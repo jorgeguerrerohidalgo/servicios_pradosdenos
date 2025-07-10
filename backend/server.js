@@ -1,4 +1,8 @@
 require('dotenv').config();
+
+// Configurar zona horaria de Santiago de Chile
+process.env.TZ = 'America/Santiago';
+
 const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
@@ -8,6 +12,7 @@ const app = express();
 // Importar rutas
 const authRoutes = require('./routes/auth.routes');
 const checkinRoutes = require('./routes/checkin.routes');
+const publicRoutes = require('./routes/public.routes');
 
 // Variables de entorno para producción
 const PORT = process.env.PORT || 3000;
@@ -70,6 +75,7 @@ app.get('/health', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/checkin', checkinRoutes);
+app.use('/api', publicRoutes);
 
 // Servir archivos estáticos desde public (primero local, luego padre)
 const publicPaths = [

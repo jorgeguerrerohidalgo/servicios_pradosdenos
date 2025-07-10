@@ -1,5 +1,8 @@
 const { Pool } = require('pg');
 
+// Configurar zona horaria de Santiago de Chile
+process.env.TZ = 'America/Santiago';
+
 // Configuración de conexión PostgreSQL (Supabase)
 let poolConfig;
 

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Administrativo - Prados de Nos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .main-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: -1;
+        }
+
+        .page-container {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .glass-container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .form-control-modern {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            color: white;
+            padding: 12px 16px;
+        }
+
+        .form-control-modern:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+            color: white;
+        }
+
+        .form-control-modern::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .btn-modern {
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #007bff, #6610f2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4);
+            color: white;
+        }
+
+        .btn-outline-light {
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            background: transparent;
+        }
+
+        .btn-outline-light:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: white;
+            color: white;
+        }
+
+        .alert-modern {
+            background: rgba(220, 53, 69, 0.2);
+            border: 1px solid rgba(220, 53, 69, 0.5);
+            border-radius: 10px;
+            color: white;
+        }
+
+        .text-white-50 {
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-background"></div>
+    <div class="page-container">
+        <div class="glass-container p-5">
+            <div class="text-center mb-4">
+                <i class="fas fa-user-shield fa-3x text-white mb-3"></i>
+                <h2 class="text-white mb-2">Acceso Administrativo</h2>
+                <p class="text-white-50">Portal exclusivo para personal autorizado</p>
+            </div>
+
+            <!-- Mensaje de error -->
+            <div id="errorMessage" class="alert alert-modern" style="display: none;">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <span id="errorText"></span>
+            </div>
+
+            <form id="loginForm" onsubmit="iniciarSesion(event)">
+                <div class="mb-3">
+                    <label for="email" class="form-label text-white">
+                        <i class="fas fa-envelope me-2"></i>Correo Electrónico
+                    </label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        class="form-control form-control-modern" 
+                        placeholder="admin@pradosdenos.com" 
+                        required
+                    >
+                </div>
+
+                <div class="mb-4">
+                    <label for="password" class="form-label text-white">
+                        <i class="fas fa-lock me-2"></i>Contraseña
+                    </label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-control form-control-modern" 
+                        placeholder="••••••••" 
+                        required
+                    >
+                </div>
+
+                <div class="d-grid gap-2 mb-3">
+                    <button type="submit" class="btn btn-modern btn-primary">
+                        <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                    </button>
+                </div>
+            </form>
+
+            <div class="text-center">
+                <a href="index.html" class="btn btn-outline-light">
+                    <i class="fas fa-arrow-left me-2"></i>Volver al Portal
+                </a>
+            </div>
+
+            <!-- Información de seguridad -->
+            <div class="mt-4 p-3" style="background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
+                <small class="text-white-50">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    Acceso seguro con autenticación de dos factores. 
+                    Todas las sesiones son monitoreadas y registradas.
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        async function iniciarSesion(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // Mostrar loading en el botón
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Iniciando sesión...';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Redireccionar al panel de administración
+                    window.location.href = '/admin-panel.html';
+                } else {
+                    mostrarError(data.message || 'Credenciales inválidas');
+                }
+            } catch (error) {
+                console.error('Error en login:', error);
+                mostrarError('Error de conexión. Inténtelo nuevamente.');
+            } finally {
+                // Restaurar botón
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        function mostrarError(mensaje) {
+            const errorDiv = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            
+            errorText.textContent = mensaje;
+            errorDiv.style.display = 'block';
+            
+            // Ocultar después de 5 segundos
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Ocultar error al escribir
+        document.getElementById('email').addEventListener('input', () => {
+            document.getElementById('errorMessage').style.display = 'none';
+        });
+
+        document.getElementById('password').addEventListener('input', () => {
+            document.getElementById('errorMessage').style.display = 'none';
+        });
+    </script>
+</body>
+</html>
