@@ -113,7 +113,7 @@ router.get('/checkins/public', async (req, res) => {
     }
     
     // Filtro por período
-    if (periodo && periodo !== 'todos') {
+    if (periodo) {
       const now = "CURRENT_TIMESTAMP AT TIME ZONE 'America/Santiago'";
       
       switch (periodo) {
@@ -130,10 +130,14 @@ router.get('/checkins/public', async (req, res) => {
         case 'mes':
           sql += ` AND c.fecha >= ${now} - INTERVAL '30 days'`;
           break;
+        case 'todos':
+          // No agregar filtro de fecha, mostrar todos los registros
+          break;
+        default:
+          // Por defecto, mostrar solo el día actual si el período no es reconocido
+          sql += ` AND c.fecha >= DATE_TRUNC('day', ${now})`;
+          break;
       }
-    } else if (!periodo) {
-      // Por defecto, mostrar solo el día actual
-      sql += ` AND c.fecha >= DATE_TRUNC('day', CURRENT_TIMESTAMP AT TIME ZONE 'America/Santiago')`;
     }
     
     sql += ` ORDER BY c.fecha DESC LIMIT 100`;
