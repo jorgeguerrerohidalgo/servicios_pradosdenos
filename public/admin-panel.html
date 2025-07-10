@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Los Prados de Nos</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar-admin {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .container-main {
+            padding: 30px 0;
+        }
+        
+        .admin-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stats-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .management-section {
+            margin-bottom: 40px;
+        }
+        
+        .management-btn {
+            width: 100%;
+            height: 80px;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .management-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .btn-success-custom {
+            background: linear-gradient(135deg, #56ab2f, #a8e6cf);
+            color: white;
+        }
+        
+        .btn-warning-custom {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+        }
+        
+        .btn-info-custom {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+        }
+        
+        .recent-activity {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .activity-item {
+            padding: 15px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .activity-time {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .welcome-section {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .init-db-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-admin">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-shield-alt"></i> Panel de Administración
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    <i class="fas fa-user"></i> <span id="adminName">Cargando...</span>
+                </span>
+                <button class="btn btn-outline-danger btn-sm" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-main">
+        <div class="container">
+            <!-- Welcome Section -->
+            <div class="welcome-section">
+                <h1><i class="fas fa-tachometer-alt"></i> Dashboard Administrativo</h1>
+                <p class="mb-0">Gestión integral del sistema de seguridad Los Prados de Nos</p>
+            </div>
+
+            <!-- Initialize DB Section -->
+            <div class="init-db-section" id="initDbSection" style="display: none;">
+                <h5><i class="fas fa-database"></i> Inicialización de Base de Datos</h5>
+                <p>La base de datos parece estar vacía. ¿Deseas inicializarla con datos de ejemplo?</p>
+                <button class="btn btn-primary" onclick="initializeDatabase()">
+                    <i class="fas fa-play"></i> Inicializar Base de Datos
+                </button>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="row" id="statsRow">
+                <div class="col-lg-3 col-md-6">
+                    <div class="stats-card">
+                        <div class="stats-number" id="totalPlazas">-</div>
+                        <div class="stats-label">
+                            <i class="fas fa-map-marker-alt"></i> Plazas Registradas
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stats-card">
+                        <div class="stats-number" id="totalGuardias">-</div>
+                        <div class="stats-label">
+                            <i class="fas fa-users"></i> Guardias Activos
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stats-card">
+                        <div class="stats-number" id="checkinsHoy">-</div>
+                        <div class="stats-label">
+                            <i class="fas fa-clipboard-check"></i> Check-ins Hoy
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stats-card">
+                        <div class="stats-number" id="checkinsSemana">-</div>
+                        <div class="stats-label">
+                            <i class="fas fa-chart-line"></i> Check-ins Semana
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Management Sections -->
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="admin-card">
+                        <h4><i class="fas fa-cogs"></i> Gestión del Sistema</h4>
+                        <div class="row management-section">
+                            <div class="col-md-6 mb-3">
+                                <button class="management-btn btn-primary-custom" onclick="manageUsers()">
+                                    <i class="fas fa-users-cog"></i><br>
+                                    Gestionar Usuarios
+                                </button>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <button class="management-btn btn-success-custom" onclick="managePlazas()">
+                                    <i class="fas fa-map-marked-alt"></i><br>
+                                    Gestionar Plazas
+                                </button>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <button class="management-btn btn-warning-custom" onclick="viewReports()">
+                                    <i class="fas fa-chart-bar"></i><br>
+                                    Reportes y Estadísticas
+                                </button>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <button class="management-btn btn-info-custom" onclick="systemSettings()">
+                                    <i class="fas fa-cog"></i><br>
+                                    Configuración
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <h5><i class="fas fa-bolt"></i> Acciones Rápidas</h5>
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <button class="btn btn-outline-primary w-100" onclick="addNewGuard()">
+                                    <i class="fas fa-user-plus"></i> Nuevo Guardia
+                                </button>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <button class="btn btn-outline-success w-100" onclick="addNewPlaza()">
+                                    <i class="fas fa-plus"></i> Nueva Plaza
+                                </button>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <button class="btn btn-outline-info w-100" onclick="exportData()">
+                                    <i class="fas fa-download"></i> Exportar Datos
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="admin-card">
+                        <h4><i class="fas fa-clock"></i> Actividad Reciente</h4>
+                        <div class="recent-activity" id="recentActivity">
+                            <div class="text-center text-muted">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Cargando actividad...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthentication();
+            loadDashboardData();
+            loadRecentActivity();
+        });
+
+        async function checkAuthentication() {
+            try {
+                const response = await fetch('/api/auth/check');
+                if (!response.ok) {
+                    window.location.href = 'admin-login.html';
+                    return;
+                }
+                
+                const data = await response.json();
+                if (data.user && data.user.tipo === 'admin') {
+                    document.getElementById('adminName').textContent = data.user.nombre;
+                } else {
+                    // Si es guardia, redirigir al sistema de checkin
+                    window.location.href = 'guardia-checkin.html';
+                }
+            } catch (error) {
+                console.error('Error verificando autenticación:', error);
+                window.location.href = 'admin-login.html';
+            }
+        }
+
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/api/stats');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        const stats = data.stats;
+                        document.getElementById('totalPlazas').textContent = stats.total_plazas || 0;
+                        document.getElementById('totalGuardias').textContent = stats.guardias_activos || 0;
+                        document.getElementById('checkinsHoy').textContent = stats.checkins_hoy || 0;
+                        document.getElementById('checkinsSemana').textContent = stats.checkins_semana || 0;
+                        
+                        // Si no hay plazas, mostrar sección de inicialización
+                        if (stats.total_plazas === 0) {
+                            document.getElementById('initDbSection').style.display = 'block';
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error cargando estadísticas:', error);
+                document.getElementById('initDbSection').style.display = 'block';
+            }
+        }
+
+        async function loadRecentActivity() {
+            try {
+                const response = await fetch('/api/checkins/public?periodo=hoy');
+                if (response.ok) {
+                    const data = await response.json();
+                    const activityDiv = document.getElementById('recentActivity');
+                    
+                    if (data.success && data.checkins.length > 0) {
+                        let html = '';
+                        data.checkins.slice(0, 5).forEach(checkin => {
+                            const fecha = new Date(checkin.fecha);
+                            html += `
+                                <div class="activity-item">
+                                    <strong>${checkin.guardia_nombre}</strong><br>
+                                    <small>Check-in en ${checkin.plaza_nombre}</small><br>
+                                    <div class="activity-time">${formatearFecha(fecha)}</div>
+                                </div>
+                            `;
+                        });
+                        activityDiv.innerHTML = html;
+                    } else {
+                        activityDiv.innerHTML = '<div class="text-center text-muted">No hay actividad reciente</div>';
+                    }
+                }
+            } catch (error) {
+                console.error('Error cargando actividad:', error);
+                document.getElementById('recentActivity').innerHTML = 
+                    '<div class="text-center text-muted">Error cargando actividad</div>';
+            }
+        }
+
+        async function initializeDatabase() {
+            try {
+                Swal.fire({
+                    title: 'Inicializando Base de Datos',
+                    text: 'Por favor espera...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                const response = await fetch('/api/init-db', { method: 'POST' });
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Base de datos inicializada!',
+                        html: `
+                            <p>${data.message}</p>
+                            <ul class="text-start">
+                                <li>Plazas: ${data.datos.plazas}</li>
+                                <li>Guardias: ${data.datos.guardias}</li>
+                                <li>Administradores: ${data.datos.administradores}</li>
+                                <li>Check-ins: ${data.datos.checkins}</li>
+                            </ul>
+                        `,
+                        confirmButtonColor: '#667eea'
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'Error inicializando la base de datos'
+                });
+            }
+        }
+
+        function formatearFecha(fecha) {
+            const opciones = {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'America/Santiago'
+            };
+            return fecha.toLocaleDateString('es-CL', opciones);
+        }
+
+        function logout() {
+            fetch('/api/auth/logout', { method: 'POST' })
+                .then(() => {
+                    window.location.href = 'index.html';
+                })
+                .catch(() => {
+                    window.location.href = 'index.html';
+                });
+        }
+
+        // Funciones de gestión (a implementar)
+        function manageUsers() {
+            Swal.fire('Próximamente', 'Función de gestión de usuarios en desarrollo', 'info');
+        }
+
+        function managePlazas() {
+            Swal.fire('Próximamente', 'Función de gestión de plazas en desarrollo', 'info');
+        }
+
+        function viewReports() {
+            Swal.fire('Próximamente', 'Sistema de reportes en desarrollo', 'info');
+        }
+
+        function systemSettings() {
+            Swal.fire('Próximamente', 'Configuración del sistema en desarrollo', 'info');
+        }
+
+        function addNewGuard() {
+            Swal.fire('Próximamente', 'Formulario de nuevo guardia en desarrollo', 'info');
+        }
+
+        function addNewPlaza() {
+            Swal.fire('Próximamente', 'Formulario de nueva plaza en desarrollo', 'info');
+        }
+
+        function exportData() {
+            Swal.fire('Próximamente', 'Función de exportación en desarrollo', 'info');
+        }
+    </script>
+</body>
+</html>

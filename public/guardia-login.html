@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login Administrador - Los Prados de Nos</title>
+  <title>Login Guardia - Los Prados de Nos</title>
   <style>
     body { 
       font-family: Arial, sans-serif; 
@@ -35,7 +35,7 @@
     button { 
       width: 100%; 
       padding: 12px; 
-      background-color: #007bff; 
+      background-color: #28a745; 
       color: white; 
       border: none; 
       border-radius: 5px; 
@@ -44,7 +44,7 @@
       margin-top: 10px;
     }
     button:hover { 
-      background-color: #0056b3; 
+      background-color: #218838; 
     }
     button:disabled { 
       background-color: #6c757d; 
@@ -61,17 +61,28 @@
       font-size: 12px;
       color: #666;
     }
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 15px;
+      color: #6c757d;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      color: #333;
+    }
   </style>
 </head>
 <body>
   <div class="login-container">
-    <h1>🏢 Login de Administrador</h1>
+    <h1>🛡️ Login de Guardia</h1>
     <form id="loginForm">
       <input type="email" name="email" placeholder="Correo electrónico" required>
       <input type="password" name="password" placeholder="Contraseña" required>
       <button type="submit">Ingresar</button>
     </form>
     <div id="error" class="error"></div>
+    <a href="/" class="back-link">← Volver al portal principal</a>
     <div class="footer">
       Sistema de Check-in para Plazas v1.0
     </div>
@@ -121,11 +132,11 @@
         const result = await response.json();
         
         if (response.ok) {
-          // Login exitoso - redirigir según el tipo de usuario
-          if (result.guardia && result.guardia.tipo === 'admin') {
-            window.location.href = '/admin-panel.html';
-          } else {
+          // Login exitoso - verificar que sea un guardia
+          if (result.guardia && result.guardia.tipo === 'guardia') {
             window.location.href = '/guardia-checkin.html';
+          } else {
+            showError('Acceso denegado. Solo guardias pueden acceder aquí.');
           }
         } else {
           // Error de login
@@ -149,13 +160,8 @@
         });
         const result = await response.json();
         
-        if (result.authenticated) {
-          // Redirigir según el tipo de usuario
-          if (result.guardia && result.guardia.tipo === 'admin') {
-            window.location.href = '/admin-panel.html';
-          } else {
-            window.location.href = '/guardia-checkin.html';
-          }
+        if (result.authenticated && result.guardia.tipo === 'guardia') {
+          window.location.href = '/guardia-checkin.html';
         }
       } catch (error) {
         // No hacer nada si falla la verificación

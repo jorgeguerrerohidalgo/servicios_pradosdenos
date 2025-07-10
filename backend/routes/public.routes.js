@@ -86,6 +86,8 @@ router.get('/checkins/public', async (req, res) => {
     const { plaza_id, periodo } = req.query;
     
     console.log('🔍 Consulta pública de checkins - Plaza:', plaza_id, 'Período:', periodo);
+    console.log('🔍 Headers:', req.headers);
+    console.log('🔍 Query completo:', req.query);
     
     let sql = `
       SELECT 
@@ -191,6 +193,182 @@ router.get('/stats', async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: 'Error interno del servidor' 
+    });
+  }
+});
+
+// Endpoint temporal para inicializar la base de datos
+router.post('/init-db', async (req, res) => {
+  try {
+    console.log('🔧 Inicializando base de datos...');
+    
+    // Verificar si ya hay datos
+    const existingPlazas = await query('SELECT COUNT(*) as total FROM plazas');
+    const totalPlazas = parseInt(existingPlazas[0].total);
+    
+    if (totalPlazas > 0) {
+      return res.json({
+        success: true,
+        message: `Base de datos ya inicializada. Hay ${totalPlazas} plazas.`,
+        plazas: totalPlazas
+      });
+    }
+    
+    console.log('📝 Insertando plazas...');
+    
+    // Insertar plazas
+    await query(`
+      INSERT INTO plazas (nombre) VALUES
+      ('Plaza La Coruña'),
+      ('Plaza Valencia'), 
+      ('Plaza Marbella'),
+      ('Plaza Evaristo Herrera Molina'),
+      ('Plaza Aaron Osorio Vidal'),
+      ('Plaza Avellino'),
+      ('Plaza Livorno'),
+      ('Plaza Turin'),
+      ('Plaza Castellon'),
+      ('Plaza Perugia'),
+      ('Plaza Ancona'),      
+      ('Plaza Capri'),
+      ('Plaza Napoles'),
+      ('Plaza Reginado Henríquez Miranda'),
+      ('Plaza Mario Arroyo Acuña'),
+      ('Plaza Roberto Risopatron'),
+      ('Plaza Barcelona'),
+      ('Plaza Parque Union Norte'),
+      ('Plaza Parque Union Sur')
+      ON CONFLICT DO NOTHING
+    `);
+    
+    console.log('🔑 Insertando tokens QR...');
+    
+    // Insertar tokens QR
+    for (let i = 1; i <= 19; i++) {
+      await query(`
+        INSERT INTO plaza_tokens (plaza_id, token) VALUES
+        ($1, $2) ON CONFLICT (token) DO NOTHING
+      `, [i, `qr-plaza-${i}-2025`]);
+    }
+    
+    console.log('👤 Insertando guardias...');
+    
+    // Insertar guardias
+    await query(`
+      INSERT INTO guardias (nombre, rut, email, password, telefono) VALUES
+      ('Carlos Mendoza Torres', '18.543.210-9', 'carlos.mendoza@pradosdenos.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+56912345678'),
+      ('María Elena Soto', '16.789.432-1', 'maria.soto@pradosdenos.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+56987654321'),
+      ('Juan Carlos Ramirez', '19.234.567-8', 'juan.ramirez@pradosdenos.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+56976543210'),
+      ('Patricia Morales Vega', '17.654.321-0', 'patricia.morales@pradosdenos.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+56965432109')
+      ON CONFLICT (email) DO NOTHING
+    `);
+    
+    console.log('👑 Insertando administradores...');
+    
+    // Insertar administradores
+    await query(`
+      INSERT INTO admin_users (nombre, apellido_paterno, apellido_materno, run, email, fecha_nacimiento, direccion, plaza_id, password_hash) VALUES
+      ('Jorge', 'Guerrero', 'Hidalgo', '15.468.127-2', 'jorgeguerrerohidalgo@gmail.com', '1982-04-24', 'Santiago de Compostela 4985', 1, '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
+      ('Admin', 'Sistema', 'Principal', '11.111.222-3', 'admin@pradosdenos.com', '1980-01-01', 'Oficina Central', 1, '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi')
+      ON CONFLICT (email) DO NOTHING
+    `);
+    
+    console.log('✅ Insertando checkins de ejemplo...');
+    
+    // Insertar checkins de ejemplo
+    await query(`
+      INSERT INTO checkins (guardia_id, plaza_id, fecha, ip_address) VALUES
+      (1, 1, CURRENT_TIMESTAMP AT TIME ZONE 'America/Santiago' - INTERVAL '2 hours', '192.168.1.100'),
+      (1, 2, CURRENT_TIMESTAMP AT TIME ZONE 'America/Santiago' - INTERVAL '1 hour 45 minutes', '192.168.1.100'),
+      (1, 3, CURRENT_TIMESTAMP AT TIME ZONE 'America/Santiago' - INTERVAL '1 hour 30 minutes', '192.168.1.100'),
+      (2, 4, CURRENT_TIMESTAMP AT TIME ZONE 'America/Santiago' - INTERVAL '1 hour', '192.168.1.101'),
+      (2, 5, CURRENT_TIMESTAMP AT TIME ZONE 'America/Santiago' - INTERVAL '45 minutes', '192.168.1.101'),
+      (2, 6, CURRENT_TIMESTAMP AT TIME ZONE 'America/Santiago' - INTERVAL '30 minutes', '192.168.1.101'),
+      (3, 7, CURRENT_TIMESTAMP AT TIME ZONE 'America/Santiago' - INTERVAL '1 day 2 hours', '192.168.1.102'),
+      (3, 8, CURRENT_TIMESTAMP AT TIME ZONE 'America/Santiago' - INTERVAL '1 day 1 hour 45 minutes', '192.168.1.102'),
+      (4, 9, CURRENT_TIMESTAMP AT TIME ZONE 'America/Santiago' - INTERVAL '1 day 1 hora 30 minutes', '192.168.1.103')
+    `);
+    
+    // Verificar resultados
+    const finalPlazas = await query('SELECT COUNT(*) as total FROM plazas');
+    const finalGuardias = await query('SELECT COUNT(*) as total FROM guardias');
+    const finalAdmins = await query('SELECT COUNT(*) as total FROM admin_users');
+    const finalCheckins = await query('SELECT COUNT(*) as total FROM checkins');
+    
+    console.log('🎉 Base de datos inicializada exitosamente');
+    
+    res.json({
+      success: true,
+      message: 'Base de datos inicializada exitosamente',
+      datos: {
+        plazas: parseInt(finalPlazas[0].total),
+        guardias: parseInt(finalGuardias[0].total),
+        administradores: parseInt(finalAdmins[0].total),
+        checkins: parseInt(finalCheckins[0].total)
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Error inicializando base de datos:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error inicializando base de datos',
+      error: error.message
+    });
+  }
+});
+
+// Ruta de debug para verificar datos
+router.get('/debug/data', async (req, res) => {
+  try {
+    console.log('🔍 Debug: Verificando datos en la base de datos...');
+    
+    const plazas = await query('SELECT id, nombre FROM plazas ORDER BY nombre');
+    const guardias = await query('SELECT id, nombre, email FROM guardias ORDER BY nombre');
+    const checkins = await query('SELECT id, plaza_id, guardia_id, fecha FROM checkins ORDER BY fecha DESC LIMIT 10');
+    
+    // Verificar checkins con JOIN
+    const checkinsWithDetails = await query(`
+      SELECT 
+        c.id,
+        c.fecha,
+        p.nombre as plaza_nombre,
+        g.nombre as guardia_nombre
+      FROM checkins c
+      INNER JOIN plazas p ON c.plaza_id = p.id
+      INNER JOIN guardias g ON c.guardia_id = g.id
+      ORDER BY c.fecha DESC
+      LIMIT 10
+    `);
+    
+    res.json({
+      success: true,
+      datos: {
+        plazas: {
+          total: plazas.length,
+          datos: plazas
+        },
+        guardias: {
+          total: guardias.length,
+          datos: guardias.map(g => ({ id: g.id, nombre: g.nombre, email: g.email }))
+        },
+        checkins: {
+          total: checkins.length,
+          datos: checkins
+        },
+        checkinsConDetalles: {
+          total: checkinsWithDetails.length,
+          datos: checkinsWithDetails
+        }
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Error en debug:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error en debug',
+      error: error.message
     });
   }
 });

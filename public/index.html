@@ -115,24 +115,48 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         
-        .admin-link {
+        .access-links {
             position: fixed;
             bottom: 20px;
             right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .access-link {
             background: rgba(255,255,255,0.2);
             color: white;
-            padding: 15px 20px;
+            padding: 12px 18px;
             border-radius: 50px;
             text-decoration: none;
             backdrop-filter: blur(10px);
             transition: all 0.3s ease;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            text-align: center;
+            min-width: 120px;
         }
         
-        .admin-link:hover {
+        .access-link:hover {
             background: rgba(255,255,255,0.3);
             color: white;
             transform: scale(1.05);
+        }
+        
+        .access-link.admin {
+            background: rgba(220, 53, 69, 0.2);
+        }
+        
+        .access-link.admin:hover {
+            background: rgba(220, 53, 69, 0.3);
+        }
+        
+        .access-link.guard {
+            background: rgba(40, 167, 69, 0.2);
+        }
+        
+        .access-link.guard:hover {
+            background: rgba(40, 167, 69, 0.3);
         }
         
         .footer {
@@ -234,10 +258,15 @@
         </div>
     </div>
     
-    <!-- Admin Link -->
-    <a href="admin-login.html" class="admin-link">
-        <i class="fas fa-user-shield"></i> Acceso Admin
-    </a>
+    <!-- Access Links -->
+    <div class="access-links">
+        <a href="admin-login.html" class="access-link admin">
+            <i class="fas fa-user-shield"></i> Admin
+        </a>
+        <a href="guardia-login.html" class="access-link guard">
+            <i class="fas fa-shield-alt"></i> Guardia
+        </a>
+    </div>
     
     <!-- Bootstrap JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
