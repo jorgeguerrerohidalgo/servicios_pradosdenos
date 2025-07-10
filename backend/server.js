@@ -40,10 +40,10 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: { 
-    secure: isProduction, // true en producción con HTTPS
+    secure: false, // Deshabilitado temporalmente para debugging
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 horas
-    sameSite: isProduction ? 'none' : 'lax'
+    sameSite: 'lax' // Cambiado de 'none' a 'lax' para mejor compatibilidad
   },
   name: 'checkin.sid'
 }));

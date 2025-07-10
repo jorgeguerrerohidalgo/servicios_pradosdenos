@@ -284,30 +284,53 @@
 
         async function checkAuthentication() {
             try {
-                const response = await fetch('/api/auth/check');
+                console.log('🔍 Iniciando verificación de autenticación...');
+                console.log('🔍 URL actual:', window.location.href);
+                console.log('🔍 Cookies disponibles:', document.cookie);
+                
+                const response = await fetch('/api/auth/check', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('🔍 Respuesta del servidor:', response.status, response.statusText);
+                console.log('🔍 Headers de respuesta:', [...response.headers.entries()]);
+                
                 if (!response.ok) {
+                    console.log('❌ Respuesta no OK, redirigiendo al login...');
                     window.location.href = 'admin-login.html';
                     return;
                 }
                 
                 const data = await response.json();
-                console.log('🔍 Datos de autenticación:', data);
+                console.log('🔍 Datos de autenticación completos:', JSON.stringify(data, null, 2));
                 
                 if (data.authenticated && data.guardia) {
+                    console.log('🔍 Usuario autenticado encontrado:', data.guardia);
                     if (data.guardia.tipo === 'admin') {
                         document.getElementById('adminName').textContent = data.guardia.nombre;
                         console.log('✅ Usuario administrador autenticado:', data.guardia.nombre);
+                        console.log('✅ Permaneciendo en panel de admin');
+                        return; // Importante: no redirigir si todo está bien
                     } else {
                         // Si es guardia, redirigir al sistema de checkin
                         console.log('🔄 Usuario es guardia, redirigiendo...');
                         window.location.href = 'guardia-checkin.html';
+                        return;
                     }
                 } else {
-                    console.log('❌ Usuario no autenticado');
+                    console.log('❌ Usuario no autenticado o datos incompletos');
+                    console.log('❌ authenticated:', data.authenticated);
+                    console.log('❌ guardia:', data.guardia);
                     window.location.href = 'admin-login.html';
                 }
             } catch (error) {
-                console.error('Error verificando autenticación:', error);
+                console.error('❌ Error verificando autenticación:', error);
+                console.error('❌ Stack trace:', error.stack);
                 window.location.href = 'admin-login.html';
             }
         }

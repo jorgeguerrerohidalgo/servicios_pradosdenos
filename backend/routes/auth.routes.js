@@ -73,6 +73,8 @@ router.post('/login', validateLogin, async (req, res) => {
     };
     
     console.log('✅ Login exitoso:', foundUser.email, 'Tipo:', userType);
+    console.log('✅ Sesión creada:', JSON.stringify(req.session.guardia, null, 2));
+    console.log('✅ Session ID:', req.sessionID);
     
     res.json({ 
       message: 'Login exitoso',
@@ -101,12 +103,20 @@ router.get('/logout', (req, res) => {
 
 // Ruta para verificar si el usuario está autenticado
 router.get('/check', (req, res) => {
+  console.log('🔍 Verificando autenticación...');
+  console.log('🔍 Session ID:', req.sessionID);
+  console.log('🔍 Session completa:', JSON.stringify(req.session, null, 2));
+  console.log('🔍 Headers:', JSON.stringify(req.headers, null, 2));
+  console.log('🔍 Cookies:', req.headers.cookie);
+  
   if (req.session.guardia) {
+    console.log('✅ Sesión encontrada:', req.session.guardia);
     res.json({ 
       authenticated: true, 
       guardia: req.session.guardia 
     });
   } else {
+    console.log('❌ No hay sesión de guardia');
     res.json({ authenticated: false });
   }
 });
