@@ -9,11 +9,23 @@ services:
       - key: NODE_ENV
         value: production
       - key: SESSION_SECRET
-        generateValue: true
+        generateValue: true  # Render genera automáticamente
       - key: DB_SSL
-        value: true
+        value: "true"
       - key: DB_SSL_REJECT_UNAUTHORIZED
-        value: false
+        value: "false"
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_CONNECTION_LIMIT
+        value: "10"
+      - key: DB_ACQUIRE_TIMEOUT
+        value: "60000"
+      - key: DB_TIMEOUT
+        value: "60000"
+      - key: DB_TIMEZONE
+        value: "+00:00"
+      # Variables sensibles como DB_HOST, DB_USER, DB_PASSWORD
+      # DEBES configurarlas manualmente en el dashboard por seguridad
     healthCheckPath: /health
     autoDeploy: true
     branch: main
