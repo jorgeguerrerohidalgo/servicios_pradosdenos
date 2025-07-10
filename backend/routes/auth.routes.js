@@ -83,15 +83,6 @@ router.post('/login', validateLogin, async (req, res) => {
   }
 });
 
-router.get('/logout', (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Error al cerrar sesión' });
-    }
-    res.json({ message: 'Sesión cerrada exitosamente' });
-  });
-});
-
 // Ruta para verificar si el usuario está autenticado
 router.get('/check', (req, res) => {
   if (req.session.guardia) {
@@ -102,6 +93,18 @@ router.get('/check', (req, res) => {
   } else {
     res.json({ authenticated: false });
   }
+});
+
+// Ruta para cerrar sesión
+router.post('/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Error cerrando sesión:', err);
+      return res.status(500).json({ success: false, message: 'Error al cerrar sesión' });
+    }
+    res.clearCookie('checkin.sid');
+    res.json({ success: true, message: 'Sesión cerrada exitosamente' });
+  });
 });
 
 module.exports = router;

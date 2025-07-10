@@ -38,6 +38,7 @@
             padding: 25px;
             margin-bottom: 20px;
             transition: transform 0.3s ease;
+            cursor: pointer;
         }
         
         .stats-card:hover {
@@ -268,171 +269,1423 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Dashboard Principal -->
+            <div id="dashboardSection">
+                <!-- Welcome Section -->
+                <div class="welcome-section">
+                    <h2><i class="fas fa-tachometer-alt"></i> Dashboard Administrativo</h2>
+                    <p>Gestiona el sistema de seguridad de Los Prados de Nos</p>
+                </div>
+
+                <!-- Estadísticas -->
+                <div class="row">
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stats-card" onclick="managePlazas()">
+                            <div class="stats-number" id="totalPlazas">0</div>
+                            <div class="stats-label">
+                                <i class="fas fa-map-marked-alt"></i> Plazas Activas
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stats-card" onclick="manageGuardias()">
+                            <div class="stats-number" id="guardiasActivos">0</div>
+                            <div class="stats-label">
+                                <i class="fas fa-users"></i> Guardias Activos
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stats-card" onclick="viewReports()">
+                            <div class="stats-number" id="checkinsHoy">0</div>
+                            <div class="stats-label">
+                                <i class="fas fa-clock"></i> Rondas Hoy
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stats-card" onclick="viewReports()">
+                            <div class="stats-number" id="checkinsSemana">0</div>
+                            <div class="stats-label">
+                                <i class="fas fa-chart-line"></i> Rondas Semana
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Management Sections -->
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="admin-card">
+                            <h4><i class="fas fa-cogs"></i> Gestión del Sistema</h4>
+                            <div class="row management-section">
+                                <div class="col-md-6 mb-3">
+                                    <button class="management-btn btn-primary-custom" onclick="manageGuardias()">
+                                        <i class="fas fa-users"></i><br>
+                                        Gestionar Guardias
+                                    </button>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <button class="management-btn btn-success-custom" onclick="managePlazas()">
+                                        <i class="fas fa-map-marked-alt"></i><br>
+                                        Gestionar Plazas
+                                    </button>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <button class="management-btn btn-warning-custom" onclick="viewReports()">
+                                        <i class="fas fa-chart-bar"></i><br>
+                                        Reportes y Estadísticas
+                                    </button>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <button class="management-btn btn-info-custom" onclick="manageAdmins()">
+                                        <i class="fas fa-user-cog"></i><br>
+                                        Administradores
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="admin-card">
+                            <h5><i class="fas fa-history"></i> Actividad Reciente</h5>
+                            <div class="recent-activity" id="actividadReciente">
+                                <div class="text-center">
+                                    <i class="fas fa-spinner fa-spin"></i> Cargando...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gestión de Guardias -->
+            <div id="guardiasSection" class="section-hidden">
+                <div class="admin-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4><i class="fas fa-users"></i> Gestión de Guardias</h4>
+                        <div>
+                            <button class="btn btn-success me-2" onclick="showAddGuardiaForm()">
+                                <i class="fas fa-plus"></i> Nuevo Guardia
+                            </button>
+                            <button class="btn btn-secondary" onclick="showDashboard()">
+                                <i class="fas fa-arrow-left"></i> Volver
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Teléfono</th>
+                                    <th>Estado</th>
+                                    <th>Último Login</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="guardiasTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center">
+                                        <i class="fas fa-spinner fa-spin"></i> Cargando...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gestión de Plazas -->
+            <div id="plazasSection" class="section-hidden">
+                <div class="admin-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4><i class="fas fa-map-marked-alt"></i> Gestión de Plazas</h4>
+                        <div>
+                            <button class="btn btn-success me-2" onclick="showAddPlazaForm()">
+                                <i class="fas fa-plus"></i> Nueva Plaza
+                            </button>
+                            <button class="btn btn-secondary" onclick="showDashboard()">
+                                <i class="fas fa-arrow-left"></i> Volver
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Dirección</th>
+                                    <th>Total Checkins</th>
+                                    <th>Último Checkin</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="plazasTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center">
+                                        <i class="fas fa-spinner fa-spin"></i> Cargando...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gestión de Administradores -->
+            <div id="adminsSection" class="section-hidden">
+                <div class="admin-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4><i class="fas fa-user-cog"></i> Gestión de Administradores</h4>
+                        <div>
+                            <button class="btn btn-success me-2" onclick="showAddAdminForm()">
+                                <i class="fas fa-plus"></i> Nuevo Administrador
+                            </button>
+                            <button class="btn btn-secondary" onclick="showDashboard()">
+                                <i class="fas fa-arrow-left"></i> Volver
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Teléfono</th>
+                                    <th>Estado</th>
+                                    <th>Fecha Creación</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminsTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center">
+                                        <i class="fas fa-spinner fa-spin"></i> Cargando...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reportes y Estadísticas -->
+            <div id="reportsSection" class="section-hidden">
+                <div class="admin-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4><i class="fas fa-chart-bar"></i> Reportes y Estadísticas</h4>
+                        <button class="btn btn-secondary" onclick="showDashboard()">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </button>
+                    </div>
+                    
+                    <!-- Filtros de Reporte -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <input type="date" class="form-control" id="fechaInicio" placeholder="Fecha Inicio">
+                                <label for="fechaInicio">Fecha Inicio</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <input type="date" class="form-control" id="fechaFin" placeholder="Fecha Fin">
+                                <label for="fechaFin">Fecha Fin</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-primary h-100" onclick="generateReport()">
+                                <i class="fas fa-chart-line"></i> Generar Reporte
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Estadísticas Detalladas -->
+                    <div class="row mb-4">
+                        <div class="col-md-2">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary" id="reportTotalCheckins">0</h5>
+                                    <p class="card-text">Total Checkins</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5 class="card-title text-success" id="reportPlazasActivas">0</h5>
+                                    <p class="card-text">Plazas con Actividad</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5 class="card-title text-warning" id="reportGuardiasActivos">0</h5>
+                                    <p class="card-text">Guardias Activos</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5 class="card-title text-info" id="reportPromedioDiario">0</h5>
+                                    <p class="card-text">Promedio Diario</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-success h-100" onclick="exportReport()">
+                                <i class="fas fa-download"></i> Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Tabla de Reporte -->
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Plaza</th>
+                                    <th>Guardia</th>
+                                    <th>Total Checkins</th>
+                                    <th>Primer Checkin</th>
+                                    <th>Último Checkin</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportTableBody">
+                                <tr>
+                                    <td colspan="5" class="text-center">
+                                        Selecciona fechas y genera un reporte
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Formularios -->
+    <div class="modal fade" id="formModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Formulario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- Contenido dinámico -->
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+    
     <script>
+        let currentUser = null;
+        let guardias = [];
+        let plazas = [];
+        let admins = [];
+        let reportData = [];
+        
+        // Verificar autenticación al cargar
         document.addEventListener('DOMContentLoaded', function() {
-            checkAuthentication();
-            loadDashboardData();
-            loadRecentActivity();
+            checkAuth();
         });
-
-        async function checkAuthentication() {
+        
+        async function checkAuth() {
             try {
-                console.log('🔍 Iniciando verificación de autenticación...');
-                console.log('🔍 URL actual:', window.location.href);
-                console.log('🔍 Cookies disponibles:', document.cookie);
-                
-                const response = await fetch('/api/auth/check', {
-                    method: 'GET',
-                    credentials: 'include',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                console.log('🔍 Respuesta del servidor:', response.status, response.statusText);
-                console.log('🔍 Headers de respuesta:', [...response.headers.entries()]);
-                
-                if (!response.ok) {
-                    console.log('❌ Respuesta no OK, redirigiendo al login...');
-                    window.location.href = 'admin-login.html';
-                    return;
-                }
-                
+                const response = await fetch('/api/auth/check');
                 const data = await response.json();
-                console.log('🔍 Datos de autenticación completos:', JSON.stringify(data, null, 2));
                 
-                if (data.authenticated && data.guardia) {
-                    console.log('🔍 Usuario autenticado encontrado:', data.guardia);
-                    if (data.guardia.tipo === 'admin') {
-                        document.getElementById('adminName').textContent = data.guardia.nombre;
-                        console.log('✅ Usuario administrador autenticado:', data.guardia.nombre);
-                        console.log('✅ Permaneciendo en panel de admin');
-                        return; // Importante: no redirigir si todo está bien
-                    } else {
-                        // Si es guardia, redirigir al sistema de checkin
-                        console.log('🔄 Usuario es guardia, redirigiendo...');
-                        window.location.href = 'guardia-checkin.html';
-                        return;
-                    }
+                if (data.authenticated && data.guardia.tipo === 'admin') {
+                    currentUser = data.guardia;
+                    document.getElementById('adminName').textContent = currentUser.nombre;
+                    loadDashboard();
                 } else {
-                    console.log('❌ Usuario no autenticado o datos incompletos');
-                    console.log('❌ authenticated:', data.authenticated);
-                    console.log('❌ guardia:', data.guardia);
                     window.location.href = 'admin-login.html';
                 }
             } catch (error) {
-                console.error('❌ Error verificando autenticación:', error);
-                console.error('❌ Stack trace:', error.stack);
+                console.error('Error verificando autenticación:', error);
                 window.location.href = 'admin-login.html';
             }
         }
-
-        async function loadDashboardData() {
+        
+        async function loadDashboard() {
             try {
-                const response = await fetch('/api/stats');
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success) {
-                        const stats = data.stats;
-                        document.getElementById('totalPlazas').textContent = stats.total_plazas || 0;
-                        document.getElementById('totalGuardias').textContent = stats.guardias_activos || 0;
-                        document.getElementById('checkinsHoy').textContent = stats.checkins_hoy || 0;
-                        document.getElementById('checkinsSemana').textContent = stats.checkins_semana || 0;
-                        
-                        // Si no hay plazas, mostrar sección de inicialización
-                        if (stats.total_plazas === 0) {
-                            document.getElementById('initDbSection').style.display = 'block';
-                        }
-                    }
+                // Cargar estadísticas
+                const statsResponse = await fetch('/api/admin/stats');
+                const statsData = await statsResponse.json();
+                
+                if (statsData.success) {
+                    document.getElementById('totalPlazas').textContent = statsData.stats.total_plazas;
+                    document.getElementById('guardiasActivos').textContent = statsData.stats.guardias_activos;
+                    document.getElementById('checkinsHoy').textContent = statsData.stats.checkins_hoy;
+                    document.getElementById('checkinsSemana').textContent = statsData.stats.checkins_semana;
                 }
+                
+                // Cargar actividad reciente
+                loadRecentActivity();
+                
             } catch (error) {
-                console.error('Error cargando estadísticas:', error);
-                document.getElementById('initDbSection').style.display = 'block';
+                console.error('Error cargando dashboard:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al cargar el dashboard',
+                    icon: 'error'
+                });
             }
         }
-
+        
         async function loadRecentActivity() {
             try {
-                const response = await fetch('/api/checkins/public?periodo=hoy');
-                if (response.ok) {
-                    const data = await response.json();
-                    const activityDiv = document.getElementById('recentActivity');
+                const response = await fetch('/api/admin/reports/recent?limit=10');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const activityHtml = data.checkins.map(checkin => `
+                        <div class="activity-item">
+                            <strong>${checkin.guardia_nombre}</strong> realizó checkin en 
+                            <strong>${checkin.plaza_nombre}</strong>
+                            <div class="activity-time">
+                                <i class="fas fa-clock"></i> ${formatearFecha(new Date(checkin.fecha))}
+                            </div>
+                        </div>
+                    `).join('');
                     
-                    if (data.success && data.checkins.length > 0) {
-                        let html = '';
-                        data.checkins.slice(0, 5).forEach(checkin => {
-                            const fecha = new Date(checkin.fecha);
-                            html += `
-                                <div class="activity-item">
-                                    <strong>${checkin.guardia_nombre}</strong><br>
-                                    <small>Check-in en ${checkin.plaza_nombre}</small><br>
-                                    <div class="activity-time">${formatearFecha(fecha)}</div>
-                                </div>
-                            `;
-                        });
-                        activityDiv.innerHTML = html;
-                    } else {
-                        activityDiv.innerHTML = '<div class="text-center text-muted">No hay actividad reciente</div>';
-                    }
+                    document.getElementById('actividadReciente').innerHTML = activityHtml || 
+                        '<div class="text-center text-muted">No hay actividad reciente</div>';
                 }
             } catch (error) {
                 console.error('Error cargando actividad:', error);
-                document.getElementById('recentActivity').innerHTML = 
-                    '<div class="text-center text-muted">Error cargando actividad</div>';
+                document.getElementById('actividadReciente').innerHTML = 
+                    '<div class="text-center text-muted">Error al cargar actividad</div>';
             }
         }
-
-        async function initializeDatabase() {
+        
+        // ==================== NAVEGACIÓN ====================
+        
+        function showDashboard() {
+            hideAllSections();
+            document.getElementById('dashboardSection').classList.remove('section-hidden');
+            loadDashboard();
+        }
+        
+        function hideAllSections() {
+            document.querySelectorAll('.section-hidden, #dashboardSection').forEach(section => {
+                section.classList.add('section-hidden');
+            });
+        }
+        
+        // ==================== GESTIÓN DE GUARDIAS ====================
+        
+        async function manageGuardias() {
+            hideAllSections();
+            document.getElementById('guardiasSection').classList.remove('section-hidden');
+            await loadGuardias();
+        }
+        
+        async function loadGuardias() {
             try {
-                Swal.fire({
-                    title: 'Inicializando Base de Datos',
-                    text: 'Por favor espera...',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-
-                const response = await fetch('/api/init-db', { method: 'POST' });
+                const response = await fetch('/api/admin/guardias');
                 const data = await response.json();
-
+                
                 if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Base de datos inicializada!',
-                        html: `
-                            <p>${data.message}</p>
-                            <ul class="text-start">
-                                <li>Plazas: ${data.datos.plazas}</li>
-                                <li>Guardias: ${data.datos.guardias}</li>
-                                <li>Administradores: ${data.datos.administradores}</li>
-                                <li>Check-ins: ${data.datos.checkins}</li>
-                            </ul>
-                        `,
-                        confirmButtonColor: '#667eea'
-                    }).then(() => {
-                        location.reload();
-                    });
-                } else {
-                    throw new Error(data.message);
+                    guardias = data.guardias;
+                    renderGuardiasTable();
                 }
             } catch (error) {
+                console.error('Error cargando guardias:', error);
                 Swal.fire({
-                    icon: 'error',
                     title: 'Error',
-                    text: error.message || 'Error inicializando la base de datos'
+                    text: 'Error al cargar guardias',
+                    icon: 'error'
                 });
             }
         }
-
+        
+        function renderGuardiasTable() {
+            const tbody = document.getElementById('guardiasTableBody');
+            
+            if (guardias.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No hay guardias registrados</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = guardias.map(guardia => `
+                <tr>
+                    <td>${guardia.nombre}</td>
+                    <td>${guardia.email}</td>
+                    <td>${guardia.telefono || 'N/A'}</td>
+                    <td>
+                        <span class="badge ${guardia.activo ? 'bg-success' : 'bg-danger'}">
+                            ${guardia.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                        <br>
+                        <small class="text-muted">${guardia.estado}</small>
+                    </td>
+                    <td>${guardia.last_login ? formatearFecha(new Date(guardia.last_login)) : 'Nunca'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editGuardia(${guardia.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteGuardia(${guardia.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function showAddGuardiaForm() {
+            document.getElementById('modalTitle').textContent = 'Nuevo Guardia';
+            document.getElementById('modalBody').innerHTML = `
+                <form id="guardiaForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="guardiaNombre" required>
+                                <label for="guardiaNombre">Nombre Completo</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="email" class="form-control" id="guardiaEmail" required>
+                                <label for="guardiaEmail">Email</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="tel" class="form-control" id="guardiaTelefono">
+                                <label for="guardiaTelefono">Teléfono</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="password" class="form-control" id="guardiaPassword" required>
+                                <label for="guardiaPassword">Contraseña</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            `;
+            
+            document.getElementById('guardiaForm').addEventListener('submit', handleGuardiaSubmit);
+            new bootstrap.Modal(document.getElementById('formModal')).show();
+        }
+        
+        async function handleGuardiaSubmit(e) {
+            e.preventDefault();
+            
+            const formData = {
+                nombre: document.getElementById('guardiaNombre').value,
+                email: document.getElementById('guardiaEmail').value,
+                telefono: document.getElementById('guardiaTelefono').value,
+                password: document.getElementById('guardiaPassword').value
+            };
+            
+            try {
+                const response = await fetch('/api/admin/guardias', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: 'Guardia creado exitosamente',
+                        icon: 'success'
+                    });
+                    bootstrap.Modal.getInstance(document.getElementById('formModal')).hide();
+                    loadGuardias();
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message,
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error creando guardia:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al crear guardia',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        async function editGuardia(id) {
+            const guardia = guardias.find(g => g.id === id);
+            if (!guardia) return;
+            
+            document.getElementById('modalTitle').textContent = 'Editar Guardia';
+            document.getElementById('modalBody').innerHTML = `
+                <form id="editGuardiaForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="editGuardiaNombre" value="${guardia.nombre}" required>
+                                <label for="editGuardiaNombre">Nombre Completo</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="email" class="form-control" id="editGuardiaEmail" value="${guardia.email}" required>
+                                <label for="editGuardiaEmail">Email</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="tel" class="form-control" id="editGuardiaTelefono" value="${guardia.telefono || ''}">
+                                <label for="editGuardiaTelefono">Teléfono</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="password" class="form-control" id="editGuardiaPassword" placeholder="Dejar vacío para no cambiar">
+                                <label for="editGuardiaPassword">Nueva Contraseña</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="editGuardiaActivo" ${guardia.activo ? 'checked' : ''}>
+                        <label class="form-check-label" for="editGuardiaActivo">
+                            Guardia Activo
+                        </label>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Actualizar</button>
+                    </div>
+                </form>
+            `;
+            
+            document.getElementById('editGuardiaForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = {
+                    nombre: document.getElementById('editGuardiaNombre').value,
+                    email: document.getElementById('editGuardiaEmail').value,
+                    telefono: document.getElementById('editGuardiaTelefono').value,
+                    activo: document.getElementById('editGuardiaActivo').checked
+                };
+                
+                const password = document.getElementById('editGuardiaPassword').value;
+                if (password) {
+                    formData.password = password;
+                }
+                
+                try {
+                    const response = await fetch(`/api/admin/guardias/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Éxito',
+                            text: 'Guardia actualizado exitosamente',
+                            icon: 'success'
+                        });
+                        bootstrap.Modal.getInstance(document.getElementById('formModal')).hide();
+                        loadGuardias();
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message,
+                            icon: 'error'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error actualizando guardia:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al actualizar guardia',
+                        icon: 'error'
+                    });
+                }
+            });
+            
+            new bootstrap.Modal(document.getElementById('formModal')).show();
+        }
+        
+        async function deleteGuardia(id) {
+            const guardia = guardias.find(g => g.id === id);
+            if (!guardia) return;
+            
+            const result = await Swal.fire({
+                title: '¿Estás seguro?',
+                text: `¿Deseas eliminar al guardia "${guardia.nombre}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            });
+            
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/api/admin/guardias/${id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Eliminado',
+                            text: data.message,
+                            icon: 'success'
+                        });
+                        loadGuardias();
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message,
+                            icon: 'error'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error eliminando guardia:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al eliminar guardia',
+                        icon: 'error'
+                    });
+                }
+            }
+        }
+        
+        // ==================== GESTIÓN DE PLAZAS ====================
+        
+        async function managePlazas() {
+            hideAllSections();
+            document.getElementById('plazasSection').classList.remove('section-hidden');
+            await loadPlazas();
+        }
+        
+        async function loadPlazas() {
+            try {
+                const response = await fetch('/api/admin/plazas');
+                const data = await response.json();
+                
+                if (data.success) {
+                    plazas = data.plazas;
+                    renderPlazasTable();
+                }
+            } catch (error) {
+                console.error('Error cargando plazas:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al cargar plazas',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        function renderPlazasTable() {
+            const tbody = document.getElementById('plazasTableBody');
+            
+            if (plazas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No hay plazas registradas</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = plazas.map(plaza => `
+                <tr>
+                    <td>${plaza.nombre}</td>
+                    <td>${plaza.direccion || 'N/A'}</td>
+                    <td>${plaza.total_checkins || 0}</td>
+                    <td>${plaza.ultimo_checkin ? formatearFecha(new Date(plaza.ultimo_checkin)) : 'Nunca'}</td>
+                    <td>
+                        <span class="badge ${plaza.activo ? 'bg-success' : 'bg-danger'}">
+                            ${plaza.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editPlaza(${plaza.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deletePlaza(${plaza.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function showAddPlazaForm() {
+            document.getElementById('modalTitle').textContent = 'Nueva Plaza';
+            document.getElementById('modalBody').innerHTML = `
+                <form id="plazaForm">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="plazaNombre" required>
+                        <label for="plazaNombre">Nombre de la Plaza</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="plazaDireccion">
+                        <label for="plazaDireccion">Dirección</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <textarea class="form-control" id="plazaDescripcion" style="height: 100px"></textarea>
+                        <label for="plazaDescripcion">Descripción</label>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            `;
+            
+            document.getElementById('plazaForm').addEventListener('submit', handlePlazaSubmit);
+            new bootstrap.Modal(document.getElementById('formModal')).show();
+        }
+        
+        async function handlePlazaSubmit(e) {
+            e.preventDefault();
+            
+            const formData = {
+                nombre: document.getElementById('plazaNombre').value,
+                direccion: document.getElementById('plazaDireccion').value,
+                descripcion: document.getElementById('plazaDescripcion').value
+            };
+            
+            try {
+                const response = await fetch('/api/admin/plazas', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: 'Plaza creada exitosamente',
+                        icon: 'success'
+                    });
+                    bootstrap.Modal.getInstance(document.getElementById('formModal')).hide();
+                    loadPlazas();
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message,
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error creando plaza:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al crear plaza',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        async function editPlaza(id) {
+            const plaza = plazas.find(p => p.id === id);
+            if (!plaza) return;
+            
+            document.getElementById('modalTitle').textContent = 'Editar Plaza';
+            document.getElementById('modalBody').innerHTML = `
+                <form id="editPlazaForm">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="editPlazaNombre" value="${plaza.nombre}" required>
+                        <label for="editPlazaNombre">Nombre de la Plaza</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="editPlazaDireccion" value="${plaza.direccion || ''}">
+                        <label for="editPlazaDireccion">Dirección</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <textarea class="form-control" id="editPlazaDescripcion" style="height: 100px">${plaza.descripcion || ''}</textarea>
+                        <label for="editPlazaDescripcion">Descripción</label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="editPlazaActivo" ${plaza.activo ? 'checked' : ''}>
+                        <label class="form-check-label" for="editPlazaActivo">
+                            Plaza Activa
+                        </label>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Actualizar</button>
+                    </div>
+                </form>
+            `;
+            
+            document.getElementById('editPlazaForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = {
+                    nombre: document.getElementById('editPlazaNombre').value,
+                    direccion: document.getElementById('editPlazaDireccion').value,
+                    descripcion: document.getElementById('editPlazaDescripcion').value,
+                    activo: document.getElementById('editPlazaActivo').checked
+                };
+                
+                try {
+                    const response = await fetch(`/api/admin/plazas/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Éxito',
+                            text: 'Plaza actualizada exitosamente',
+                            icon: 'success'
+                        });
+                        bootstrap.Modal.getInstance(document.getElementById('formModal')).hide();
+                        loadPlazas();
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message,
+                            icon: 'error'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error actualizando plaza:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al actualizar plaza',
+                        icon: 'error'
+                    });
+                }
+            });
+            
+            new bootstrap.Modal(document.getElementById('formModal')).show();
+        }
+        
+        async function deletePlaza(id) {
+            const plaza = plazas.find(p => p.id === id);
+            if (!plaza) return;
+            
+            const result = await Swal.fire({
+                title: '¿Estás seguro?',
+                text: `¿Deseas eliminar la plaza "${plaza.nombre}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            });
+            
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/api/admin/plazas/${id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Eliminado',
+                            text: data.message,
+                            icon: 'success'
+                        });
+                        loadPlazas();
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message,
+                            icon: 'error'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error eliminando plaza:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al eliminar plaza',
+                        icon: 'error'
+                    });
+                }
+            }
+        }
+        
+        // ==================== GESTIÓN DE ADMINISTRADORES ====================
+        
+        async function manageAdmins() {
+            hideAllSections();
+            document.getElementById('adminsSection').classList.remove('section-hidden');
+            await loadAdmins();
+        }
+        
+        async function loadAdmins() {
+            try {
+                const response = await fetch('/api/admin/admins');
+                const data = await response.json();
+                
+                if (data.success) {
+                    admins = data.admins;
+                    renderAdminsTable();
+                }
+            } catch (error) {
+                console.error('Error cargando administradores:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al cargar administradores',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        function renderAdminsTable() {
+            const tbody = document.getElementById('adminsTableBody');
+            
+            if (admins.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No hay administradores registrados</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = admins.map(admin => `
+                <tr>
+                    <td>${admin.nombre} ${admin.apellido_paterno} ${admin.apellido_materno || ''}</td>
+                    <td>${admin.email}</td>
+                    <td>${admin.telefono || 'N/A'}</td>
+                    <td>
+                        <span class="badge ${admin.activo ? 'bg-success' : 'bg-danger'}">
+                            ${admin.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                    </td>
+                    <td>${formatearFecha(new Date(admin.created_at))}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editAdmin(${admin.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        ${admin.id !== currentUser.id ? `
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteAdmin(${admin.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        ` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function showAddAdminForm() {
+            document.getElementById('modalTitle').textContent = 'Nuevo Administrador';
+            document.getElementById('modalBody').innerHTML = `
+                <form id="adminForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="adminNombre" required>
+                                <label for="adminNombre">Nombre</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="adminApellidoPaterno" required>
+                                <label for="adminApellidoPaterno">Apellido Paterno</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="adminApellidoMaterno">
+                                <label for="adminApellidoMaterno">Apellido Materno</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="email" class="form-control" id="adminEmail" required>
+                                <label for="adminEmail">Email</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="tel" class="form-control" id="adminTelefono">
+                                <label for="adminTelefono">Teléfono</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="password" class="form-control" id="adminPassword" required>
+                                <label for="adminPassword">Contraseña</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            `;
+            
+            document.getElementById('adminForm').addEventListener('submit', handleAdminSubmit);
+            new bootstrap.Modal(document.getElementById('formModal')).show();
+        }
+        
+        async function handleAdminSubmit(e) {
+            e.preventDefault();
+            
+            const formData = {
+                nombre: document.getElementById('adminNombre').value,
+                apellido_paterno: document.getElementById('adminApellidoPaterno').value,
+                apellido_materno: document.getElementById('adminApellidoMaterno').value,
+                email: document.getElementById('adminEmail').value,
+                telefono: document.getElementById('adminTelefono').value,
+                password: document.getElementById('adminPassword').value
+            };
+            
+            try {
+                const response = await fetch('/api/admin/admins', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: 'Administrador creado exitosamente',
+                        icon: 'success'
+                    });
+                    bootstrap.Modal.getInstance(document.getElementById('formModal')).hide();
+                    loadAdmins();
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message,
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error creando administrador:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al crear administrador',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        async function editAdmin(id) {
+            const admin = admins.find(a => a.id === id);
+            if (!admin) return;
+            
+            document.getElementById('modalTitle').textContent = 'Editar Administrador';
+            document.getElementById('modalBody').innerHTML = `
+                <form id="editAdminForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="editAdminNombre" value="${admin.nombre}" required>
+                                <label for="editAdminNombre">Nombre</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="editAdminApellidoPaterno" value="${admin.apellido_paterno}" required>
+                                <label for="editAdminApellidoPaterno">Apellido Paterno</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="editAdminApellidoMaterno" value="${admin.apellido_materno || ''}">
+                                <label for="editAdminApellidoMaterno">Apellido Materno</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="email" class="form-control" id="editAdminEmail" value="${admin.email}" required>
+                                <label for="editAdminEmail">Email</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="tel" class="form-control" id="editAdminTelefono" value="${admin.telefono || ''}">
+                                <label for="editAdminTelefono">Teléfono</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="password" class="form-control" id="editAdminPassword" placeholder="Dejar vacío para no cambiar">
+                                <label for="editAdminPassword">Nueva Contraseña</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="editAdminActivo" ${admin.activo ? 'checked' : ''}>
+                        <label class="form-check-label" for="editAdminActivo">
+                            Administrador Activo
+                        </label>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Actualizar</button>
+                    </div>
+                </form>
+            `;
+            
+            document.getElementById('editAdminForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = {
+                    nombre: document.getElementById('editAdminNombre').value,
+                    apellido_paterno: document.getElementById('editAdminApellidoPaterno').value,
+                    apellido_materno: document.getElementById('editAdminApellidoMaterno').value,
+                    email: document.getElementById('editAdminEmail').value,
+                    telefono: document.getElementById('editAdminTelefono').value,
+                    activo: document.getElementById('editAdminActivo').checked
+                };
+                
+                const password = document.getElementById('editAdminPassword').value;
+                if (password) {
+                    formData.password = password;
+                }
+                
+                try {
+                    const response = await fetch(`/api/admin/admins/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Éxito',
+                            text: 'Administrador actualizado exitosamente',
+                            icon: 'success'
+                        });
+                        bootstrap.Modal.getInstance(document.getElementById('formModal')).hide();
+                        loadAdmins();
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message,
+                            icon: 'error'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error actualizando administrador:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al actualizar administrador',
+                        icon: 'error'
+                    });
+                }
+            });
+            
+            new bootstrap.Modal(document.getElementById('formModal')).show();
+        }
+        
+        async function deleteAdmin(id) {
+            const admin = admins.find(a => a.id === id);
+            if (!admin) return;
+            
+            const result = await Swal.fire({
+                title: '¿Estás seguro?',
+                text: `¿Deseas eliminar al administrador "${admin.nombre} ${admin.apellido_paterno}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            });
+            
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/api/admin/admins/${id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Eliminado',
+                            text: data.message,
+                            icon: 'success'
+                        });
+                        loadAdmins();
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message,
+                            icon: 'error'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error eliminando administrador:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al eliminar administrador',
+                        icon: 'error'
+                    });
+                }
+            }
+        }
+        
+        // ==================== REPORTES ====================
+        
+        function viewReports() {
+            hideAllSections();
+            document.getElementById('reportsSection').classList.remove('section-hidden');
+            
+            // Establecer fechas por defecto (últimos 30 días)
+            const hoy = new Date();
+            const hace30Dias = new Date(hoy.getTime() - (30 * 24 * 60 * 60 * 1000));
+            
+            document.getElementById('fechaFin').value = hoy.toISOString().split('T')[0];
+            document.getElementById('fechaInicio').value = hace30Dias.toISOString().split('T')[0];
+            
+            generateReport();
+        }
+        
+        async function generateReport() {
+            const fechaInicio = document.getElementById('fechaInicio').value;
+            const fechaFin = document.getElementById('fechaFin').value;
+            
+            try {
+                let url = '/api/admin/reports/activity';
+                if (fechaInicio && fechaFin) {
+                    url += `?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
+                } else if (fechaInicio) {
+                    url += `?fecha_inicio=${fechaInicio}`;
+                }
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.success) {
+                    reportData = data.actividad;
+                    renderReportTable();
+                    updateReportStats();
+                }
+            } catch (error) {
+                console.error('Error generando reporte:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al generar reporte',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        function renderReportTable() {
+            const tbody = document.getElementById('reportTableBody');
+            
+            if (reportData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No hay datos para el período seleccionado</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = reportData.map(item => `
+                <tr>
+                    <td>${item.plaza_nombre}</td>
+                    <td>${item.guardia_nombre}</td>
+                    <td>${item.total_checkins}</td>
+                    <td>${formatearFecha(new Date(item.primer_checkin))}</td>
+                    <td>${formatearFecha(new Date(item.ultimo_checkin))}</td>
+                </tr>
+            `).join('');
+        }
+        
+        function updateReportStats() {
+            const totalCheckins = reportData.reduce((sum, item) => sum + parseInt(item.total_checkins), 0);
+            const plazasUnicas = new Set(reportData.map(item => item.plaza_nombre)).size;
+            const guardiasUnicos = new Set(reportData.map(item => item.guardia_nombre)).size;
+            
+            // Calcular promedio diario
+            const fechaInicio = new Date(document.getElementById('fechaInicio').value);
+            const fechaFin = new Date(document.getElementById('fechaFin').value);
+            const dias = Math.ceil((fechaFin - fechaInicio) / (1000 * 60 * 60 * 24)) + 1;
+            const promedioDiario = Math.round(totalCheckins / dias);
+            
+            document.getElementById('reportTotalCheckins').textContent = totalCheckins;
+            document.getElementById('reportPlazasActivas').textContent = plazasUnicas;
+            document.getElementById('reportGuardiasActivos').textContent = guardiasUnicos;
+            document.getElementById('reportPromedioDiario').textContent = promedioDiario;
+        }
+        
+        function exportReport() {
+            if (reportData.length === 0) {
+                Swal.fire({
+                    title: 'Sin datos',
+                    text: 'No hay datos para exportar',
+                    icon: 'warning'
+                });
+                return;
+            }
+            
+            // Crear CSV
+            const headers = ['Plaza', 'Guardia', 'Total Checkins', 'Primer Checkin', 'Último Checkin'];
+            const csvContent = [
+                headers.join(','),
+                ...reportData.map(item => [
+                    item.plaza_nombre,
+                    item.guardia_nombre,
+                    item.total_checkins,
+                    formatearFecha(new Date(item.primer_checkin)),
+                    formatearFecha(new Date(item.ultimo_checkin))
+                ].join(','))
+            ].join('\n');
+            
+            // Descargar archivo
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `reporte_checkins_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // ==================== UTILIDADES ====================
+        
         function formatearFecha(fecha) {
             const opciones = {
                 day: '2-digit',
@@ -444,45 +1697,24 @@
             };
             return fecha.toLocaleDateString('es-CL', opciones);
         }
-
-        function logout() {
-            fetch('/api/auth/logout', { method: 'POST' })
-                .then(() => {
-                    window.location.href = 'index.html';
-                })
-                .catch(() => {
-                    window.location.href = 'index.html';
-                });
+        
+        async function logout() {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = 'admin-login.html';
+            } catch (error) {
+                console.error('Error al cerrar sesión:', error);
+                window.location.href = 'admin-login.html';
+            }
         }
-
-        // Funciones de gestión (a implementar)
-        function manageUsers() {
-            Swal.fire('Próximamente', 'Función de gestión de usuarios en desarrollo', 'info');
-        }
-
-        function managePlazas() {
-            Swal.fire('Próximamente', 'Función de gestión de plazas en desarrollo', 'info');
-        }
-
-        function viewReports() {
-            Swal.fire('Próximamente', 'Sistema de reportes en desarrollo', 'info');
-        }
-
-        function systemSettings() {
-            Swal.fire('Próximamente', 'Configuración del sistema en desarrollo', 'info');
-        }
-
-        function addNewGuard() {
-            Swal.fire('Próximamente', 'Formulario de nuevo guardia en desarrollo', 'info');
-        }
-
-        function addNewPlaza() {
-            Swal.fire('Próximamente', 'Formulario de nueva plaza en desarrollo', 'info');
-        }
-
-        function exportData() {
-            Swal.fire('Próximamente', 'Función de exportación en desarrollo', 'info');
-        }
+        
+        // Auto-refresh del dashboard cada 5 minutos
+        setInterval(function() {
+            const dashboardSection = document.getElementById('dashboardSection');
+            if (!dashboardSection.classList.contains('section-hidden')) {
+                loadDashboard();
+            }
+        }, 300000);
     </script>
 </body>
 </html>
