@@ -18,55 +18,76 @@ const validateLogin = (req, res, next) => {
   next();
 };
 
-router.post('/login', validateLogin, (req, res) => {
+router.post('/login', validateLogin, async (req, res) => {
   const { email, password } = req.body;
   
-  db.query('SELECT * FROM guardias WHERE email = ?', [email], async (err, results) => {
-    if (err) {
-      console.error('Error en consulta de login:', err);
-      return res.status(500).json({ error: 'Error interno del servidor' });
+  try {
+    console.log('🔐 Intento de login para:', email);
+    
+    // Primero buscar en guardias
+    let user = await db.query('SELECT * FROM guardias WHERE email = $1', [email]);
+    let userType = 'guardia';
+    
+    // Si no se encuentra, buscar en admin_users
+    if (user.length === 0) {
+      user = await db.query('SELECT *, password_hash as password FROM admin_users WHERE email = $1', [email]);
+      userType = 'admin';
     }
     
-    if (results.length === 0) {
+    if (user.length === 0) {
+      console.log('❌ Usuario no encontrado:', email);
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
     
-    const guardia = results[0];
+    const foundUser = user[0];
+    console.log('👤 Usuario encontrado:', foundUser.email, 'Tipo:', userType);
     
-    try {
-      // Para retrocompatibilidad, si la contraseña no está hasheada, comparar directamente
-      let isValidPassword = false;
-      if (guardia.password.startsWith('$2b$')) {
-        // Contraseña hasheada
-        isValidPassword = await bcrypt.compare(password, guardia.password);
-      } else {
-        // Contraseña en texto plano (temporal para datos existentes)
-        isValidPassword = password === guardia.password;
-      }
-      
-      if (!isValidPassword) {
-        return res.status(401).json({ error: 'Credenciales inválidas' });
-      }
-      
-      req.session.guardia = {
-        id: guardia.id,
-        nombre: guardia.nombre,
-        email: guardia.email
-      };
-      
-      res.json({ 
-        message: 'Login exitoso',
-        guardia: {
-          id: guardia.id,
-          nombre: guardia.nombre,
-          email: guardia.email
-        }
-      });
-    } catch (error) {
-      console.error('Error al verificar contraseña:', error);
-      return res.status(500).json({ error: 'Error interno del servidor' });
+    // Verificar contraseña
+    let isValidPassword = false;
+    if (foundUser.password.startsWith('$2b$')) {
+      // Contraseña hasheada
+      isValidPassword = await bcrypt.compare(password, foundUser.password);
+    } else {
+      // Contraseña en texto plano (temporal para datos existentes)
+      isValidPassword = password === foundUser.password;
     }
-  });
+    
+    if (!isValidPassword) {
+      console.log('❌ Contraseña incorrecta para:', email);
+      return res.status(401).json({ error: 'Credenciales inválidas' });
+    }
+    
+    // Actualizar último login solo para guardias
+    if (userType === 'guardia') {
+      await db.query('UPDATE guardias SET last_login = CURRENT_TIMESTAMP WHERE id = $1', [foundUser.id]);
+    }
+    
+    // Crear sesión
+    const userName = userType === 'guardia' ? foundUser.nombre : `${foundUser.nombre} ${foundUser.apellido_paterno}`;
+    
+    req.session.guardia = {
+      id: foundUser.id,
+      nombre: userName,
+      email: foundUser.email,
+      tipo: userType
+    };
+    
+    console.log('✅ Login exitoso:', foundUser.email, 'Tipo:', userType);
+    
+    res.json({ 
+      message: 'Login exitoso',
+      guardia: {
+        id: foundUser.id,
+        nombre: userName,
+        email: foundUser.email,
+        tipo: userType
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Error en login:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
 });
 
 router.get('/logout', (req, res) => {
