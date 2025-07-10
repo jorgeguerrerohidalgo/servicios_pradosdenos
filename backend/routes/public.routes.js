@@ -20,67 +20,8 @@ router.get('/plazas', async (req, res) => {
   }
 });
 
-// Obtener checkins de una plaza específica
-router.get('/checkins/:plazaId', async (req, res) => {
-  try {
-    const { plazaId } = req.params;
-    
-    console.log('🔍 Consultando checkins para plaza ID:', plazaId);
-    
-    // Validar que plazaId sea un número
-    if (!plazaId || isNaN(plazaId)) {
-      return res.status(400).json({
-        success: false,
-        message: 'ID de plaza inválido'
-      });
-    }
-
-    // Obtener los últimos 50 checkins de la plaza, con datos del guardia
-    // Convertir fecha a zona horaria de Santiago
-    const registros = await query(`
-      SELECT 
-        g.nombre as guardia_nombre,
-        c.fecha AT TIME ZONE 'UTC' AT TIME ZONE 'America/Santiago' as fecha,
-        c.fecha as fecha_utc
-      FROM checkins c
-      INNER JOIN guardias g ON c.guardia_id = g.id
-      WHERE c.plaza_id = $1
-      ORDER BY c.fecha DESC
-      LIMIT 50
-    `, [plazaId]);
-
-    console.log('📊 Registros encontrados:', registros.length);
-
-    // Formatear las fechas para el frontend
-    const registrosFormateados = registros.map(registro => ({
-      guardia_nombre: registro.guardia_nombre,
-      fecha: registro.fecha,
-      fecha_formateada: new Date(registro.fecha).toLocaleString('es-CL', {
-        timeZone: 'America/Santiago',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    }));
-
-    res.json({
-      success: true,
-      registros: registrosFormateados,
-      total: registros.length
-    });
-
-  } catch (error) {
-    console.error('❌ Error obteniendo checkins:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Error interno del servidor' 
-    });
-  }
-});
-
 // Obtener checkins con filtros para consulta pública
+// IMPORTANTE: Esta ruta debe ir ANTES que /checkins/:plazaId para evitar conflictos
 router.get('/checkins/public', async (req, res) => {
   try {
     const { plaza_id, periodo } = req.query;
@@ -161,6 +102,66 @@ router.get('/checkins/public', async (req, res) => {
       success: false, 
       message: 'Error interno del servidor',
       error: error.message
+    });
+  }
+});
+
+// Obtener checkins de una plaza específica
+router.get('/checkins/:plazaId', async (req, res) => {
+  try {
+    const { plazaId } = req.params;
+    
+    console.log('🔍 Consultando checkins para plaza ID:', plazaId);
+    
+    // Validar que plazaId sea un número
+    if (!plazaId || isNaN(plazaId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'ID de plaza inválido'
+      });
+    }
+
+    // Obtener los últimos 50 checkins de la plaza, con datos del guardia
+    // Convertir fecha a zona horaria de Santiago
+    const registros = await query(`
+      SELECT 
+        g.nombre as guardia_nombre,
+        c.fecha AT TIME ZONE 'UTC' AT TIME ZONE 'America/Santiago' as fecha,
+        c.fecha as fecha_utc
+      FROM checkins c
+      INNER JOIN guardias g ON c.guardia_id = g.id
+      WHERE c.plaza_id = $1
+      ORDER BY c.fecha DESC
+      LIMIT 50
+    `, [plazaId]);
+
+    console.log('📊 Registros encontrados:', registros.length);
+
+    // Formatear las fechas para el frontend
+    const registrosFormateados = registros.map(registro => ({
+      guardia_nombre: registro.guardia_nombre,
+      fecha: registro.fecha,
+      fecha_formateada: new Date(registro.fecha).toLocaleString('es-CL', {
+        timeZone: 'America/Santiago',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    }));
+
+    res.json({
+      success: true,
+      registros: registrosFormateados,
+      total: registros.length
+    });
+
+  } catch (error) {
+    console.error('❌ Error obteniendo checkins:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error interno del servidor' 
     });
   }
 });
