@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Servicios - Los Prados de Nos</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .container-main {
+            padding: 50px 0;
+        }
+        
+        .header-section {
+            text-align: center;
+            color: white;
+            margin-bottom: 50px;
+        }
+        
+        .header-section h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header-section p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .service-card {
+            background: white;
+            border-radius: 15px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .service-card:hover::before {
+            left: 100%;
+        }
+        
+        .service-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .service-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .service-description {
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        
+        .service-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+        
+        .service-btn:hover {
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .admin-link {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 50px;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .admin-link:hover {
+            background: rgba(255,255,255,0.3);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        @media (max-width: 768px) {
+            .header-section h1 {
+                font-size: 2rem;
+            }
+            
+            .services-grid {
+                grid-template-columns: 1fr;
+                padding: 0 20px;
+            }
+            
+            .service-card {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-main">
+        <div class="container">
+            <!-- Header Section -->
+            <div class="header-section">
+                <h1><i class="fas fa-home"></i> Los Prados de Nos</h1>
+                <p>Portal de Servicios para Vecinos</p>
+            </div>
+            
+            <!-- Services Grid -->
+            <div class="services-grid">
+                <!-- Consulta de Rondas de Seguridad -->
+                <div class="service-card" onclick="window.location.href='consulta-rondas.html'">
+                    <div class="service-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3 class="service-title">Rondas de Seguridad</h3>
+                    <p class="service-description">
+                        Consulta los horarios y fechas de las rondas de seguridad realizadas en tu plaza.
+                        Mantente informado sobre la vigilancia de tu sector.
+                    </p>
+                    <a href="consulta-rondas.html" class="service-btn">
+                        <i class="fas fa-search"></i> Consultar Rondas
+                    </a>
+                </div>
+                
+                <!-- Información de Contacto -->
+                <div class="service-card" onclick="showContactInfo()">
+                    <div class="service-icon">
+                        <i class="fas fa-phone"></i>
+                    </div>
+                    <h3 class="service-title">Contacto Emergencias</h3>
+                    <p class="service-description">
+                        Números de contacto para emergencias, seguridad y administración del conjunto residencial.
+                    </p>
+                    <button class="service-btn" onclick="showContactInfo()">
+                        <i class="fas fa-phone-alt"></i> Ver Contactos
+                    </button>
+                </div>
+                
+                <!-- Información General -->
+                <div class="service-card" onclick="showGeneralInfo()">
+                    <div class="service-icon">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <h3 class="service-title">Información General</h3>
+                    <p class="service-description">
+                        Horarios de atención, reglamentos internos y información importante para los vecinos.
+                    </p>
+                    <button class="service-btn" onclick="showGeneralInfo()">
+                        <i class="fas fa-book"></i> Ver Información
+                    </button>
+                </div>
+                
+                <!-- Próximamente -->
+                <div class="service-card" style="opacity: 0.7;">
+                    <div class="service-icon">
+                        <i class="fas fa-wrench"></i>
+                    </div>
+                    <h3 class="service-title">Más Servicios</h3>
+                    <p class="service-description">
+                        Próximamente: Reserva de espacios comunes, pagos en línea, y más servicios digitales.
+                    </p>
+                    <button class="service-btn" disabled style="opacity: 0.6;">
+                        <i class="fas fa-clock"></i> Próximamente
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="footer">
+                <p>&copy; 2025 Los Prados de Nos - Portal de Servicios</p>
+                <p><small>Desarrollado para mejorar la comunicación entre vecinos</small></p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Admin Link -->
+    <a href="admin-login.html" class="admin-link">
+        <i class="fas fa-user-shield"></i> Acceso Admin
+    </a>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- SweetAlert2 for better alerts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        function showContactInfo() {
+            Swal.fire({
+                title: 'Contactos de Emergencia',
+                html: `
+                    <div style="text-align: left;">
+                        <h5><i class="fas fa-shield-alt"></i> Seguridad</h5>
+                        <p><strong>Emergencias:</strong> <a href="tel:+56912345678">+56 9 1234 5678</a></p>
+                        <p><strong>Central Seguridad:</strong> <a href="tel:+56987654321">+56 9 8765 4321</a></p>
+                        
+                        <hr>
+                        
+                        <h5><i class="fas fa-building"></i> Administración</h5>
+                        <p><strong>Administrador:</strong> <a href="tel:+56976543210">+56 9 7654 3210</a></p>
+                        <p><strong>Email:</strong> <a href="mailto:admin@pradosdenos.com">admin@pradosdenos.com</a></p>
+                        
+                        <hr>
+                        
+                        <h5><i class="fas fa-ambulance"></i> Emergencias Generales</h5>
+                        <p><strong>Carabineros:</strong> <a href="tel:133">133</a></p>
+                        <p><strong>Bomberos:</strong> <a href="tel:132">132</a></p>
+                        <p><strong>SAMU:</strong> <a href="tel:131">131</a></p>
+                    </div>
+                `,
+                icon: 'info',
+                confirmButtonText: 'Cerrar',
+                confirmButtonColor: '#667eea',
+                width: '500px'
+            });
+        }
+        
+        function showGeneralInfo() {
+            Swal.fire({
+                title: 'Información General',
+                html: `
+                    <div style="text-align: left;">
+                        <h5><i class="fas fa-clock"></i> Horarios de Atención</h5>
+                        <p><strong>Administración:</strong> Lunes a Viernes 9:00 - 18:00</p>
+                        <p><strong>Seguridad:</strong> 24 horas, todos los días</p>
+                        
+                        <hr>
+                        
+                        <h5><i class="fas fa-shield-alt"></i> Rondas de Seguridad</h5>
+                        <p>Las rondas se realizan en horarios rotativos para cubrir todas las plazas del conjunto.</p>
+                        <p>Puedes consultar el historial de rondas en tiempo real desde el portal.</p>
+                        
+                        <hr>
+                        
+                        <h5><i class="fas fa-info"></i> Importante</h5>
+                        <p>Para emergencias, siempre contacta primero a los números oficiales (133, 132, 131).</p>
+                        <p>La seguridad privada es un servicio complementario.</p>
+                    </div>
+                `,
+                icon: 'info',
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#667eea',
+                width: '500px'
+            });
+        }
+        
+        // Loading animation
+        window.addEventListener('load', function() {
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+    </script>
+</body>
+</html>

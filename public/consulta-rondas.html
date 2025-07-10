@@ -3,415 +3,390 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta de Rondas - Prados de Nos</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Consulta de Rondas - Los Prados de Nos</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* Estilos heredados del portal principal */
-        .main-background {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+        body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            z-index: -1;
-        }
-
-        .page-container {
-            position: relative;
-            z-index: 1;
             min-height: 100vh;
-            padding: 20px 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-
-        .glass-container {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        
+        .container-main {
+            padding: 30px 0;
         }
-
-        .btn-modern {
-            padding: 12px 30px;
-            border-radius: 10px;
-            font-weight: 600;
-            transition: all 0.3s ease;
+        
+        .header-section {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header-section h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
             border: none;
+            padding: 10px 15px;
+            border-radius: 50px;
             text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
         }
-
-        .btn-success {
-            background: linear-gradient(45deg, #28a745, #20c997);
+        
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
             color: white;
+            transform: scale(1.05);
         }
-
-        .btn-success:hover {
+        
+        .main-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        
+        .filter-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .results-section {
+            min-height: 300px;
+        }
+        
+        .ronda-item {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            border-left: 4px solid #667eea;
+        }
+        
+        .ronda-item:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
-            color: white;
         }
-
-        .btn-outline-light {
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            color: white;
-            background: transparent;
+        
+        .ronda-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
         }
-
-        .btn-outline-light:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: white;
-            color: white;
+        
+        .plaza-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
         }
-
-        .form-control-modern {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-            color: white;
-            padding: 12px 16px;
-        }
-
-        .form-control-modern:focus {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: #007bff;
-            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-            color: white;
-        }
-
-        .form-control-modern::placeholder {
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .form-select-modern {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-            color: white;
-            padding: 12px 16px;
-        }
-
-        .form-select-modern option {
-            background: #343a40;
-            color: white;
-        }
-
-        .table-modern {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .table-modern th {
-            background: rgba(0, 0, 0, 0.3);
-            color: white;
-            border: none;
+        
+        .fecha-hora {
+            color: #667eea;
             font-weight: 600;
         }
-
-        .table-modern td {
-            background: rgba(255, 255, 255, 0.05);
-            color: white;
-            border: none;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        
+        .guardia-info {
+            color: #666;
+            font-size: 0.9rem;
         }
-
-        .table-modern tbody tr:hover {
-            background: rgba(255, 255, 255, 0.1);
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
         }
-
-        /* Vista móvil */
-        .mobile-card {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            color: white;
+        
+        .no-results {
+            text-align: center;
+            padding: 50px;
+            color: #666;
         }
-
-        .mobile-card h6 {
-            color: #28a745;
-            margin-bottom: 0.5rem;
+        
+        .no-results i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
         }
-
-        .mobile-card small {
-            opacity: 0.8;
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
         }
-
-        /* Responsive */
+        
+        .status-recent {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-today {
+            background: #cce7ff;
+            color: #004085;
+        }
+        
+        .status-old {
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+        
         @media (max-width: 768px) {
-            .desktop-view { display: none !important; }
-            .mobile-view { display: block !important; }
-        }
-
-        @media (min-width: 769px) {
-            .desktop-view { display: block !important; }
-            .mobile-view { display: none !important; }
-        }
-
-        .alert-modern {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            color: white;
+            .ronda-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .container-main {
+                padding: 20px 10px;
+            }
+            
+            .main-card {
+                padding: 20px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="main-background"></div>
-    <div class="page-container">
+    <a href="index.html" class="back-btn">
+        <i class="fas fa-arrow-left"></i> Volver
+    </a>
+    
+    <div class="container-main">
         <div class="container">
             <!-- Header -->
-            <div class="glass-container p-4 mb-4">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h2 class="text-white mb-2">
-                            <i class="fas fa-shield-alt me-2"></i>Control de Rondas de Seguridad
-                        </h2>
-                        <p class="text-white-50 mb-0">Consulta cuándo pasó el guardia por tu plaza</p>
-                    </div>
-                    <div class="col-md-4 text-end">
-                        <a href="index.html" class="btn btn-outline-light">
-                            <i class="fas fa-arrow-left me-2"></i>Volver al Portal
-                        </a>
-                    </div>
-                </div>
+            <div class="header-section">
+                <h1><i class="fas fa-shield-alt"></i> Consulta de Rondas</h1>
+                <p>Revisa las rondas de seguridad realizadas en tu plaza</p>
             </div>
-
-            <!-- Formulario de consulta -->
-            <div class="glass-container p-4 mb-4">
-                <h5 class="text-white mb-3">
-                    <i class="fas fa-search me-2"></i>Selecciona tu Plaza
-                </h5>
-                <form id="consultaForm" onsubmit="consultarRondas(event)">
-                    <div class="row g-3">
-                        <div class="col-md-8">
-                            <label for="plaza" class="form-label text-white">
-                                <i class="fas fa-map-marker-alt me-2"></i>Plaza
-                            </label>
-                            <select id="plaza" name="plaza" class="form-select form-select-modern" required>
-                                <option value="">Seleccione su plaza...</option>
-                                <!-- Las opciones se cargarán dinámicamente -->
+            
+            <!-- Main Card -->
+            <div class="main-card">
+                <!-- Filter Section -->
+                <div class="filter-section">
+                    <h5><i class="fas fa-filter"></i> Filtros de Búsqueda</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="plazaSelect" class="form-label">Seleccionar Plaza</label>
+                            <select class="form-select" id="plazaSelect">
+                                <option value="">Todas las plazas</option>
                             </select>
                         </div>
-                        <div class="col-md-4 d-flex align-items-end">
-                            <button type="submit" class="btn btn-modern btn-success w-100">
-                                <i class="fas fa-search me-2"></i>Consultar
-                            </button>
+                        <div class="col-md-6 mb-3">
+                            <label for="fechaFiltro" class="form-label">Filtrar por Fecha</label>
+                            <select class="form-select" id="fechaFiltro">
+                                <option value="hoy">Hoy</option>
+                                <option value="ayer">Ayer</option>
+                                <option value="semana">Última semana</option>
+                                <option value="mes">Último mes</option>
+                                <option value="todos">Todos los registros</option>
+                            </select>
                         </div>
                     </div>
-                </form>
-            </div>
-
-            <!-- Resultados -->
-            <div id="resultados" class="glass-container p-4" style="display: none;">
-                <h5 class="text-white mb-3">
-                    <i class="fas fa-clock-rotate-left me-2"></i>
-                    Últimas Rondas - <span id="plazaSeleccionada"></span>
-                </h5>
-
-                <!-- Vista desktop -->
-                <div class="desktop-view">
-                    <div class="table-responsive">
-                        <table class="table table-modern">
-                            <thead>
-                                <tr>
-                                    <th><i class="fas fa-user-shield me-2"></i>Guardia</th>
-                                    <th><i class="fas fa-calendar-alt me-2"></i>Fecha</th>
-                                    <th><i class="fas fa-clock me-2"></i>Hora</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tablaResultados">
-                                <!-- Los resultados se cargarán aquí -->
-                            </tbody>
-                        </table>
+                    <button class="btn btn-primary" onclick="buscarRondas()">
+                        <i class="fas fa-search"></i> Buscar Rondas
+                    </button>
+                    <button class="btn btn-outline-secondary ms-2" onclick="limpiarFiltros()">
+                        <i class="fas fa-times"></i> Limpiar
+                    </button>
+                </div>
+                
+                <!-- Results Section -->
+                <div class="results-section" id="resultados">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p>Cargando rondas de seguridad...</p>
                     </div>
-                </div>
-
-                <!-- Vista móvil -->
-                <div class="mobile-view">
-                    <div id="cardsResultados">
-                        <!-- Los cards se cargarán aquí -->
-                    </div>
-                </div>
-
-                <!-- Sin resultados -->
-                <div id="sinResultados" class="alert alert-modern text-center" style="display: none;">
-                    <i class="fas fa-info-circle fa-2x mb-3"></i>
-                    <h6>No se encontraron registros</h6>
-                    <p class="mb-0">No hay rondas registradas para esta plaza en las últimas 24 horas.</p>
-                </div>
-
-                <!-- Información adicional -->
-                <div class="mt-4 p-3" style="background: rgba(255, 255, 255, 0.05); border-radius: 10px;">
-                    <small class="text-white-50">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Se muestran las últimas 50 rondas. Los horarios están en zona horaria de Santiago de Chile.
-                        Última actualización: <span id="ultimaActualizacion"></span>
-                    </small>
                 </div>
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <script>
-        // Cargar plazas al iniciar
+        let plazas = [];
+        let rondas = [];
+        
+        // Cargar datos al iniciar
         document.addEventListener('DOMContentLoaded', function() {
             cargarPlazas();
-            actualizarTiempo();
+            buscarRondas();
         });
-
+        
         async function cargarPlazas() {
             try {
                 const response = await fetch('/api/plazas');
-                const plazas = await response.json();
-                
-                const select = document.getElementById('plaza');
-                select.innerHTML = '<option value="">Seleccione su plaza...</option>';
-                
-                plazas.forEach(plaza => {
-                    const option = document.createElement('option');
-                    option.value = plaza.id;
-                    option.textContent = plaza.nombre;
-                    select.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Error cargando plazas:', error);
-                mostrarError('Error al cargar las plazas disponibles');
-            }
-        }
-
-        async function consultarRondas(event) {
-            event.preventDefault();
-            
-            const plazaId = document.getElementById('plaza').value;
-            const plazaNombre = document.getElementById('plaza').options[document.getElementById('plaza').selectedIndex].text;
-            
-            if (!plazaId) {
-                alert('Por favor seleccione una plaza');
-                return;
-            }
-
-            try {
-                // Mostrar loading
-                document.getElementById('resultados').style.display = 'block';
-                document.getElementById('plazaSeleccionada').textContent = plazaNombre;
-                document.getElementById('tablaResultados').innerHTML = '<tr><td colspan="3" class="text-center"><i class="fas fa-spinner fa-spin me-2"></i>Cargando...</td></tr>';
-                document.getElementById('cardsResultados').innerHTML = '<div class="text-center text-white"><i class="fas fa-spinner fa-spin me-2"></i>Cargando...</div>';
-
-                const response = await fetch(`/api/checkins/${plazaId}`);
-                const data = await response.json();
-
-                if (data.success && data.registros.length > 0) {
-                    mostrarResultados(data.registros);
-                    document.getElementById('sinResultados').style.display = 'none';
-                } else {
-                    document.getElementById('sinResultados').style.display = 'block';
-                    document.getElementById('tablaResultados').innerHTML = '';
-                    document.getElementById('cardsResultados').innerHTML = '';
+                if (response.ok) {
+                    plazas = await response.json();
+                    const select = document.getElementById('plazaSelect');
+                    
+                    plazas.forEach(plaza => {
+                        const option = document.createElement('option');
+                        option.value = plaza.id;
+                        option.textContent = plaza.nombre;
+                        select.appendChild(option);
+                    });
                 }
-
-                actualizarTiempo();
             } catch (error) {
-                console.error('Error consultando rondas:', error);
-                mostrarError('Error al consultar las rondas. Inténtelo nuevamente.');
+                console.error('Error al cargar plazas:', error);
             }
         }
-
-        function mostrarResultados(registros) {
-            // Vista desktop (tabla)
-            const tablaBody = document.getElementById('tablaResultados');
-            tablaBody.innerHTML = '';
-
-            // Vista móvil (cards)
-            const cardsContainer = document.getElementById('cardsResultados');
-            cardsContainer.innerHTML = '';
-
-            registros.forEach(registro => {
-                // Formatear fecha y hora
-                const fecha = new Date(registro.fecha);
-                const fechaStr = fecha.toLocaleDateString('es-CL');
-                const horaStr = fecha.toLocaleTimeString('es-CL', { 
-                    hour: '2-digit', 
-                    minute: '2-digit',
-                    timeZone: 'America/Santiago'
-                });
-
-                // Fila para tabla desktop
-                const fila = document.createElement('tr');
-                fila.innerHTML = `
-                    <td class="fw-bold">
-                        <i class="fas fa-user-shield me-2 text-success"></i>
-                        ${registro.guardia_nombre}
-                    </td>
-                    <td>
-                        <i class="fas fa-calendar-alt me-2 text-info"></i>
-                        ${fechaStr}
-                    </td>
-                    <td>
-                        <i class="fas fa-clock me-2 text-warning"></i>
-                        ${horaStr}
-                    </td>
-                `;
-                tablaBody.appendChild(fila);
-
-                // Card para vista móvil
-                const card = document.createElement('div');
-                card.className = 'mobile-card';
-                card.innerHTML = `
-                    <h6>
-                        <i class="fas fa-user-shield me-2"></i>
-                        ${registro.guardia_nombre}
-                    </h6>
-                    <div class="d-flex justify-content-between">
-                        <span>
-                            <i class="fas fa-calendar-alt me-1"></i>
-                            ${fechaStr}
-                        </span>
-                        <span>
-                            <i class="fas fa-clock me-1"></i>
-                            ${horaStr}
-                        </span>
-                    </div>
-                `;
-                cardsContainer.appendChild(card);
-            });
-        }
-
-        function mostrarError(mensaje) {
-            const resultadosDiv = document.getElementById('resultados');
-            resultadosDiv.style.display = 'block';
-            resultadosDiv.innerHTML = `
-                <div class="alert alert-modern text-center">
-                    <i class="fas fa-exclamation-triangle fa-2x mb-3 text-warning"></i>
-                    <h6>Error</h6>
-                    <p class="mb-0">${mensaje}</p>
+        
+        async function buscarRondas() {
+            const resultados = document.getElementById('resultados');
+            const plazaId = document.getElementById('plazaSelect').value;
+            const fechaFiltro = document.getElementById('fechaFiltro').value;
+            
+            // Mostrar loading
+            resultados.innerHTML = `
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p>Buscando rondas...</p>
                 </div>
             `;
-        }
-
-        function actualizarTiempo() {
-            const ahora = new Date();
-            const tiempoStr = ahora.toLocaleString('es-CL', {
-                timeZone: 'America/Santiago',
-                year: 'numeric',
-                month: '2-digit', 
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
             
-            const elemento = document.getElementById('ultimaActualizacion');
-            if (elemento) {
-                elemento.textContent = tiempoStr;
+            try {
+                let url = '/api/checkins/public?';
+                if (plazaId) url += `plaza_id=${plazaId}&`;
+                if (fechaFiltro && fechaFiltro !== 'todos') url += `periodo=${fechaFiltro}&`;
+                
+                const response = await fetch(url);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        rondas = data.checkins;
+                        mostrarResultados(rondas);
+                    } else {
+                        throw new Error(data.message || 'Error al buscar rondas');
+                    }
+                } else {
+                    throw new Error('Error al buscar rondas');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultados.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h5>Error al cargar datos</h5>
+                        <p>No se pudieron cargar las rondas. Por favor, intenta nuevamente.</p>
+                        <button class="btn btn-primary" onclick="buscarRondas()">
+                            <i class="fas fa-refresh"></i> Reintentar
+                        </button>
+                    </div>
+                `;
             }
         }
+        
+        function mostrarResultados(rondas) {
+            const resultados = document.getElementById('resultados');
+            
+            if (rondas.length === 0) {
+                resultados.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-search"></i>
+                        <h5>No se encontraron rondas</h5>
+                        <p>No hay registros que coincidan con los filtros seleccionados.</p>
+                        <button class="btn btn-outline-primary" onclick="limpiarFiltros()">
+                            <i class="fas fa-times"></i> Limpiar Filtros
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = `<h5><i class="fas fa-list"></i> Resultados (${rondas.length} rondas encontradas)</h5>`;
+            
+            rondas.forEach(ronda => {
+                const fecha = new Date(ronda.fecha);
+                const ahora = new Date();
+                const diferencia = ahora - fecha;
+                const horas = diferencia / (1000 * 60 * 60);
+                
+                let statusClass = 'status-old';
+                let statusText = 'Hace más de 24h';
+                
+                if (horas < 2) {
+                    statusClass = 'status-recent';
+                    statusText = 'Reciente';
+                } else if (horas < 24) {
+                    statusClass = 'status-today';
+                    statusText = 'Hoy';
+                }
+                
+                html += `
+                    <div class="ronda-item">
+                        <div class="ronda-header">
+                            <div>
+                                <div class="plaza-name">
+                                    <i class="fas fa-map-marker-alt"></i> ${ronda.plaza_nombre}
+                                </div>
+                                <div class="guardia-info">
+                                    <i class="fas fa-user"></i> ${ronda.guardia_nombre}
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fecha-hora">
+                                    <i class="fas fa-clock"></i> ${formatearFecha(fecha)}
+                                </div>
+                                <span class="status-badge ${statusClass}">${statusText}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            resultados.innerHTML = html;
+        }
+        
+        function formatearFecha(fecha) {
+            const opciones = {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'America/Santiago'
+            };
+            return fecha.toLocaleDateString('es-CL', opciones);
+        }
+        
+        function limpiarFiltros() {
+            document.getElementById('plazaSelect').value = '';
+            document.getElementById('fechaFiltro').value = 'hoy';
+            buscarRondas();
+        }
+        
+        // Auto-refresh cada 2 minutos
+        setInterval(function() {
+            // Solo auto-refresh si no hay filtros específicos
+            const plazaSelect = document.getElementById('plazaSelect').value;
+            const fechaFiltro = document.getElementById('fechaFiltro').value;
+            
+            if (!plazaSelect && fechaFiltro === 'hoy') {
+                buscarRondas();
+            }
+        }, 120000);
     </script>
 </body>
 </html>
