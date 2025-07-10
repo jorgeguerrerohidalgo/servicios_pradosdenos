@@ -65,12 +65,48 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/checkin', checkinRoutes);
 
-// Servir archivos estáticos desde public
-app.use(express.static(path.join(__dirname, '../public')));
+// Servir archivos estáticos desde public (primero local, luego padre)
+const publicPaths = [
+  path.join(__dirname, 'public'),     // backend/public (para Render)
+  path.join(__dirname, '../public')   // public (para desarrollo local)
+];
+
+publicPaths.forEach(publicPath => {
+  if (require('fs').existsSync(publicPath)) {
+    app.use(express.static(publicPath));
+    console.log(`📁 Sirviendo archivos estáticos desde: ${publicPath}`);
+  }
+});
 
 // Ruta por defecto para SPA (Single Page App)
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public', 'login.html'));
+  // Evitar que rutas de API sean capturadas aquí
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API endpoint no encontrado' });
+  }
+  
+  // Buscar login.html en múltiples ubicaciones
+  const possiblePaths = [
+    path.join(__dirname, 'public', 'login.html'),
+    path.join(__dirname, '../public', 'login.html')
+  ];
+  
+  let filePath = null;
+  for (const possiblePath of possiblePaths) {
+    if (require('fs').existsSync(possiblePath)) {
+      filePath = possiblePath;
+      break;
+    }
+  }
+  
+  if (filePath) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).json({ 
+      error: 'Archivo login.html no encontrado',
+      searched: possiblePaths 
+    });
+  }
 });
 
 // Manejo de errores global
@@ -87,6 +123,14 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
   console.log(`🌍 Entorno: ${NODE_ENV}`);
   console.log(`⚡ Health check disponible en: http://localhost:${PORT}/health`);
+  
+  // Debug: Verificar rutas de archivos
+  const publicPath = path.join(__dirname, '../public');
+  const loginPath = path.join(publicPath, 'login.html');
+  console.log(`📁 Directorio público: ${publicPath}`);
+  console.log(`📄 Archivo login.html existe: ${require('fs').existsSync(loginPath)}`);
+  console.log(`📂 Contenido directorio público:`, require('fs').readdirSync(publicPath).join(', '));
+  
   if (!isProduction) {
     console.log(`🏠 Frontend disponible en: http://localhost:${PORT}/login.html`);
   }

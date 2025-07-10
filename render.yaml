@@ -3,7 +3,10 @@ services:
     name: checkin-plaza-backend
     env: node
     plan: free
-    buildCommand: cd backend && npm install
+    buildCommand: |
+      cd backend && npm install
+      echo "Verificando estructura de archivos..."
+      ls -la ../public/
     startCommand: cd backend && npm start
     envVars:
       - key: NODE_ENV
