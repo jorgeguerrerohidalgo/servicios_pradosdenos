@@ -1,15 +1,27 @@
-# Sistema de Check-in para Plazas
+# Portal de Servicios - Prados de Nos 🏡
 
-Sistema de check-in para plazas con guardias autenticados y escaneo de QR.
+Sistema completo de servicios digitales para el Conjunto Los Prados de Nos, con enfoque en la consulta pública de rondas de seguridad y administración interna.
 
-## Características
+## ✨ Características Principales
 
-- ✅ Autenticación segura de guardias con hash de contraseñas
-- ✅ Escaneo de códigos QR para check-in en plazas
-- ✅ Prevención de check-ins duplicados (2 horas de intervalo)
-- ✅ Historial de check-ins por guardia
-- ✅ Validaciones de entrada y manejo de errores
-- ✅ Interfaz web responsive
+### 🌐 Portal Público
+- **Portal de servicios principal** con diseño moderno glass-effect
+- **Consulta pública de rondas** para que vecinos vean cuándo pasó seguridad
+- **6 servicios planificados** con roadmap de desarrollo
+- **Diseño responsive** optimizado para móviles y desktop
+- **Zona horaria de Santiago de Chile** configurada automáticamente
+
+### 🛡️ Sistema de Seguridad  
+- **Check-in de guardias** con doble validación (QR + código)
+- **Registro de rondas** con fecha/hora precisa
+- **Consulta en tiempo real** del historial de seguridad
+- **Vista adaptativa** (tabla en desktop, cards en móvil)
+
+### 👨‍💼 Administración
+- **Panel administrativo** separado del portal público
+- **Gestión de guardias** y personal de seguridad
+- **Gestión de plazas** del conjunto
+- **Autenticación segura** con sesiones
 
 ## Deployment en Render
 
