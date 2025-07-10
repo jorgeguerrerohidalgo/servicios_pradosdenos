@@ -130,6 +130,10 @@
             padding: 20px;
             margin-bottom: 30px;
         }
+        
+        .section-hidden {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -152,124 +156,6 @@
 
     <div class="container-main">
         <div class="container">
-            <!-- Welcome Section -->
-            <div class="welcome-section">
-                <h1><i class="fas fa-tachometer-alt"></i> Dashboard Administrativo</h1>
-                <p class="mb-0">Gestión integral del sistema de seguridad Los Prados de Nos</p>
-            </div>
-
-            <!-- Initialize DB Section -->
-            <div class="init-db-section" id="initDbSection" style="display: none;">
-                <h5><i class="fas fa-database"></i> Inicialización de Base de Datos</h5>
-                <p>La base de datos parece estar vacía. ¿Deseas inicializarla con datos de ejemplo?</p>
-                <button class="btn btn-primary" onclick="initializeDatabase()">
-                    <i class="fas fa-play"></i> Inicializar Base de Datos
-                </button>
-            </div>
-
-            <!-- Stats Row -->
-            <div class="row" id="statsRow">
-                <div class="col-lg-3 col-md-6">
-                    <div class="stats-card">
-                        <div class="stats-number" id="totalPlazas">-</div>
-                        <div class="stats-label">
-                            <i class="fas fa-map-marker-alt"></i> Plazas Registradas
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <div class="stats-card">
-                        <div class="stats-number" id="totalGuardias">-</div>
-                        <div class="stats-label">
-                            <i class="fas fa-users"></i> Guardias Activos
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <div class="stats-card">
-                        <div class="stats-number" id="checkinsHoy">-</div>
-                        <div class="stats-label">
-                            <i class="fas fa-clipboard-check"></i> Check-ins Hoy
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <div class="stats-card">
-                        <div class="stats-number" id="checkinsSemana">-</div>
-                        <div class="stats-label">
-                            <i class="fas fa-chart-line"></i> Check-ins Semana
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Management Sections -->
-            <div class="row">
-                <div class="col-lg-8">
-                    <div class="admin-card">
-                        <h4><i class="fas fa-cogs"></i> Gestión del Sistema</h4>
-                        <div class="row management-section">
-                            <div class="col-md-6 mb-3">
-                                <button class="management-btn btn-primary-custom" onclick="manageUsers()">
-                                    <i class="fas fa-users-cog"></i><br>
-                                    Gestionar Usuarios
-                                </button>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <button class="management-btn btn-success-custom" onclick="managePlazas()">
-                                    <i class="fas fa-map-marked-alt"></i><br>
-                                    Gestionar Plazas
-                                </button>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <button class="management-btn btn-warning-custom" onclick="viewReports()">
-                                    <i class="fas fa-chart-bar"></i><br>
-                                    Reportes y Estadísticas
-                                </button>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <button class="management-btn btn-info-custom" onclick="systemSettings()">
-                                    <i class="fas fa-cog"></i><br>
-                                    Configuración
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Quick Actions -->
-                        <h5><i class="fas fa-bolt"></i> Acciones Rápidas</h5>
-                        <div class="row">
-                            <div class="col-md-4 mb-2">
-                                <button class="btn btn-outline-primary w-100" onclick="addNewGuard()">
-                                    <i class="fas fa-user-plus"></i> Nuevo Guardia
-                                </button>
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <button class="btn btn-outline-success w-100" onclick="addNewPlaza()">
-                                    <i class="fas fa-plus"></i> Nueva Plaza
-                                </button>
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <button class="btn btn-outline-info w-100" onclick="exportData()">
-                                    <i class="fas fa-download"></i> Exportar Datos
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-4">
-                    <div class="admin-card">
-                        <h4><i class="fas fa-clock"></i> Actividad Reciente</h4>
-                        <div class="recent-activity" id="recentActivity">
-                            <div class="text-center text-muted">
-                                <i class="fas fa-spinner fa-spin"></i>
-                                <p>Cargando actividad...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Dashboard Principal -->
             <div id="dashboardSection">
                 <!-- Welcome Section -->
@@ -600,10 +486,14 @@
         let plazas = [];
         let admins = [];
         let reportData = [];
+        let isInitialized = false;
         
         // Verificar autenticación al cargar
         document.addEventListener('DOMContentLoaded', function() {
-            checkAuth();
+            if (!isInitialized) {
+                isInitialized = true;
+                checkAuth();
+            }
         });
         
         async function checkAuth() {
@@ -626,15 +516,40 @@
         
         async function loadDashboard() {
             try {
+                // Mostrar loading state
+                const loadingElements = [
+                    { id: 'totalPlazas', text: '...' },
+                    { id: 'guardiasActivos', text: '...' },
+                    { id: 'checkinsHoy', text: '...' },
+                    { id: 'checkinsSemana', text: '...' }
+                ];
+                
+                loadingElements.forEach(element => {
+                    const el = document.getElementById(element.id);
+                    if (el) el.textContent = element.text;
+                });
+                
                 // Cargar estadísticas
                 const statsResponse = await fetch('/api/admin/stats');
                 const statsData = await statsResponse.json();
                 
-                if (statsData.success) {
-                    document.getElementById('totalPlazas').textContent = statsData.stats.total_plazas;
-                    document.getElementById('guardiasActivos').textContent = statsData.stats.guardias_activos;
-                    document.getElementById('checkinsHoy').textContent = statsData.stats.checkins_hoy;
-                    document.getElementById('checkinsSemana').textContent = statsData.stats.checkins_semana;
+                if (statsData.success && statsData.stats) {
+                    const stats = statsData.stats;
+                    
+                    // Actualizar estadísticas con verificación de elementos
+                    const updates = [
+                        { id: 'totalPlazas', value: stats.total_plazas || 0 },
+                        { id: 'guardiasActivos', value: stats.guardias_activos || 0 },
+                        { id: 'checkinsHoy', value: stats.checkins_hoy || 0 },
+                        { id: 'checkinsSemana', value: stats.checkins_semana || 0 }
+                    ];
+                    
+                    updates.forEach(update => {
+                        const element = document.getElementById(update.id);
+                        if (element) {
+                            element.textContent = update.value;
+                        }
+                    });
                 }
                 
                 // Cargar actividad reciente
@@ -652,10 +567,15 @@
         
         async function loadRecentActivity() {
             try {
+                const activityContainer = document.getElementById('actividadReciente');
+                
+                // Limpiar el contenido previo para evitar duplicaciones
+                activityContainer.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando actividad...</div>';
+                
                 const response = await fetch('/api/admin/reports/recent?limit=10');
                 const data = await response.json();
                 
-                if (data.success) {
+                if (data.success && data.checkins && data.checkins.length > 0) {
                     const activityHtml = data.checkins.map(checkin => `
                         <div class="activity-item">
                             <strong>${checkin.guardia_nombre}</strong> realizó checkin en 
@@ -666,8 +586,9 @@
                         </div>
                     `).join('');
                     
-                    document.getElementById('actividadReciente').innerHTML = activityHtml || 
-                        '<div class="text-center text-muted">No hay actividad reciente</div>';
+                    activityContainer.innerHTML = activityHtml;
+                } else {
+                    activityContainer.innerHTML = '<div class="text-center text-muted">No hay actividad reciente</div>';
                 }
             } catch (error) {
                 console.error('Error cargando actividad:', error);
@@ -685,8 +606,12 @@
         }
         
         function hideAllSections() {
-            document.querySelectorAll('.section-hidden, #dashboardSection').forEach(section => {
-                section.classList.add('section-hidden');
+            const sections = ['dashboardSection', 'guardiasSection', 'plazasSection', 'adminsSection', 'reportsSection'];
+            sections.forEach(sectionId => {
+                const section = document.getElementById(sectionId);
+                if (section) {
+                    section.classList.add('section-hidden');
+                }
             });
         }
         
@@ -1709,12 +1634,29 @@
         }
         
         // Auto-refresh del dashboard cada 5 minutos
-        setInterval(function() {
-            const dashboardSection = document.getElementById('dashboardSection');
-            if (!dashboardSection.classList.contains('section-hidden')) {
-                loadDashboard();
+        let autoRefreshInterval;
+        
+        function startAutoRefresh() {
+            // Limpiar intervalo anterior si existe
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
             }
-        }, 300000);
+            
+            autoRefreshInterval = setInterval(function() {
+                const dashboardSection = document.getElementById('dashboardSection');
+                if (dashboardSection && !dashboardSection.classList.contains('section-hidden')) {
+                    loadDashboard();
+                }
+            }, 300000); // 5 minutos
+        }
+        
+        // Iniciar auto-refresh después de cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Esperar un poco antes de iniciar auto-refresh para evitar conflictos
+            setTimeout(function() {
+                startAutoRefresh();
+            }, 2000);
+        });
     </script>
 </body>
 </html>
