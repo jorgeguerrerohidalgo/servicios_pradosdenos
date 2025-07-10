@@ -3,12 +3,18 @@ const { Pool } = require('pg');
 // Configuración de conexión PostgreSQL (Supabase)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  connectionTimeoutMillis: 10000,
+  idleTimeoutMillis: 30000,
+  max: 10
 });
 
 // Función para probar la conexión
 const testConnection = async () => {
   try {
+    console.log('🔌 Intentando conectar a la base de datos...');
+    console.log('📍 URL de conexión:', process.env.DATABASE_URL ? 'Configurada' : 'NO CONFIGURADA');
+    
     const client = await pool.connect();
     const result = await client.query('SELECT 1 as test');
     client.release();
@@ -16,6 +22,17 @@ const testConnection = async () => {
     return true;
   } catch (error) {
     console.error('❌ Error conectando a la base de datos:', error.message);
+    console.error('🔍 Tipo de error:', error.code || 'UNKNOWN');
+    
+    // Sugerencias específicas según el tipo de error
+    if (error.code === 'ENOTFOUND') {
+      console.error('💡 Verifica que la URL de la base de datos sea correcta');
+    } else if (error.code === 'ENETUNREACH') {
+      console.error('💡 Problema de conectividad de red. Verifica SSL y la URL de conexión');
+    } else if (error.code === 'ECONNREFUSED') {
+      console.error('💡 La base de datos rechazó la conexión. Verifica credenciales');
+    }
+    
     return false;
   }
 };
