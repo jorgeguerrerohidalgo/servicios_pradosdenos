@@ -291,11 +291,20 @@
                 }
                 
                 const data = await response.json();
-                if (data.user && data.user.tipo === 'admin') {
-                    document.getElementById('adminName').textContent = data.user.nombre;
+                console.log('🔍 Datos de autenticación:', data);
+                
+                if (data.authenticated && data.guardia) {
+                    if (data.guardia.tipo === 'admin') {
+                        document.getElementById('adminName').textContent = data.guardia.nombre;
+                        console.log('✅ Usuario administrador autenticado:', data.guardia.nombre);
+                    } else {
+                        // Si es guardia, redirigir al sistema de checkin
+                        console.log('🔄 Usuario es guardia, redirigiendo...');
+                        window.location.href = 'guardia-checkin.html';
+                    }
                 } else {
-                    // Si es guardia, redirigir al sistema de checkin
-                    window.location.href = 'guardia-checkin.html';
+                    console.log('❌ Usuario no autenticado');
+                    window.location.href = 'admin-login.html';
                 }
             } catch (error) {
                 console.error('Error verificando autenticación:', error);
