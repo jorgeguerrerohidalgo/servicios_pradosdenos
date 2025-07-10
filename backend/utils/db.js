@@ -1,62 +1,21 @@
-const mysql = require('mysql2');
+const { Pool } = require('pg');
 
-// Configuración de conexión con soporte para servicios de base de datos externos
-const connectionConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root', 
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'checkin_plaza',
-  port: process.env.DB_PORT || 3306,
-  
-  // Configuraciones para servicios de BD externos (PlanetScale, Railway, etc.)
-  ssl: process.env.DB_SSL === 'true' ? {
-    rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false'
-  } : false,
-  
-  // Configuraciones adicionales para estabilidad
-  multipleStatements: false,
-  timezone: process.env.DB_TIMEZONE || '+00:00',
-  
-  // Para Railway y otros servicios que requieren estas configuraciones
-  charset: 'utf8mb4',
-  supportBigNumbers: true,
-  bigNumberStrings: true
-};
-
-// Configuración del pool (solo las opciones válidas para mysql2)
-const poolConfig = {
-  ...connectionConfig,
-  connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT) || 10,
-  acquireTimeout: parseInt(process.env.DB_ACQUIRE_TIMEOUT) || 60000,
-  timeout: parseInt(process.env.DB_TIMEOUT) || 60000
-};
-
-// Crear pool de conexiones para mejor rendimiento
-const pool = mysql.createPool(poolConfig);
-
-// Promisificar para usar async/await
-const promisePool = pool.promise();
+// Configuración de conexión PostgreSQL (Supabase)
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
 
 // Función para probar la conexión
 const testConnection = async () => {
   try {
-    const [rows] = await promisePool.execute('SELECT 1 as test');
-    console.log('✅ Base de datos conectada exitosamente');
+    const client = await pool.connect();
+    const result = await client.query('SELECT 1 as test');
+    client.release();
+    console.log('✅ Base de datos PostgreSQL conectada exitosamente');
     return true;
   } catch (error) {
     console.error('❌ Error conectando a la base de datos:', error.message);
-    
-    // Información de debugging para desarrollo
-    if (process.env.NODE_ENV !== 'production') {
-      console.error('Configuración de DB:', {
-        host: connectionConfig.host,
-        user: connectionConfig.user,
-        database: connectionConfig.database,
-        port: connectionConfig.port,
-        ssl: !!connectionConfig.ssl
-      });
-    }
-    
     return false;
   }
 };
@@ -64,39 +23,41 @@ const testConnection = async () => {
 // Probar conexión al inicializar
 testConnection();
 
-// Manejo de errores del pool
-pool.on('connection', (connection) => {
-  console.log(`Nueva conexión DB establecida como id ${connection.threadId}`);
-});
-
-pool.on('error', (err) => {
-  console.error('Error en el pool de conexiones DB:', err);
-  if (err.code === 'PROTOCOL_CONNECTION_LOST') {
-    console.log('Intentando reconectar a la base de datos...');
-  } else {
-    throw err;
+// Función para mantener compatibilidad con código MySQL existente
+const query = (sql, params, callback) => {
+  // Si no hay callback, es una llamada async
+  if (typeof params === 'function') {
+    callback = params;
+    params = [];
   }
-});
-
-// Función helper para queries simples
-const query = (sql, params = []) => {
-  return new Promise((resolve, reject) => {
-    pool.execute(sql, params, (error, results) => {
+  
+  // Convertir ? de MySQL a $1, $2, etc. de PostgreSQL
+  let paramIndex = 1;
+  const pgSql = sql.replace(/\?/g, () => `$${paramIndex++}`);
+  
+  if (callback) {
+    pool.query(pgSql, params, (error, results) => {
       if (error) {
-        reject(error);
+        callback(error, null);
       } else {
-        resolve(results);
+        callback(null, results.rows);
       }
     });
-  });
+  } else {
+    return new Promise((resolve, reject) => {
+      pool.query(pgSql, params, (error, results) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(results.rows);
+        }
+      });
+    });
+  }
 };
 
-// Exportar tanto el pool como métodos helper
 module.exports = {
   pool,
-  promisePool,
   query,
-  testConnection,
-  // Mantener compatibilidad con código existente
-  ...pool
+  testConnection
 };
