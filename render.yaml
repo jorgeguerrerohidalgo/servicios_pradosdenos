@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: checkin-plaza-backend
+    env: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: DB_SSL
+        value: true
+      - key: DB_SSL_REJECT_UNAUTHORIZED
+        value: false
+    healthCheckPath: /health
+    autoDeploy: true
+    branch: main

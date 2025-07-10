@@ -1,40 +1,131 @@
-# Servicios Prados de Nos 🏘️
+# Sistema de Check-in para Plazas
 
-Sistema de servicios digitales complementarios para el Conjunto Los Prados de Nos. Este repositorio extiende las funcionalidades del sistema principal de check-in con servicios adicionales para la comunidad residencial.
+Sistema de check-in para plazas con guardias autenticados y escaneo de QR.
 
-## 🎯 Objetivo
+## Características
 
-Proporcionar servicios digitales adicionales que complementen el sistema principal de check-in, mejorando la experiencia de los vecinos y la administración del conjunto.
+- ✅ Autenticación segura de guardias con hash de contraseñas
+- ✅ Escaneo de códigos QR para check-in en plazas
+- ✅ Prevención de check-ins duplicados (2 horas de intervalo)
+- ✅ Historial de check-ins por guardia
+- ✅ Validaciones de entrada y manejo de errores
+- ✅ Interfaz web responsive
 
-## 🚀 Servicios Planificados
+## Deployment en Render
 
-- 📅 **Reservas de Áreas Comunes**
-- 💬 **Sistema de Comunicaciones**
-- 🔧 **Reportes de Mantenimiento**
-- 💳 **Estados de Cuenta**
-- 👥 **Directorio de Vecinos**
-- 📊 **Dashboard de Métricas**
+### 🚀 Deploy Rápido
+1. Fork este repositorio
+2. Conectar con Render
+3. Configurar base de datos externa (PlanetScale recomendado)
+4. Configurar variables de entorno
+5. Deploy automático con `render.yaml`
 
-## 🛠️ Tecnologías
+**Ver guía completa:** [DEPLOY_RENDER.md](./DEPLOY_RENDER.md)
 
-- **Backend**: PHP 8.2+
-- **Base de datos**: MySQL 8.0+
-- **Frontend**: Bootstrap 5.3, CSS Grid, HTML5
-- **Estilos**: Diseño moderno con glass-effect
-- **Iconos**: FontAwesome 6.0
+### Variables de Entorno Requeridas
+```bash
+NODE_ENV=production
+SESSION_SECRET=tu_clave_muy_segura
+DB_HOST=tu_host_de_bd
+DB_USER=tu_usuario
+DB_PASSWORD=tu_password
+DB_NAME=checkin_plaza
+DB_SSL=true
+```
 
-## 📋 Estado del Proyecto
+## Instalación Local
 
-🚧 **En Desarrollo** - Repositorio creado el 9 de julio de 2025
+### 1. Configurar la base de datos
+```sql
+-- Ejecutar el archivo SQL para crear la estructura
+SOURCE checkin_plaza_extend.sql;
+```
 
-## 🔗 Relación con el Sistema Principal
+### 2. Configurar el backend
+```bash
+cd backend
+npm install
+```
 
-Este repositorio es complementario al sistema principal de check-in ubicado en el repositorio `checkin-plaza`. Los servicios aquí desarrollados se integrarán con el sistema existente.
+### 3. Configurar variables de entorno
+```bash
+# Copiar el archivo de ejemplo
+cp .env.example .env
 
-## 👨‍💻 Autor
+# Editar .env con tus credenciales de base de datos
+```
 
-Creado por [@jorgeguerrerohidalgo](https://github.com/jorgeguerrerohidalgo)
+### 4. Actualizar contraseñas a hash (opcional)
+```sql
+-- Si tienes datos existentes, ejecutar:
+SOURCE update_passwords.sql;
+```
 
----
+### 5. Iniciar el servidor
+```bash
+npm start
+```
 
-**Conjunto Los Prados de Nos - Servicios Digitales** 🏠
+## Estructura del Proyecto
+
+```
+servicios_pradosdenos/
+├── README.md
+├── checkin_plaza_extend.sql     # Estructura de base de datos
+├── update_passwords.sql         # Script para actualizar contraseñas
+├── backend/
+│   ├── package.json
+│   ├── server.js               # Servidor principal
+│   ├── .env.example           # Plantilla de variables de entorno
+│   ├── utils/
+│   │   └── db.js              # Configuración de base de datos
+│   └── routes/
+│       ├── auth.routes.js     # Autenticación de guardias
+│       └── checkin.routes.js  # Gestión de check-ins
+└── public/
+    ├── login.html             # Página de login
+    └── checkin.html           # Página de check-in con QR
+```
+
+## API Endpoints
+
+### Autenticación
+- `POST /api/auth/login` - Login de guardia
+- `GET /api/auth/logout` - Cerrar sesión
+- `GET /api/auth/check` - Verificar autenticación
+
+### Check-ins
+- `POST /api/checkin` - Registrar check-in
+- `GET /api/checkin/history` - Obtener historial de check-ins
+
+## Credenciales de Prueba
+
+- **Email:** carlos@example.com, **Contraseña:** 1234
+- **Email:** maria@example.com, **Contraseña:** 5678
+
+## Tokens QR de Prueba
+
+- Plaza Norte: `qr-token-norte-123`
+- Plaza Sur: `qr-token-sur-456` 
+- Plaza Central: `qr-token-central-789`
+
+## Seguridad Implementada
+
+- Contraseñas hasheadas con bcrypt
+- Validación de entrada en todas las rutas
+- Prevención de check-ins duplicados
+- Manejo seguro de sesiones
+- Logs de errores para debugging
+
+## Tecnologías Utilizadas
+
+- **Backend:** Node.js, Express.js, MySQL2, bcrypt
+- **Frontend:** HTML5, JavaScript vanilla, html5-qrcode
+- **Base de datos:** MySQL
+
+## Próximas Mejoras
+
+- [ ] Panel de administración
+- [ ] Reportes de check-ins
+- [ ] Notificaciones push
+- [ ] API para aplicación móvil
