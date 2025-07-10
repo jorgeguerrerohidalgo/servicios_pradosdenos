@@ -3,13 +3,10 @@
 CREATE DATABASE IF NOT EXISTS checkin_plaza;
 USE checkin_plaza;
 
--- Tabla de plazas
+-- Tabla de plazas (simplificada)
 CREATE TABLE IF NOT EXISTS plazas (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  nombre VARCHAR(100) NOT NULL,
-  direccion VARCHAR(255),
-  comuna VARCHAR(100),
-  region VARCHAR(100)
+  nombre VARCHAR(100) NOT NULL
 );
 
 -- Tabla de tokens QR únicos por plaza
@@ -41,10 +38,10 @@ CREATE TABLE IF NOT EXISTS checkins (
 );
 
 -- Insertar plazas
-INSERT INTO plazas (nombre, direccion, comuna, region) VALUES
-('Plaza Norte', 'Av. Principal 123', 'Huechuraba', 'RM'),
-('Plaza Sur', 'Calle Secundaria 456', 'Puente Alto', 'RM'),
-('Plaza Central', 'Diagonal Norte 789', 'Santiago', 'RM');
+INSERT INTO plazas (nombre) VALUES
+('Plaza Norte'),
+('Plaza Sur'),
+('Plaza Central');
 
 -- Insertar tokens QR asociados a las plazas
 INSERT INTO plaza_tokens (plaza_id, token) VALUES

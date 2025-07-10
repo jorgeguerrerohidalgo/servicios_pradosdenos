@@ -93,7 +93,7 @@ router.post('/', requireAuth, validateCheckin, (req, res) => {
 // Ruta para obtener el historial de check-ins del guardia
 router.get('/history', requireAuth, (req, res) => {
   const query = `
-    SELECT c.id, c.fecha, p.nombre as plaza_nombre, p.direccion 
+    SELECT c.id, c.fecha, p.nombre as plaza_nombre
     FROM checkins c 
     JOIN plazas p ON c.plaza_id = p.id 
     WHERE c.guardia_id = ? 

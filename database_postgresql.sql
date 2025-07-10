@@ -1,12 +1,9 @@
 -- Script de inicialización para PostgreSQL (Supabase)
 
--- Tabla de plazas
+-- Tabla de plazas (simplificada)
 CREATE TABLE IF NOT EXISTS plazas (
   id SERIAL PRIMARY KEY,
   nombre VARCHAR(100) NOT NULL,
-  direccion VARCHAR(255),
-  comuna VARCHAR(100),
-  region VARCHAR(100),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -48,7 +45,6 @@ CREATE TABLE IF NOT EXISTS checkins (
 
 -- Índices para mejor rendimiento
 CREATE INDEX IF NOT EXISTS idx_plazas_nombre ON plazas(nombre);
-CREATE INDEX IF NOT EXISTS idx_plazas_comuna ON plazas(comuna);
 CREATE INDEX IF NOT EXISTS idx_plaza_tokens_token ON plaza_tokens(token);
 CREATE INDEX IF NOT EXISTS idx_guardias_email ON guardias(email);
 CREATE INDEX IF NOT EXISTS idx_guardias_rut ON guardias(rut);
@@ -57,10 +53,10 @@ CREATE INDEX IF NOT EXISTS idx_checkins_plaza_id ON checkins(plaza_id);
 CREATE INDEX IF NOT EXISTS idx_checkins_fecha ON checkins(fecha);
 
 -- Insertar datos de ejemplo
-INSERT INTO plazas (nombre, direccion, comuna, region) VALUES
-('Plaza Norte', 'Av. Principal 123', 'Huechuraba', 'RM'),
-('Plaza Sur', 'Calle Secundaria 456', 'Puente Alto', 'RM'),
-('Plaza Central', 'Diagonal Norte 789', 'Santiago', 'RM')
+INSERT INTO plazas (nombre) VALUES
+('Plaza Norte'),
+('Plaza Sur'),
+('Plaza Central')
 ON CONFLICT DO NOTHING;
 
 -- Insertar tokens QR

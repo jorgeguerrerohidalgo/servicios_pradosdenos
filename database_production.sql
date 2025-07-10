@@ -8,20 +8,15 @@
 -- Usar la base de datos que ya existe en el servicio externo
 -- La mayoría de servicios de BD externos ya tienen una BD creada
 
--- Tabla de plazas con índices optimizados
+-- Tabla de plazas (simplificada)
 CREATE TABLE IF NOT EXISTS plazas (
   id INT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(100) NOT NULL,
-  direccion VARCHAR(255),
-  comuna VARCHAR(100),
-  region VARCHAR(100),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   
   -- Índices para mejor rendimiento
-  INDEX idx_nombre (nombre),
-  INDEX idx_comuna (comuna),
-  INDEX idx_region (region)
+  INDEX idx_nombre (nombre)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Tabla de tokens QR únicos por plaza
@@ -78,10 +73,10 @@ CREATE TABLE IF NOT EXISTS checkins (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Insertar datos de ejemplo solo si las tablas están vacías
-INSERT IGNORE INTO plazas (id, nombre, direccion, comuna, region) VALUES
-(1, 'Plaza Norte', 'Av. Principal 123', 'Huechuraba', 'RM'),
-(2, 'Plaza Sur', 'Calle Secundaria 456', 'Puente Alto', 'RM'),
-(3, 'Plaza Central', 'Diagonal Norte 789', 'Santiago', 'RM');
+INSERT IGNORE INTO plazas (id, nombre) VALUES
+(1, 'Plaza Norte'),
+(2, 'Plaza Sur'),
+(3, 'Plaza Central');
 
 -- Insertar tokens QR asociados a las plazas
 INSERT IGNORE INTO plaza_tokens (id, plaza_id, token) VALUES
@@ -101,10 +96,7 @@ SELECT
     c.fecha,
     g.nombre as guardia_nombre,
     g.email as guardia_email,
-    p.nombre as plaza_nombre,
-    p.direccion as plaza_direccion,
-    p.comuna,
-    p.region
+    p.nombre as plaza_nombre
 FROM checkins c
 JOIN guardias g ON c.guardia_id = g.id
 JOIN plazas p ON c.plaza_id = p.id
