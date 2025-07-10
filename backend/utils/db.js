@@ -13,12 +13,6 @@ const connectionConfig = {
     rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false'
   } : false,
   
-  // Pool de conexiones para mejor rendimiento en producción
-  connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT) || 10,
-  acquireTimeout: parseInt(process.env.DB_ACQUIRE_TIMEOUT) || 60000,
-  timeout: parseInt(process.env.DB_TIMEOUT) || 60000,
-  reconnect: true,
-  
   // Configuraciones adicionales para estabilidad
   multipleStatements: false,
   timezone: process.env.DB_TIMEZONE || '+00:00',
@@ -29,8 +23,16 @@ const connectionConfig = {
   bigNumberStrings: true
 };
 
+// Configuración del pool (solo las opciones válidas para mysql2)
+const poolConfig = {
+  ...connectionConfig,
+  connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT) || 10,
+  acquireTimeout: parseInt(process.env.DB_ACQUIRE_TIMEOUT) || 60000,
+  timeout: parseInt(process.env.DB_TIMEOUT) || 60000
+};
+
 // Crear pool de conexiones para mejor rendimiento
-const pool = mysql.createPool(connectionConfig);
+const pool = mysql.createPool(poolConfig);
 
 // Promisificar para usar async/await
 const promisePool = pool.promise();

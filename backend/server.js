@@ -43,6 +43,12 @@ app.use(session({
   name: 'checkin.sid'
 }));
 
+// Advertencia sobre MemoryStore en producción
+if (isProduction) {
+  console.log('⚠️  NOTA: Se está usando MemoryStore para sesiones en producción.');
+  console.log('⚠️  Para producción real, considera usar connect-redis o similar.');
+}
+
 // Middleware de logging en producción
 if (isProduction) {
   app.use((req, res, next) => {
@@ -124,12 +130,29 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🌍 Entorno: ${NODE_ENV}`);
   console.log(`⚡ Health check disponible en: http://localhost:${PORT}/health`);
   
-  // Debug: Verificar rutas de archivos
-  const publicPath = path.join(__dirname, '../public');
-  const loginPath = path.join(publicPath, 'login.html');
-  console.log(`📁 Directorio público: ${publicPath}`);
-  console.log(`📄 Archivo login.html existe: ${require('fs').existsSync(loginPath)}`);
-  console.log(`📂 Contenido directorio público:`, require('fs').readdirSync(publicPath).join(', '));
+  // Debug: Verificar rutas de archivos (con manejo de errores)
+  const publicPaths = [
+    path.join(__dirname, 'public'),
+    path.join(__dirname, '../public')
+  ];
+  
+  publicPaths.forEach(publicPath => {
+    const loginPath = path.join(publicPath, 'login.html');
+    const dirExists = require('fs').existsSync(publicPath);
+    const fileExists = require('fs').existsSync(loginPath);
+    
+    console.log(`📁 Directorio: ${publicPath} - Existe: ${dirExists}`);
+    console.log(`📄 Login.html: ${loginPath} - Existe: ${fileExists}`);
+    
+    if (dirExists) {
+      try {
+        const contents = require('fs').readdirSync(publicPath);
+        console.log(`📂 Contenido: ${contents.join(', ')}`);
+      } catch (err) {
+        console.log(`❌ Error leyendo directorio: ${err.message}`);
+      }
+    }
+  });
   
   if (!isProduction) {
     console.log(`🏠 Frontend disponible en: http://localhost:${PORT}/login.html`);
