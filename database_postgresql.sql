@@ -128,7 +128,7 @@ ON CONFLICT (email) DO NOTHING;
 
 -- Insertar administradores del sistema
 INSERT INTO admin_users (nombre, apellido_paterno, apellido_materno, run, email, fecha_nacimiento, direccion, plaza_id, password_hash) VALUES
-('Jorge', 'Guerrero', 'Hidalgo', '15.468.127-2', 'jorgeguerrerohidalgo@gmail.com', '1982-04-24', 'Santiago de Compostela 4985', 1, '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
+('Jorge', 'Guerrero', 'Hidalgo', '15.468.127-2', 'jorgeguerrerohidalgo@gmail.com', '1982-04-24', 'Santiago de Compostela 4985', 1, '$2b$10$/MlZ4tqK6S5yts2wDR7dwu6JnMpXY3RrxH6ZxO23lp4YaeRAj2Ij.'),
 ('Supervisor', 'Seguridad', 'Nocturno', '11.111.222-3', 'supervisor@pradosdenos.com', '1982-05-20', 'Centro de Control Los Prados de Nos', 2, '$2b$10$ABC123def456ghi789jkl012mno345pqr678stu901vwx234yzA567Bc')
 ON CONFLICT (email) DO NOTHING;
 
