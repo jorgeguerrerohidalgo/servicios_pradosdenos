@@ -22,8 +22,6 @@ router.post('/login', validateLogin, async (req, res) => {
   const { email, password } = req.body;
   
   try {
-    console.log('🔐 Intento de login para:', email);
-    
     // Primero buscar en guardias
     let user = await db.query('SELECT * FROM guardias WHERE email = $1', [email]);
     let userType = 'guardia';
@@ -35,12 +33,10 @@ router.post('/login', validateLogin, async (req, res) => {
     }
     
     if (user.length === 0) {
-      console.log('❌ Usuario no encontrado:', email);
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
     
     const foundUser = user[0];
-    console.log('👤 Usuario encontrado:', foundUser.email, 'Tipo:', userType);
     
     // Verificar contraseña
     let isValidPassword = false;
@@ -53,7 +49,6 @@ router.post('/login', validateLogin, async (req, res) => {
     }
     
     if (!isValidPassword) {
-      console.log('❌ Contraseña incorrecta para:', email);
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
     
@@ -71,10 +66,6 @@ router.post('/login', validateLogin, async (req, res) => {
       email: foundUser.email,
       tipo: userType
     };
-    
-    console.log('✅ Login exitoso:', foundUser.email, 'Tipo:', userType);
-    console.log('✅ Sesión creada:', JSON.stringify(req.session.guardia, null, 2));
-    console.log('✅ Session ID:', req.sessionID);
     
     res.json({ 
       message: 'Login exitoso',
@@ -103,20 +94,12 @@ router.get('/logout', (req, res) => {
 
 // Ruta para verificar si el usuario está autenticado
 router.get('/check', (req, res) => {
-  console.log('🔍 Verificando autenticación...');
-  console.log('🔍 Session ID:', req.sessionID);
-  console.log('🔍 Session completa:', JSON.stringify(req.session, null, 2));
-  console.log('🔍 Headers:', JSON.stringify(req.headers, null, 2));
-  console.log('🔍 Cookies:', req.headers.cookie);
-  
   if (req.session.guardia) {
-    console.log('✅ Sesión encontrada:', req.session.guardia);
     res.json({ 
       authenticated: true, 
       guardia: req.session.guardia 
     });
   } else {
-    console.log('❌ No hay sesión de guardia');
     res.json({ authenticated: false });
   }
 });

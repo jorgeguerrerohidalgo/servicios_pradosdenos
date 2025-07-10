@@ -5,14 +5,10 @@ const { query } = require('../utils/db');
 // Obtener todas las plazas para el dropdown
 router.get('/plazas', async (req, res) => {
   try {
-    console.log('📍 Solicitando lista de plazas...');
-    
     const plazas = await query('SELECT id, nombre FROM plazas ORDER BY nombre ASC');
-    
-    console.log('✅ Plazas encontradas:', plazas.length);
     res.json(plazas);
   } catch (error) {
-    console.error('❌ Error obteniendo plazas:', error);
+    console.error('Error obteniendo plazas:', error);
     res.status(500).json({ 
       success: false, 
       message: 'Error interno del servidor' 
@@ -25,10 +21,6 @@ router.get('/plazas', async (req, res) => {
 router.get('/checkins/public', async (req, res) => {
   try {
     const { plaza_id, periodo } = req.query;
-    
-    console.log('🔍 Consulta pública de checkins - Plaza:', plaza_id, 'Período:', periodo);
-    console.log('🔍 Headers:', req.headers);
-    console.log('🔍 Query completo:', req.query);
     
     let sql = `
       SELECT 
@@ -83,12 +75,7 @@ router.get('/checkins/public', async (req, res) => {
     
     sql += ` ORDER BY c.fecha DESC LIMIT 100`;
     
-    console.log('🔍 SQL generado:', sql);
-    console.log('🔍 Parámetros:', params);
-    
     const checkins = await query(sql, params);
-    
-    console.log('✅ Checkins encontrados:', checkins.length);
     
     res.json({
       success: true,
@@ -97,7 +84,7 @@ router.get('/checkins/public', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error en consulta pública de checkins:', error);
+    console.error('Error en consulta pública de checkins:', error);
     res.status(500).json({ 
       success: false, 
       message: 'Error interno del servidor',
@@ -110,8 +97,6 @@ router.get('/checkins/public', async (req, res) => {
 router.get('/checkins/:plazaId', async (req, res) => {
   try {
     const { plazaId } = req.params;
-    
-    console.log('🔍 Consultando checkins para plaza ID:', plazaId);
     
     // Validar que plazaId sea un número
     if (!plazaId || isNaN(plazaId)) {
@@ -134,8 +119,6 @@ router.get('/checkins/:plazaId', async (req, res) => {
       ORDER BY c.fecha DESC
       LIMIT 50
     `, [plazaId]);
-
-    console.log('📊 Registros encontrados:', registros.length);
 
     // Formatear las fechas para el frontend
     const registrosFormateados = registros.map(registro => ({
@@ -169,8 +152,6 @@ router.get('/checkins/:plazaId', async (req, res) => {
 // Estadísticas generales (para dashboard futuro)
 router.get('/stats', async (req, res) => {
   try {
-    console.log('📈 Solicitando estadísticas generales...');
-    
     const stats = await Promise.all([
       query('SELECT COUNT(*) as total FROM plazas'),
       query('SELECT COUNT(*) as total FROM guardias WHERE activo = true'),
@@ -187,14 +168,13 @@ router.get('/stats', async (req, res) => {
       checkins_hoy: parseInt(stats[3][0].total)
     };
 
-    console.log('✅ Estadísticas generadas:', resultado);
     res.json({
       success: true,
       stats: resultado
     });
 
   } catch (error) {
-    console.error('❌ Error obteniendo estadísticas:', error);
+    console.error('Error obteniendo estadísticas:', error);
     res.status(500).json({ 
       success: false, 
       message: 'Error interno del servidor' 

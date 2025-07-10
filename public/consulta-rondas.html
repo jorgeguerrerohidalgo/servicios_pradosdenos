@@ -207,20 +207,6 @@
                     <button class="btn btn-outline-secondary ms-2" onclick="limpiarFiltros()">
                         <i class="fas fa-times"></i> Limpiar
                     </button>
-                    
-                    <!-- Botones de Testing -->
-                    <div class="mt-3">
-                        <small class="text-muted">Testing APIs:</small><br>
-                        <button class="btn btn-outline-info btn-sm me-2" onclick="testAPI('/api/plazas')">
-                            <i class="fas fa-bug"></i> Test Plazas
-                        </button>
-                        <button class="btn btn-outline-info btn-sm me-2" onclick="testAPI('/api/checkins/public')">
-                            <i class="fas fa-bug"></i> Test Checkins
-                        </button>
-                        <button class="btn btn-outline-info btn-sm me-2" onclick="testAPI('/api/debug/data')">
-                            <i class="fas fa-bug"></i> Debug Data
-                        </button>
-                    </div>
                 </div>
                 
                 <!-- Results Section -->
@@ -272,10 +258,6 @@
             const plazaId = document.getElementById('plazaSelect').value;
             const fechaFiltro = document.getElementById('fechaFiltro').value;
             
-            console.log('🔍 Iniciando búsqueda de rondas...');
-            console.log('🔍 Plaza ID seleccionado:', plazaId);
-            console.log('🔍 Filtro de fecha:', fechaFiltro);
-            
             // Mostrar loading
             resultados.innerHTML = `
                 <div class="loading">
@@ -287,45 +269,29 @@
             try {
                 let url = '/api/checkins/public?';
                 if (plazaId) url += `plaza_id=${plazaId}&`;
-                // Siempre enviar período, no solo cuando es diferente de 'todos'
                 url += `periodo=${fechaFiltro || 'hoy'}&`;
                 
-                console.log('🔍 URL construida:', url);
-                
                 const response = await fetch(url);
-                console.log('🔍 Status de respuesta:', response.status, response.statusText);
-                console.log('🔍 Headers de respuesta:', [...response.headers.entries()]);
                 
                 if (response.ok) {
                     const data = await response.json();
-                    console.log('🔍 Datos recibidos:', JSON.stringify(data, null, 2));
-                    console.log('🔍 Tipo de data.checkins:', typeof data.checkins);
-                    console.log('🔍 Es array data.checkins:', Array.isArray(data.checkins));
-                    console.log('🔍 Longitud de checkins:', data.checkins ? data.checkins.length : 'undefined');
                     
                     if (data.success) {
                         rondas = data.checkins;
-                        console.log('🔍 Asignando rondas:', rondas);
                         mostrarResultados(rondas);
                     } else {
-                        console.log('❌ API devolvió success: false');
                         throw new Error(data.message || 'Error al buscar rondas');
                     }
                 } else {
-                    console.log('❌ Response no OK');
-                    const errorText = await response.text();
-                    console.log('❌ Texto de error:', errorText);
                     throw new Error('Error al buscar rondas');
                 }
             } catch (error) {
-                console.error('❌ Error completo:', error);
-                console.error('❌ Stack trace:', error.stack);
+                console.error('Error al cargar rondas:', error);
                 resultados.innerHTML = `
                     <div class="no-results">
                         <i class="fas fa-exclamation-triangle"></i>
                         <h5>Error al cargar datos</h5>
                         <p>No se pudieron cargar las rondas. Por favor, intenta nuevamente.</p>
-                        <p><small>Error: ${error.message}</small></p>
                         <button class="btn btn-primary" onclick="buscarRondas()">
                             <i class="fas fa-refresh"></i> Reintentar
                         </button>
@@ -337,14 +303,7 @@
         function mostrarResultados(rondas) {
             const resultados = document.getElementById('resultados');
             
-            console.log('🔍 Mostrando resultados...');
-            console.log('🔍 Rondas recibidas:', rondas);
-            console.log('🔍 Tipo de rondas:', typeof rondas);
-            console.log('🔍 Es array:', Array.isArray(rondas));
-            console.log('🔍 Longitud:', rondas ? rondas.length : 'undefined');
-            
             if (!rondas || rondas.length === 0) {
-                console.log('🔍 No hay rondas para mostrar');
                 resultados.innerHTML = `
                     <div class="no-results">
                         <i class="fas fa-search"></i>
@@ -358,11 +317,9 @@
                 return;
             }
             
-            console.log('🔍 Generando HTML para', rondas.length, 'rondas');
             let html = `<h5><i class="fas fa-list"></i> Resultados (${rondas.length} rondas encontradas)</h5>`;
             
             rondas.forEach((ronda, index) => {
-                console.log(`🔍 Procesando ronda ${index}:`, ronda);
                 const fecha = new Date(ronda.fecha);
                 const ahora = new Date();
                 const diferencia = ahora - fecha;
@@ -422,37 +379,7 @@
             buscarRondas();
         }
         
-        // Función de testing para APIs
-        async function testAPI(endpoint) {
-            try {
-                console.log(`🔍 Testing endpoint: ${endpoint}`);
-                const response = await fetch(endpoint);
-                const data = await response.json();
-                
-                console.log(`✅ Respuesta de ${endpoint}:`, data);
-                
-                Swal.fire({
-                    title: `Test: ${endpoint}`,
-                    html: `
-                        <div style="text-align: left; font-family: monospace; font-size: 12px; max-height: 400px; overflow-y: auto;">
-                            <strong>Status:</strong> ${response.status}<br>
-                            <strong>Data:</strong><br>
-                            <pre>${JSON.stringify(data, null, 2)}</pre>
-                        </div>
-                    `,
-                    icon: response.ok ? 'success' : 'error',
-                    confirmButtonText: 'Cerrar',
-                    width: '600px'
-                });
-            } catch (error) {
-                console.error(`❌ Error testing ${endpoint}:`, error);
-                Swal.fire({
-                    title: `Error: ${endpoint}`,
-                    text: error.message,
-                    icon: 'error'
-                });
-            }
-        }
+
 
         // Auto-refresh cada 2 minutos
         setInterval(function() {
