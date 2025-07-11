@@ -23,6 +23,25 @@ Sistema completo de servicios digitales para el Conjunto Los Prados de Nos, con 
 - **Gestión de plazas** del conjunto
 - **Autenticación segura** con sesiones
 
+## 🛠️ Migración de Esquema
+
+### ⚠️ IMPORTANTE: Corrección de Errores 500
+Si estás experimentando errores 500 en la gestión de plazas y administradores, es porque hay inconsistencias entre el esquema de la base de datos y el código del backend.
+
+**Solución rápida:**
+1. Visita: `https://tu-dominio.com/migrate-schema.html`
+2. Haz clic en "Ejecutar Migración"
+3. Espera a que se complete la migración
+
+**Solución manual (Supabase):**
+1. Ejecuta el script `migration_fix_schema.sql` en tu base de datos
+2. O usa el esquema corregido: `database_postgresql_fixed.sql`
+
+Los cambios incluyen:
+- Campos `direccion`, `descripcion` y `activo` en tabla `plazas`
+- Campos `telefono`, `activo` y `last_login` en tabla `admin_users`
+- Campos opcionales que no se usan en el código
+
 ## Deployment en Render
 
 ### 🚀 Deploy Rápido
