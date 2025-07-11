@@ -201,6 +201,11 @@
   <button class="btn btn-info" onclick="showDebugInfo()" style="position: absolute; top: 20px; left: 20px; z-index: 1000;">
     <i class="fas fa-bug"></i> Debug
   </button>
+  
+  <!-- Botón para simular QR -->
+  <button class="btn btn-warning" onclick="simulateQRScan()" style="position: absolute; top: 70px; left: 20px; z-index: 1000;">
+    <i class="fas fa-qrcode"></i> Simular QR
+  </button>
 
   <div class="container">
     <div class="header">
@@ -450,6 +455,8 @@
     
     // Mostrar sección de validación
     function showValidationSection() {
+      console.log('=== MOSTRANDO SECCIÓN DE VALIDACIÓN ===');
+      
       document.getElementById('qrScanSection').style.display = 'none';
       document.getElementById('validationSection').style.display = 'block';
       const input = document.getElementById('validationCodeInput');
@@ -459,61 +466,56 @@
       document.getElementById('codeValidationFeedback').textContent = '';
       document.getElementById('confirmCheckinBtn').disabled = true;
       
+      console.log('Input elemento:', input);
+      console.log('userValidationCode en showValidationSection:', userValidationCode);
+      
       // Auto-focus en el input
       setTimeout(() => {
         input.focus();
+        console.log('Focus aplicado al input');
       }, 100);
       
-      // Remover event listeners anteriores para evitar duplicados
-      input.removeEventListener('input', validateCodeInput);
-      input.removeEventListener('keypress', handleEnterKey);
+      // USAR LÓGICA DIRECTA COMO EN EL DIAGNÓSTICO
+      input.oninput = function() {
+        console.log('=== EVENT INPUT EJECUTADO ===');
+        const enteredCode = this.value.trim().toUpperCase();
+        const feedback = document.getElementById('codeValidationFeedback');
+        const confirmBtn = document.getElementById('confirmCheckinBtn');
+        
+        console.log('Código ingresado:', enteredCode);
+        console.log('Código esperado:', userValidationCode);
+        console.log('Códigos coinciden:', enteredCode === userValidationCode.toUpperCase());
+        
+        if (enteredCode.length === 0) {
+          feedback.textContent = '';
+          feedback.className = 'form-text';
+          confirmBtn.disabled = true;
+          console.log('→ Campo vacío, botón deshabilitado');
+        } else if (userValidationCode && enteredCode === userValidationCode.toUpperCase()) {
+          feedback.textContent = '✓ Código correcto';
+          feedback.className = 'form-text code-match';
+          confirmBtn.disabled = false;
+          console.log('→ Código correcto, botón HABILITADO');
+        } else {
+          feedback.textContent = '✗ Código incorrecto';
+          feedback.className = 'form-text code-mismatch';
+          confirmBtn.disabled = true;
+          console.log('→ Código incorrecto, botón deshabilitado');
+        }
+        
+        console.log('Estado final del botón disabled:', confirmBtn.disabled);
+      };
       
-      // Agregar event listeners
-      input.addEventListener('input', validateCodeInput);
-      input.addEventListener('keypress', handleEnterKey);
+      // Event listener para Enter
+      input.onkeypress = function(e) {
+        if (e.key === 'Enter' && !document.getElementById('confirmCheckinBtn').disabled) {
+          console.log('Enter presionado, ejecutando confirmCheckin()');
+          confirmCheckin();
+        }
+      };
       
+      console.log('Event listeners agregados correctamente');
       updateSteps(2);
-    }
-    
-    // Función para validar el código ingresado
-    function validateCodeInput() {
-      const enteredCode = this.value.trim().toUpperCase();
-      const feedback = document.getElementById('codeValidationFeedback');
-      const confirmBtn = document.getElementById('confirmCheckinBtn');
-      
-      console.log('=== VALIDACIÓN DE CÓDIGO ===');
-      console.log('Código ingresado (original):', this.value);
-      console.log('Código ingresado (procesado):', enteredCode);
-      console.log('Código esperado:', userValidationCode);
-      console.log('Código esperado (procesado):', userValidationCode ? userValidationCode.toUpperCase() : 'NULL');
-      console.log('Longitud código ingresado:', enteredCode.length);
-      console.log('userValidationCode existe:', !!userValidationCode);
-      
-      if (enteredCode.length === 0) {
-        feedback.textContent = '';
-        feedback.className = 'form-text';
-        confirmBtn.disabled = true;
-        console.log('→ Campo vacío, botón deshabilitado');
-      } else if (userValidationCode && enteredCode === userValidationCode.toUpperCase()) {
-        feedback.textContent = '✓ Código correcto';
-        feedback.className = 'form-text code-match';
-        confirmBtn.disabled = false;
-        console.log('→ Código correcto, botón habilitado');
-      } else {
-        feedback.textContent = '✗ Código incorrecto';
-        feedback.className = 'form-text code-mismatch';
-        confirmBtn.disabled = true;
-        console.log('→ Código incorrecto, botón deshabilitado');
-      }
-      console.log('Estado botón disabled:', confirmBtn.disabled);
-      console.log('=== FIN VALIDACIÓN ===');
-    }
-    
-    // Función para manejar la tecla Enter
-    function handleEnterKey(e) {
-      if (e.key === 'Enter' && !document.getElementById('confirmCheckinBtn').disabled) {
-        confirmCheckin();
-      }
     }
     
     // Confirmar check-in
@@ -640,6 +642,14 @@ Longitud: ${userValidationCode ? userValidationCode.length : 'NULL'}
 Input actual: "${document.getElementById('validationCodeInput').value}"
 Botón deshabilitado: ${document.getElementById('confirmCheckinBtn').disabled}
 Sección visible: ${document.getElementById('validationSection').style.display !== 'none'}`);
+    }
+    
+    // Función para simular QR escaneado (debug)
+    function simulateQRScan() {
+      console.log('Simulando escaneo QR...');
+      scannedToken = 'TEST_TOKEN_123';
+      showValidationSection();
+      showStatus('QR simulado. Ahora ingresa tu código de validación.', 'success');
     }
     
     // Manejar tecla Enter en el campo de validación (se maneja en showValidationSection)
