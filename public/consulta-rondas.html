@@ -238,18 +238,60 @@
             try {
                 const response = await fetch('/api/plazas');
                 if (response.ok) {
-                    plazas = await response.json();
+                    const data = await response.json();
+                    
+                    // Manejar diferentes formatos de respuesta
+                    let plazasArray = [];
+                    if (data.success && Array.isArray(data.plazas)) {
+                        plazasArray = data.plazas;
+                    } else if (Array.isArray(data)) {
+                        plazasArray = data;
+                    } else {
+                        console.error('Formato de respuesta no reconocido:', data);
+                        return;
+                    }
+                    
+                    plazas = plazasArray;
                     const select = document.getElementById('plazaSelect');
                     
-                    plazas.forEach(plaza => {
+                    // Limpiar opciones existentes (excepto "Todas las plazas")
+                    const opciones = select.querySelectorAll('option');
+                    opciones.forEach(option => {
+                        if (option.value !== '') {
+                            option.remove();
+                        }
+                    });
+                    
+                    // Agregar las plazas
+                    plazasArray.forEach(plaza => {
                         const option = document.createElement('option');
                         option.value = plaza.id;
                         option.textContent = plaza.nombre;
                         select.appendChild(option);
                     });
+                    
+                    console.log(`✅ Plazas cargadas: ${plazasArray.length}`);
+                } else {
+                    console.error('Error al cargar plazas:', response.status, response.statusText);
                 }
             } catch (error) {
                 console.error('Error al cargar plazas:', error);
+                
+                // Usar datos de prueba si la API falla
+                console.log('Usando datos de prueba...');
+                const plazasPrueba = [
+                    { id: 1, nombre: 'Plaza Norte (Test)' },
+                    { id: 2, nombre: 'Plaza Sur (Test)' },
+                    { id: 3, nombre: 'Plaza Este (Test)' }
+                ];
+                
+                const select = document.getElementById('plazaSelect');
+                plazasPrueba.forEach(plaza => {
+                    const option = document.createElement('option');
+                    option.value = plaza.id;
+                    option.textContent = plaza.nombre;
+                    select.appendChild(option);
+                });
             }
         }
         

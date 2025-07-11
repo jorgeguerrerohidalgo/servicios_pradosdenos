@@ -186,7 +186,21 @@
             }
             
             log('✓ Librería QRCode disponible', 'success');
-            log(`Versión: ${QRCode.version || 'Desconocida'}`, 'info');
+            
+            // Verificar si es la librería real o el fallback
+            if (window.SimpleQRCode && QRCode === window.SimpleQRCode) {
+                log('⚠️ Usando fallback SimpleQRCode (Google Charts)', 'warning');
+            } else {
+                log('✓ Usando librería QRCode real', 'success');
+            }
+            
+            // Intentar obtener versión
+            try {
+                const version = QRCode.version || 'Desconocida';
+                log(`Versión: ${version}`, 'info');
+            } catch (e) {
+                log('No se pudo obtener la versión', 'warning');
+            }
             
             // Probar métodos disponibles
             const methods = ['toCanvas', 'toDataURL', 'toString'];
@@ -202,11 +216,21 @@
         function testStaticQR() {
             log('Probando generación de QR con texto estático...', 'info');
             
+            if (typeof QRCode === 'undefined') {
+                log('ERROR: La librería QRCode no está cargada', 'error');
+                return;
+            }
+            
             const canvas = document.createElement('canvas');
             canvas.className = 'qr-canvas';
             
             const testText = 'TEST-QR-12345';
             log(`Generando QR para: "${testText}"`, 'info');
+            
+            // Verificar si es la librería real o el fallback
+            if (window.SimpleQRCode && QRCode === window.SimpleQRCode) {
+                log('⚠️ Usando fallback SimpleQRCode', 'warning');
+            }
             
             QRCode.toCanvas(canvas, testText, { width: 200 })
                 .then(() => {
@@ -214,13 +238,20 @@
                     const container = document.getElementById('qrContainer');
                     const wrapper = document.createElement('div');
                     wrapper.className = 'text-center m-2';
-                    wrapper.innerHTML = `<div><strong>Prueba Estática</strong></div>`;
+                    wrapper.innerHTML = `<div><strong>Prueba Estática</strong></div><div><small>Texto: ${testText}</small></div>`;
                     wrapper.appendChild(canvas);
                     container.appendChild(wrapper);
                 })
                 .catch(err => {
                     log(`✗ Error generando QR estático: ${err.message}`, 'error');
-                    console.error('Error QR estático:', err);
+                    console.error('Error QR estático completo:', err);
+                    
+                    // Información adicional para debugging
+                    log(`Detalles del error:`, 'error');
+                    log(`- Tipo de error: ${err.name}`, 'error');
+                    log(`- Stack trace: ${err.stack}`, 'error');
+                    log(`- Texto usado: "${testText}"`, 'error');
+                    log(`- Canvas válido: ${canvas ? 'SÍ' : 'NO'}`, 'error');
                 });
         }
 
@@ -237,12 +268,26 @@
                 }
                 
                 const data = await response.json();
-                plazasData = data;
                 
-                log(`✓ Datos cargados: ${data.length} plazas`, 'success');
+                // Verificar el formato de la respuesta
+                log(`Respuesta de la API: ${JSON.stringify(data, null, 2)}`, 'info');
+                
+                let plazasArray = [];
+                
+                if (data.success && Array.isArray(data.plazas)) {
+                    plazasArray = data.plazas;
+                } else if (Array.isArray(data)) {
+                    plazasArray = data;
+                } else {
+                    throw new Error('Formato de respuesta no reconocido');
+                }
+                
+                plazasData = plazasArray;
+                
+                log(`✓ Datos cargados: ${plazasArray.length} plazas`, 'success');
                 
                 // Mostrar información detallada de cada plaza
-                data.forEach((plaza, index) => {
+                plazasArray.forEach((plaza, index) => {
                     log(`Plaza ${index + 1}: ${plaza.nombre}`, 'info');
                     log(`  - ID: ${plaza.id}`, 'info');
                     log(`  - Token: ${plaza.token ? plaza.token.substring(0, 20) + '...' : 'NULL'}`, 'info');
@@ -263,6 +308,16 @@
             } catch (error) {
                 log(`✗ Error cargando datos: ${error.message}`, 'error');
                 console.error('Error:', error);
+                
+                // Usar datos de prueba si la API falla
+                log('Usando datos de prueba como fallback...', 'warning');
+                plazasData = [
+                    { id: 1, nombre: 'Plaza Norte (Test)', token: 'TOKEN_NORTE_123456' },
+                    { id: 2, nombre: 'Plaza Sur (Test)', token: 'TOKEN_SUR_789012' },
+                    { id: 3, nombre: 'Plaza Este (Test)', token: 'TOKEN_ESTE_345678' }
+                ];
+                
+                log(`✓ Datos de prueba cargados: ${plazasData.length} plazas`, 'success');
             }
         }
 
