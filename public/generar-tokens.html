@@ -165,6 +165,12 @@
             </ol>
         </div>
         
+        <div class="info" style="background: #fff3cd; color: #856404; border-color: #ffc107;">
+            <strong><i class="fas fa-wrench"></i> Nota Técnica:</strong>
+            Este proceso utiliza un endpoint temporal que no requiere autenticación de administrador.
+            Una vez completada la configuración inicial, este endpoint será removido por seguridad.
+        </div>
+        
         <div class="actions">
             <button id="generateBtn" class="btn btn-primary" onclick="generateTokens()">
                 <i class="fas fa-cog"></i> Generar Tokens Faltantes
@@ -206,12 +212,12 @@
             status.style.display = 'block';
             
             try {
-                const response = await fetch('/api/admin/generate-tokens', {
+                // Usar endpoint temporal sin restricciones de autenticación
+                const response = await fetch('/api/generate-tokens-temp', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
-                    },
-                    credentials: 'include'
+                    }
                 });
                 
                 const data = await response.json();
@@ -225,6 +231,18 @@
                             <p><strong>Total plazas:</strong> ${data.estadoFinal.totalPlazas}</p>
                             <p><strong>Plazas con token:</strong> ${data.estadoFinal.plazasConToken}</p>
                             <p><strong>Plazas sin token:</strong> ${data.estadoFinal.plazasSinToken}</p>
+                            ${data.estadoFinal.plazasConTokenNombres.length > 0 ? `
+                                <h4>Plazas con token:</h4>
+                                <ul>
+                                    ${data.estadoFinal.plazasConTokenNombres.map(nombre => `<li>${nombre}</li>`).join('')}
+                                </ul>
+                            ` : ''}
+                            ${data.estadoFinal.plazasSinTokenNombres.length > 0 ? `
+                                <h4 style="color: #e74c3c;">Plazas que aún necesitan token:</h4>
+                                <ul>
+                                    ${data.estadoFinal.plazasSinTokenNombres.map(nombre => `<li>${nombre}</li>`).join('')}
+                                </ul>
+                            ` : ''}
                             ${data.errores.length > 0 ? `
                                 <h4>Errores:</h4>
                                 <ul>
@@ -233,6 +251,14 @@
                             ` : ''}
                         </div>
                     `;
+                    
+                    // Si se generaron tokens, mostrar mensaje de éxito
+                    if (data.tokensGenerados > 0) {
+                        setTimeout(() => {
+                            alert(`¡Éxito! Se generaron ${data.tokensGenerados} tokens. Ahora puede generar los códigos QR.`);
+                        }, 1000);
+                    }
+                    
                 } else {
                     status.className = 'status error';
                     status.innerHTML = `
@@ -246,8 +272,9 @@
                 status.className = 'status error';
                 status.innerHTML = `
                     <h4><i class="fas fa-exclamation-circle"></i> Error de Conexión</h4>
-                    <p>No se pudo conectar con el servidor. Verifique que esté logueado como administrador.</p>
+                    <p>No se pudo conectar con el servidor.</p>
                     <p><strong>Error:</strong> ${error.message}</p>
+                    <p><strong>Nota:</strong> Este endpoint es temporal y no requiere autenticación.</p>
                 `;
             } finally {
                 generateBtn.disabled = false;
