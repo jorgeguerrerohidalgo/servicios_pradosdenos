@@ -212,6 +212,27 @@
     <i class="fas fa-check"></i> Test Direct
   </button>
 
+  <!-- Botones de debugging adicionales -->
+  <button class="btn btn-info" onclick="testClickEvent()" style="position: absolute; top: 170px; left: 20px; z-index: 1000; font-size: 10px;">
+    <i class="fas fa-bug"></i> Test Click
+  </button>
+  
+  <button class="btn btn-danger" onclick="forceConfirmCheckin()" style="position: absolute; top: 220px; left: 20px; z-index: 1000; font-size: 10px;">
+    <i class="fas fa-bolt"></i> Force Check-in
+  </button>
+  
+  <button class="btn btn-secondary" onclick="checkEventListeners()" style="position: absolute; top: 270px; left: 20px; z-index: 1000; font-size: 10px;">
+    <i class="fas fa-search"></i> Check Events
+  </button>
+  
+  <button class="btn btn-warning" onclick="checkForOverlays()" style="position: absolute; top: 320px; left: 20px; z-index: 1000; font-size: 10px;">
+    <i class="fas fa-layer-group"></i> Check Overlays
+  </button>
+  
+  <button class="btn btn-primary" onclick="repairButton()" style="position: absolute; top: 370px; left: 20px; z-index: 1000; font-size: 10px;">
+    <i class="fas fa-tools"></i> Repair Button
+  </button>
+
   <div class="container">
     <div class="header">
       <h1><i class="fas fa-qrcode"></i> Check-in Plaza</h1>
@@ -417,7 +438,7 @@
       try {
         html5QrCode = new Html5Qrcode("reader");
         
-        const cameras = await Html5Qrcode.getCameras();
+        const cameras = await Html5QrCode.getCameras();
         const cameraId = cameras.length > 0 ? cameras[cameras.length - 1].id : undefined;
         
         await html5QrCode.start(
@@ -544,6 +565,21 @@
     
     // Confirmar check-in
     async function confirmCheckin() {
+      console.log('🚀 === CONFIRM CHECKIN EJECUTADO ===');
+      console.log('Timestamp:', new Date().toISOString());
+      
+      // Mostrar alerta visual para debugging
+      const debugAlert = document.createElement('div');
+      debugAlert.className = 'alert alert-info';
+      debugAlert.innerHTML = '<strong>DEBUG:</strong> confirmCheckin() ejecutado - ' + new Date().toLocaleTimeString();
+      debugAlert.style.position = 'fixed';
+      debugAlert.style.top = '10px';
+      debugAlert.style.right = '10px';
+      debugAlert.style.zIndex = '9999';
+      debugAlert.style.minWidth = '300px';
+      document.body.appendChild(debugAlert);
+      setTimeout(() => debugAlert.remove(), 3000);
+      
       const enteredCode = document.getElementById('validationCodeInput').value.trim();
       const confirmBtn = document.getElementById('confirmCheckinBtn');
       
@@ -786,6 +822,182 @@ Sección visible: ${document.getElementById('validationSection').style.display !
 - Ahora puedes probar el check-in`);
     }
     
+    // Función de debugging para probar el evento onclick
+    function testClickEvent() {
+      console.log('=== TEST CLICK EVENT ===');
+      const confirmBtn = document.getElementById('confirmCheckinBtn');
+      
+      // Verificar el estado del botón
+      console.log('Botón encontrado:', confirmBtn);
+      console.log('Botón disabled:', confirmBtn.disabled);
+      console.log('Botón onclick:', confirmBtn.onclick);
+      console.log('Botón style.display:', confirmBtn.style.display);
+      console.log('Botón classList:', confirmBtn.classList.toString());
+      
+      // Verificar si hay overlays o elementos que bloqueen
+      const rect = confirmBtn.getBoundingClientRect();
+      console.log('Posición del botón:', rect);
+      
+      // Verificar elemento en la posición del botón
+      const elementAtPosition = document.elementFromPoint(
+        rect.left + rect.width / 2,
+        rect.top + rect.height / 2
+      );
+      console.log('Elemento en la posición del botón:', elementAtPosition);
+      console.log('¿Es el mismo botón?', elementAtPosition === confirmBtn);
+      
+      // Probar el evento onclick directamente
+      console.log('Probando onclick directamente...');
+      try {
+        if (confirmBtn.onclick) {
+          confirmBtn.onclick();
+        } else {
+          console.log('No hay onclick definido');
+        }
+      } catch (error) {
+        console.error('Error al ejecutar onclick:', error);
+      }
+      
+      // Probar con click() programático
+      console.log('Probando click() programático...');
+      try {
+        confirmBtn.click();
+      } catch (error) {
+        console.error('Error al ejecutar click():', error);
+      }
+    }
+    
+    // Función para forzar la ejecución de confirmCheckin
+    function forceConfirmCheckin() {
+      console.log('=== FORCE CONFIRM CHECKIN ===');
+      console.log('Ejecutando confirmCheckin() directamente...');
+      try {
+        confirmCheckin();
+      } catch (error) {
+        console.error('Error al ejecutar confirmCheckin():', error);
+      }
+    }
+    
+    // Función para verificar event listeners
+    function checkEventListeners() {
+      console.log('=== CHECK EVENT LISTENERS ===');
+      const confirmBtn = document.getElementById('confirmCheckinBtn');
+      
+      // Verificar si el botón tiene event listeners
+      console.log('Botón:', confirmBtn);
+      console.log('outerHTML:', confirmBtn.outerHTML);
+      
+      // Probar añadir un event listener temporal
+      console.log('Añadiendo event listener temporal...');
+      const tempListener = function(e) {
+        console.log('Event listener temporal ejecutado:', e);
+        console.log('Event target:', e.target);
+        console.log('Event currentTarget:', e.currentTarget);
+      };
+      
+      confirmBtn.addEventListener('click', tempListener, { once: true });
+      
+      // Simular un click
+      console.log('Simulando click...');
+      const clickEvent = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        view: window
+      });
+      confirmBtn.dispatchEvent(clickEvent);
+    }
+
+    // Función para verificar overlays o elementos que bloqueen
+    function checkForOverlays() {
+      console.log('=== CHECKING FOR OVERLAYS ===');
+      const confirmBtn = document.getElementById('confirmCheckinBtn');
+      const rect = confirmBtn.getBoundingClientRect();
+      
+      console.log('Botón rect:', rect);
+      console.log('Botón visible:', rect.width > 0 && rect.height > 0);
+      console.log('Botón en viewport:', rect.top >= 0 && rect.left >= 0);
+      
+      // Verificar z-index
+      const computedStyle = window.getComputedStyle(confirmBtn);
+      console.log('Botón z-index:', computedStyle.zIndex);
+      console.log('Botón position:', computedStyle.position);
+      console.log('Botón display:', computedStyle.display);
+      console.log('Botón visibility:', computedStyle.visibility);
+      console.log('Botón pointer-events:', computedStyle.pointerEvents);
+      
+      // Verificar elementos padre
+      let parent = confirmBtn.parentElement;
+      let level = 0;
+      while (parent && level < 5) {
+        const parentStyle = window.getComputedStyle(parent);
+        console.log(`Padre nivel ${level}:`, parent.tagName, parent.className);
+        console.log(`  - display: ${parentStyle.display}`);
+        console.log(`  - visibility: ${parentStyle.visibility}`);
+        console.log(`  - pointer-events: ${parentStyle.pointerEvents}`);
+        parent = parent.parentElement;
+        level++;
+      }
+      
+      // Verificar si hay elementos superpuestos
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const elementsAtCenter = document.elementsFromPoint(centerX, centerY);
+      console.log('Elementos en el centro del botón:', elementsAtCenter);
+      
+      // Verificar si el botón está en la lista
+      const buttonIndex = elementsAtCenter.indexOf(confirmBtn);
+      console.log('Índice del botón en la lista:', buttonIndex);
+      if (buttonIndex > 0) {
+        console.log('⚠️ Hay elementos encima del botón:');
+        for (let i = 0; i < buttonIndex; i++) {
+          console.log(`  - ${elementsAtCenter[i].tagName} (${elementsAtCenter[i].className})`);
+        }
+      }
+    }
+
+    // Función para reparar el botón si hay problemas
+    function repairButton() {
+      console.log('=== REPARANDO BOTÓN ===');
+      const confirmBtn = document.getElementById('confirmCheckinBtn');
+      
+      if (!confirmBtn) {
+        console.error('❌ Botón no encontrado');
+        return;
+      }
+      
+      // Verificar el onclick original
+      console.log('onclick original:', confirmBtn.onclick);
+      
+      // Eliminar y volver a asignar el onclick
+      confirmBtn.onclick = null;
+      confirmBtn.onclick = function() {
+        console.log('onclick reparado ejecutado');
+        confirmCheckin();
+      };
+      
+      // También añadir event listener como backup
+      confirmBtn.addEventListener('click', function(e) {
+        console.log('Event listener backup ejecutado');
+        if (!confirmBtn.disabled) {
+          console.log('Ejecutando confirmCheckin desde event listener');
+          confirmCheckin();
+        }
+      });
+      
+      // Verificar y corregir estilos
+      confirmBtn.style.pointerEvents = 'auto';
+      confirmBtn.style.position = 'relative';
+      confirmBtn.style.zIndex = '1000';
+      
+      // Forzar repaint
+      confirmBtn.style.display = 'none';
+      confirmBtn.offsetHeight; // Trigger reflow
+      confirmBtn.style.display = 'inline-block';
+      
+      console.log('✅ Botón reparado');
+      console.log('Nuevo onclick:', confirmBtn.onclick);
+    }
+
     // Manejar tecla Enter en el campo de validación (se maneja en showValidationSection)
     
     // Inicializar la aplicación
