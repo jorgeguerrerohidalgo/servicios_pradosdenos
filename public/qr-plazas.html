@@ -4,58 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Códigos QR de Plazas - Los Prados de Nos</title>
-    <!-- Múltiples CDNs para QRCode como fallback -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-    <script src="qrcode-fallback.js"></script>
-    <script>
-        // Verificar si QRCode se cargó, si no, intentar con CDN alternativo
-        function loadQRCodeLibrary() {
-            if (typeof QRCode === 'undefined') {
-                console.log('⚠️ CDN principal falló, intentando CDN alternativo...');
-                const script = document.createElement('script');
-                script.src = 'https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js';
-                script.onload = () => {
-                    console.log('✅ QRCode cargado desde CDN alternativo');
-                    if (typeof QRCode === 'undefined') {
-                        loadThirdCDN();
-                    }
-                };
-                script.onerror = () => loadThirdCDN();
-                document.head.appendChild(script);
-            } else {
-                console.log('✅ QRCode cargado correctamente desde CDN principal');
-            }
-        }
-        
-        function loadThirdCDN() {
-            console.log('❌ CDN alternativo también falló, intentando tercera opción...');
-            const script2 = document.createElement('script');
-            script2.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js';
-            script2.onload = () => {
-                console.log('✅ QRCode cargado desde tercer CDN');
-                if (typeof QRCode === 'undefined') {
-                    useSimpleQRCode();
-                }
-            };
-            script2.onerror = () => useSimpleQRCode();
-            document.head.appendChild(script2);
-        }
-        
-        function useSimpleQRCode() {
-            console.log('❌ Todos los CDNs fallaron, usando fallback simple');
-            if (typeof SimpleQRCode !== 'undefined') {
-                window.QRCode = window.SimpleQRCode;
-                console.log('✅ Usando SimpleQRCode como fallback');
-            } else {
-                console.log('❌ Fallback también falló');
-            }
-        }
-        
-        // Verificar cuando el DOM esté listo
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(loadQRCodeLibrary, 100);
-        });
-    </script>
+    <!-- Implementación propia de QR que NO depende de CDNs externos -->
+    <script src="simple-qr-generator.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         body {
