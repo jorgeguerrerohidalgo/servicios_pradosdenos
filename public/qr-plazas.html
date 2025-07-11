@@ -121,6 +121,30 @@
         .error {
             color: #e74c3c;
             font-weight: bold;
+            text-align: center;
+            padding: 30px;
+            background: #fff5f5;
+            border: 2px dashed #e74c3c;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .error h3 {
+            color: #e74c3c;
+            margin-bottom: 15px;
+        }
+        .error ul {
+            text-align: left;
+            display: inline-block;
+            margin: 15px 0;
+        }
+        .error button {
+            margin: 5px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
         }
         .loading {
             text-align: center;
@@ -186,20 +210,39 @@
         
         async function loadPlazasFromAPI() {
             try {
-                console.log('Cargando plazas desde API...');
+                console.log('🔄 Cargando plazas desde API...');
                 const response = await fetch(`${getApiUrl()}/api/plazas`);
                 const data = await response.json();
                 
+                console.log('📡 Respuesta completa de la API:', data);
+                
                 if (data.success && data.plazas) {
-                    console.log('Plazas cargadas:', data.plazas.length);
+                    console.log('✅ Plazas cargadas:', data.plazas.length);
+                    console.log('🔍 Primera plaza:', data.plazas[0]);
+                    
+                    // Verificar tokens
+                    const conToken = data.plazas.filter(p => p.token);
+                    const sinToken = data.plazas.filter(p => !p.token);
+                    console.log(`📊 Estadísticas: ${conToken.length} con token, ${sinToken.length} sin token`);
+                    
+                    if (sinToken.length > 0) {
+                        console.warn('⚠️ Plazas sin token:', sinToken.map(p => `${p.nombre} (ID: ${p.id})`));
+                    }
+                    
                     currentPlazas = data.plazas;
                     return data.plazas;
+                } else if (data.length > 0) {
+                    // Si la API devuelve array directo sin wrapper success
+                    console.log('Plazas cargadas (formato directo):', data.length);
+                    console.log('Primera plaza:', data[0]);
+                    currentPlazas = data;
+                    return data;
                 } else {
-                    console.error('Error en respuesta API:', data);
+                    console.error('❌ Error en respuesta API:', data);
                     return [];
                 }
             } catch (error) {
-                console.error('Error cargando plazas:', error);
+                console.error('❌ Error cargando plazas:', error);
                 return [];
             }
         }
@@ -212,7 +255,44 @@
             const plazas = await loadPlazasFromAPI();
             
             if (plazas.length === 0) {
-                qrGrid.innerHTML = '<div class="error">Error: No se pudieron cargar las plazas</div>';
+                qrGrid.innerHTML = `
+                    <div class="error">
+                        <h3><i class="fas fa-exclamation-triangle"></i> Error: No se pudieron cargar las plazas</h3>
+                        <p>Verifique que:</p>
+                        <ul>
+                            <li>El servidor esté ejecutándose</li>
+                            <li>La base de datos esté conectada</li>
+                            <li>Esté autenticado correctamente</li>
+                        </ul>
+                        <button onclick="generateQRCodes()" class="btn-primary">
+                            <i class="fas fa-refresh"></i> Reintentar
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Verificar si hay plazas sin token
+            const plazasSinToken = plazas.filter(p => !p.token);
+            
+            if (plazasSinToken.length > 0) {
+                qrGrid.innerHTML = `
+                    <div class="error">
+                        <h3><i class="fas fa-exclamation-triangle"></i> Algunas plazas no tienen tokens QR</h3>
+                        <p><strong>${plazasSinToken.length}</strong> de <strong>${plazas.length}</strong> plazas no tienen tokens asignados:</p>
+                        <ul>
+                            ${plazasSinToken.map(p => `<li>${p.nombre} (ID: ${p.id})</li>`).join('')}
+                        </ul>
+                        <div style="margin-top: 20px;">
+                            <button onclick="window.location.href='generar-tokens.html'" class="btn-success">
+                                <i class="fas fa-cog"></i> Generar Tokens Faltantes
+                            </button>
+                            <button onclick="generateQRCodes()" class="btn-primary">
+                                <i class="fas fa-refresh"></i> Reintentar
+                            </button>
+                        </div>
+                    </div>
+                `;
                 return;
             }
             
@@ -227,6 +307,8 @@
                 canvas.className = 'qr-code';
                 
                 try {
+                    console.log(`🔄 Generando QR para ${plaza.nombre} con token: ${plaza.token}`);
+                    
                     // Generar QR con el token de la plaza
                     await QRCode.toCanvas(canvas, plaza.token, {
                         width: 200,
@@ -260,18 +342,28 @@
                     qrCard.querySelector('.qr-code-container').appendChild(canvas);
                     qrGrid.appendChild(qrCard);
                     
+                    console.log(`✅ QR generado exitosamente para ${plaza.nombre}`);
+                    
                 } catch (error) {
-                    console.error('Error generando QR para plaza:', plaza.nombre, error);
+                    console.error('❌ Error generando QR para plaza:', plaza.nombre, error);
+                    
                     qrCard.innerHTML = `
                         <h3>${plaza.nombre}</h3>
-                        <div class="error">Error generando QR</div>
+                        <div class="error">⚠️ Error generando QR</div>
                         <div class="token-info">
-                            <strong>Token:</strong> <code>${plaza.token}</code>
+                            <strong>Token:</strong> <code>${plaza.token}</code><br>
+                            <small style="color: #e74c3c;">Error: ${error.message}</small>
+                        </div>
+                        <div class="plaza-info">
+                            <strong>ID:</strong> ${plaza.id}<br>
+                            <strong>Dirección:</strong> ${plaza.direccion || 'N/A'}
                         </div>
                     `;
                     qrGrid.appendChild(qrCard);
                 }
             }
+            
+            console.log('🎉 Generación de QR completada');
         }
         
         function printQR(plazaId) {

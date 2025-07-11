@@ -590,4 +590,83 @@ router.get('/reports/recent', requireAdmin, async (req, res) => {
   }
 });
 
+// ==================== ENDPOINT TEMPORAL: GENERAR TOKENS ====================
+// Endpoint temporal para generar tokens automáticamente para plazas sin token
+router.post('/generate-tokens', requireAdmin, async (req, res) => {
+  try {
+    console.log('=== GENERANDO TOKENS FALTANTES ===');
+    
+    // Obtener plazas sin token
+    const plazasSinToken = await query(`
+      SELECT p.id, p.nombre
+      FROM plazas p
+      LEFT JOIN plaza_tokens pt ON p.id = pt.plaza_id
+      WHERE p.activo = TRUE AND pt.token IS NULL
+    `);
+    
+    console.log(`Plazas sin token encontradas: ${plazasSinToken.length}`);
+    
+    if (plazasSinToken.length === 0) {
+      return res.json({ 
+        success: true, 
+        message: 'Todas las plazas ya tienen tokens asignados',
+        tokensGenerados: 0 
+      });
+    }
+    
+    let tokensGenerados = 0;
+    const errores = [];
+    
+    // Generar tokens para cada plaza
+    for (const plaza of plazasSinToken) {
+      const token = `qr-plaza-${plaza.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      try {
+        await query(`
+          INSERT INTO plaza_tokens (plaza_id, token, creado_en)
+          VALUES ($1, $2, NOW())
+        `, [plaza.id, token]);
+        
+        tokensGenerados++;
+        console.log(`✓ Token generado para ${plaza.nombre}: ${token}`);
+      } catch (error) {
+        console.error(`✗ Error generando token para ${plaza.nombre}:`, error.message);
+        errores.push(`Error en ${plaza.nombre}: ${error.message}`);
+      }
+    }
+    
+    // Verificación final
+    const verificacion = await query(`
+      SELECT p.id, p.nombre, pt.token
+      FROM plazas p
+      LEFT JOIN plaza_tokens pt ON p.id = pt.plaza_id
+      WHERE p.activo = TRUE
+      ORDER BY p.nombre ASC
+    `);
+    
+    const conToken = verificacion.filter(p => p.token);
+    const sinToken = verificacion.filter(p => !p.token);
+    
+    res.json({
+      success: true,
+      message: `Tokens generados exitosamente`,
+      tokensGenerados,
+      errores,
+      estadoFinal: {
+        totalPlazas: verificacion.length,
+        plazasConToken: conToken.length,
+        plazasSinToken: sinToken.length
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error generando tokens:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error interno del servidor',
+      error: error.message 
+    });
+  }
+});
+
 module.exports = router;
