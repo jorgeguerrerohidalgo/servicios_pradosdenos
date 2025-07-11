@@ -532,6 +532,8 @@
         
         async function loadDashboard() {
             try {
+                console.log('Iniciando carga del dashboard...');
+                
                 // Mostrar loading state
                 const loadingElements = [
                     { id: 'totalPlazas', text: '...' },
@@ -546,6 +548,7 @@
                 });
                 
                 // Cargar estadísticas
+                console.log('Solicitando estadísticas...');
                 const statsResponse = await fetch('/api/admin/stats', {
                     method: 'GET',
                     credentials: 'include',
@@ -554,15 +557,25 @@
                     }
                 });
                 
+                console.log('Stats response status:', statsResponse.status);
+                
                 if (!statsResponse.ok) {
                     if (statsResponse.status === 403) {
+                        console.log('Acceso denegado - redirigiendo al login');
                         window.location.href = 'admin-login.html';
                         return;
+                    } else if (statsResponse.status === 404) {
+                        console.log('Endpoint de estadísticas no encontrado');
+                        // Cargar estadísticas básicas manualmente
+                        await loadBasicStats();
+                        loadRecentActivity();
+                        return;
                     }
-                    throw new Error(`Error HTTP: ${statsResponse.status}`);
+                    throw new Error(`Error HTTP: ${statsResponse.status} - ${statsResponse.statusText}`);
                 }
                 
                 const statsData = await statsResponse.json();
+                console.log('Stats data received:', statsData);
                 
                 if (statsData.success && statsData.stats) {
                     const stats = statsData.stats;
@@ -579,8 +592,12 @@
                         const element = document.getElementById(update.id);
                         if (element) {
                             element.textContent = update.value;
+                            console.log(`Actualizado ${update.id}: ${update.value}`);
                         }
                     });
+                } else {
+                    console.error('Respuesta de estadísticas sin datos válidos:', statsData);
+                    await loadBasicStats();
                 }
                 
                 // Cargar actividad reciente
@@ -588,11 +605,19 @@
                 
             } catch (error) {
                 console.error('Error cargando dashboard:', error);
-                Swal.fire({
-                    title: 'Error',
-                    text: 'Error al cargar el dashboard',
-                    icon: 'error'
-                });
+                
+                // Intentar cargar estadísticas básicas como fallback
+                try {
+                    await loadBasicStats();
+                    loadRecentActivity();
+                } catch (fallbackError) {
+                    console.error('Error en fallback:', fallbackError);
+                    Swal.fire({
+                        title: 'Error',
+                        text: `Error al cargar el dashboard: ${error.message}`,
+                        icon: 'error'
+                    });
+                }
             }
         }
         
@@ -603,6 +628,7 @@
                 // Limpiar el contenido previo para evitar duplicaciones
                 activityContainer.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando actividad...</div>';
                 
+                console.log('Solicitando actividad reciente...');
                 const response = await fetch('/api/admin/reports/recent?limit=10', {
                     method: 'GET',
                     credentials: 'include',
@@ -611,15 +637,22 @@
                     }
                 });
                 
+                console.log('Recent activity response status:', response.status);
+                
                 if (!response.ok) {
                     if (response.status === 403) {
                         window.location.href = 'admin-login.html';
                         return;
+                    } else if (response.status === 404) {
+                        console.log('Endpoint de actividad reciente no encontrado');
+                        activityContainer.innerHTML = '<div class="text-center text-muted">Función de actividad reciente no disponible</div>';
+                        return;
                     }
-                    throw new Error(`Error HTTP: ${response.status}`);
+                    throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
                 }
                 
                 const data = await response.json();
+                console.log('Recent activity data:', data);
                 
                 if (data.success && data.checkins && data.checkins.length > 0) {
                     const activityHtml = data.checkins.map(checkin => `
@@ -639,7 +672,74 @@
             } catch (error) {
                 console.error('Error cargando actividad:', error);
                 document.getElementById('actividadReciente').innerHTML = 
-                    '<div class="text-center text-muted">Error al cargar actividad</div>';
+                    `<div class="text-center text-muted">Error al cargar actividad: ${error.message}</div>`;
+            }
+        }
+        
+        // ==================== FUNCIÓN FALLBACK PARA ESTADÍSTICAS ====================
+        
+        async function loadBasicStats() {
+            console.log('Cargando estadísticas básicas...');
+            
+            try {
+                // Cargar plazas
+                const plazasResponse = await fetch('/api/admin/plazas', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (plazasResponse.ok) {
+                    const plazasData = await plazasResponse.json();
+                    if (plazasData.success) {
+                        const totalPlazas = plazasData.plazas ? plazasData.plazas.length : 0;
+                        const element = document.getElementById('totalPlazas');
+                        if (element) element.textContent = totalPlazas;
+                        console.log('Plazas cargadas:', totalPlazas);
+                    }
+                }
+                
+                // Cargar guardias
+                const guardiasResponse = await fetch('/api/admin/guardias', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (guardiasResponse.ok) {
+                    const guardiasData = await guardiasResponse.json();
+                    if (guardiasData.success) {
+                        const guardiasActivos = guardiasData.guardias ? 
+                            guardiasData.guardias.filter(g => g.activo).length : 0;
+                        const element = document.getElementById('guardiasActivos');
+                        if (element) element.textContent = guardiasActivos;
+                        console.log('Guardias activos:', guardiasActivos);
+                    }
+                }
+                
+                // Para checkins, usar valores básicos si no tenemos endpoints específicos
+                const checkinsHoyElement = document.getElementById('checkinsHoy');
+                const checkinsSemanaElement = document.getElementById('checkinsSemana');
+                
+                if (checkinsHoyElement) checkinsHoyElement.textContent = '0';
+                if (checkinsSemanaElement) checkinsSemanaElement.textContent = '0';
+                
+                console.log('Estadísticas básicas cargadas como fallback');
+                
+            } catch (error) {
+                console.error('Error cargando estadísticas básicas:', error);
+                // Establecer valores por defecto
+                const defaultElements = [
+                    { id: 'totalPlazas', value: '0' },
+                    { id: 'guardiasActivos', value: '0' },
+                    { id: 'checkinsHoy', value: '0' },
+                    { id: 'checkinsSemana', value: '0' }
+                ];
+                
+                defaultElements.forEach(item => {
+                    const element = document.getElementById(item.id);
+                    if (element) element.textContent = item.value;
+                });
             }
         }
         
@@ -814,14 +914,13 @@
                 email: document.getElementById('guardiaEmail').value,
                 telefono: document.getElementById('guardiaTelefono').value,
                 password: document.getElementById('guardiaPassword').value
-            };
-            
-            try {
-                const response = await fetch('/api/admin/guardias', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                });
+            };                try {
+                    const response = await fetch('/api/admin/guardias', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
                 
                 const data = await response.json();
                 
@@ -916,6 +1015,7 @@
                 try {
                     const response = await fetch(`/api/admin/guardias/${id}`, {
                         method: 'PUT',
+                        credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(formData)
                     });
@@ -968,7 +1068,8 @@
             if (result.isConfirmed) {
                 try {
                     const response = await fetch(`/api/admin/guardias/${id}`, {
-                        method: 'DELETE'
+                        method: 'DELETE',
+                        credentials: 'include'
                     });
                     
                     const data = await response.json();
@@ -1137,6 +1238,7 @@
             try {
                 const response = await fetch('/api/admin/plazas', {
                     method: 'POST',
+                    credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
                 });
@@ -1213,6 +1315,7 @@
                 try {
                     const response = await fetch(`/api/admin/plazas/${id}`, {
                         method: 'PUT',
+                        credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(formData)
                     });
@@ -1265,7 +1368,8 @@
             if (result.isConfirmed) {
                 try {
                     const response = await fetch(`/api/admin/plazas/${id}`, {
-                        method: 'DELETE'
+                        method: 'DELETE',
+                        credentials: 'include'
                     });
                     
                     const data = await response.json();
@@ -1469,6 +1573,7 @@
             try {
                 const response = await fetch('/api/admin/admins', {
                     method: 'POST',
+                    credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
                 });

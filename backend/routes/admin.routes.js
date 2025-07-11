@@ -430,29 +430,41 @@ router.delete('/admins/:id', requireAdmin, async (req, res) => {
 // Estadísticas generales
 router.get('/stats', requireAdmin, async (req, res) => {
   try {
+    console.log('Obteniendo estadísticas del dashboard...');
+    
     const stats = await Promise.all([
       query('SELECT COUNT(*) as total FROM plazas WHERE activo = true'),
       query('SELECT COUNT(*) as total FROM guardias WHERE activo = true'),
-      query('SELECT COUNT(*) as total FROM checkins WHERE fecha >= CURRENT_DATE - INTERVAL \'7 days\''),
-      query('SELECT COUNT(*) as total FROM checkins WHERE fecha >= CURRENT_DATE'),
-      query('SELECT COUNT(*) as total FROM checkins WHERE fecha >= CURRENT_DATE - INTERVAL \'30 days\''),
+      query(`SELECT COUNT(*) as total FROM checkins 
+             WHERE fecha::date >= (CURRENT_DATE - INTERVAL '7 days')`),
+      query(`SELECT COUNT(*) as total FROM checkins 
+             WHERE fecha::date = CURRENT_DATE`),
+      query(`SELECT COUNT(*) as total FROM checkins 
+             WHERE fecha::date >= (CURRENT_DATE - INTERVAL '30 days')`),
       query('SELECT COUNT(*) as total FROM checkins'),
     ]);
     
-    res.json({
+    const result = {
       success: true,
       stats: {
-        total_plazas: parseInt(stats[0][0].total),
-        guardias_activos: parseInt(stats[1][0].total),
-        checkins_semana: parseInt(stats[2][0].total),
-        checkins_hoy: parseInt(stats[3][0].total),
-        checkins_mes: parseInt(stats[4][0].total),
-        checkins_total: parseInt(stats[5][0].total)
+        total_plazas: parseInt(stats[0][0].total) || 0,
+        guardias_activos: parseInt(stats[1][0].total) || 0,
+        checkins_semana: parseInt(stats[2][0].total) || 0,
+        checkins_hoy: parseInt(stats[3][0].total) || 0,
+        checkins_mes: parseInt(stats[4][0].total) || 0,
+        checkins_total: parseInt(stats[5][0].total) || 0
       }
-    });
+    };
+    
+    console.log('Estadísticas obtenidas:', result);
+    res.json(result);
   } catch (error) {
     console.error('Error obteniendo estadísticas:', error);
-    res.status(500).json({ success: false, message: 'Error interno del servidor' });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error interno del servidor',
+      error: error.message 
+    });
   }
 });
 
