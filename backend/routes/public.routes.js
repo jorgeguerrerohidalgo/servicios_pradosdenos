@@ -5,10 +5,35 @@ const { query } = require('../utils/db');
 // Obtener todas las plazas para el dropdown
 router.get('/plazas', async (req, res) => {
   try {
-    const plazas = await query('SELECT id, nombre FROM plazas ORDER BY nombre ASC');
-    res.json(plazas);
+    const plazas = await query(`
+      SELECT p.id, p.nombre, p.direccion, p.descripcion, p.activo,
+             pt.token
+      FROM plazas p
+      LEFT JOIN plaza_tokens pt ON p.id = pt.plaza_id
+      WHERE p.activo = TRUE
+      ORDER BY p.nombre ASC
+    `);
+    
+    res.json({
+      success: true,
+      plazas: plazas
+    });
   } catch (error) {
     console.error('Error obteniendo plazas:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error interno del servidor' 
+    });
+  }
+});
+
+// Obtener solo nombres de plazas (para dropdown básico)
+router.get('/plazas/simple', async (req, res) => {
+  try {
+    const plazas = await query('SELECT id, nombre FROM plazas WHERE activo = TRUE ORDER BY nombre ASC');
+    res.json(plazas);
+  } catch (error) {
+    console.error('Error obteniendo plazas simples:', error);
     res.status(500).json({ 
       success: false, 
       message: 'Error interno del servidor' 

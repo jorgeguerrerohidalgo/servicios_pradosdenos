@@ -1,14 +1,6 @@
 -- Script de inicialización CORREGIDO para PostgreSQL (Supabase)
 -- Configurar zona horaria para Santiago de Chile
-SET timezone = '-- Insertar guardias con contraseñas hasheadas y códigos de validación
-INSERT INTO guardias (nombre, rut, email, password, telefono, activo, validation_code) 
-SELECT nombre, rut, email, password, telefono, activo, validation_code FROM (VALUES
-('Carlos Mendoza Torres', '18.543.210-9', 'carlos.mendoza@pradosdenos.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+56912345678', TRUE, '1001'),
-('María Elena Soto', '16.789.432-1', 'maria.soto@pradosdenos.com', '$2b$10$Hgw2GWfqF7dqLgGxw9v1b.qH7VkGZGK5kOOGK5kL5kOOGK5kL5k', '+56987654321', TRUE, '2002'),
-('Juan Carlos Ramirez', '19.234.567-8', 'juan.ramirez@pradosdenos.com', '$2b$10$XYZ123abc456def789ghi012jkl345mno678pqr901stu234vwx567yz', '+56976543210', TRUE, '3003'),
-('Patricia Morales Vega', '17.654.321-0', 'patricia.morales@pradosdenos.com', '$2b$10$ABC789def012ghi345jkl678mno901pqr234stu567vwx890yzA123Bc', '+56965432109', TRUE, '4004')
-) AS nuevos_guardias(nombre, rut, email, password, telefono, activo, validation_code)
-WHERE NOT EXISTS (SELECT 1 FROM guardias WHERE guardias.email = nuevos_guardias.email);/Santiago';
+SET timezone = 'America/Santiago';
 
 -- Tabla de plazas (CORREGIDA - con todos los campos que usa el backend)
 CREATE TABLE IF NOT EXISTS plazas (
@@ -138,12 +130,14 @@ SELECT plaza_id, token FROM (VALUES
 WHERE NOT EXISTS (SELECT 1 FROM plaza_tokens WHERE plaza_tokens.token = nuevos_tokens.token);
 
 -- Insertar guardias con contraseñas hasheadas y códigos de validación
-INSERT INTO guardias (nombre, rut, email, password, telefono, activo, validation_code) VALUES
+INSERT INTO guardias (nombre, rut, email, password, telefono, activo, validation_code) 
+SELECT nombre, rut, email, password, telefono, activo, validation_code FROM (VALUES
 ('Carlos Mendoza Torres', '18.543.210-9', 'carlos.mendoza@pradosdenos.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+56912345678', TRUE, '1001'),
 ('María Elena Soto', '16.789.432-1', 'maria.soto@pradosdenos.com', '$2b$10$Hgw2GWfqF7dqLgGxw9v1b.qH7VkGZGK5kOOGK5kL5kOOGK5kL5k', '+56987654321', TRUE, '2002'),
 ('Juan Carlos Ramirez', '19.234.567-8', 'juan.ramirez@pradosdenos.com', '$2b$10$XYZ123abc456def789ghi012jkl345mno678pqr901stu234vwx567yz', '+56976543210', TRUE, '3003'),
 ('Patricia Morales Vega', '17.654.321-0', 'patricia.morales@pradosdenos.com', '$2b$10$ABC789def012ghi345jkl678mno901pqr234stu567vwx890yzA123Bc', '+56965432109', TRUE, '4004')
-ON CONFLICT (email) DO NOTHING;
+) AS nuevos_guardias(nombre, rut, email, password, telefono, activo, validation_code)
+WHERE NOT EXISTS (SELECT 1 FROM guardias WHERE guardias.email = nuevos_guardias.email);
 
 -- Insertar administradores del sistema (con campos opcionales)
 INSERT INTO admin_users (nombre, apellido_paterno, apellido_materno, run, email, telefono, fecha_nacimiento, direccion, plaza_id, activo, password_hash) 
