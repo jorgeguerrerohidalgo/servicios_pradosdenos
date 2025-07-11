@@ -196,6 +196,11 @@
   <button class="btn btn-danger btn-logout" onclick="logout()">
     <i class="fas fa-sign-out-alt"></i> Salir
   </button>
+  
+  <!-- Botón de diagnóstico temporal -->
+  <button class="btn btn-info" onclick="showDebugInfo()" style="position: absolute; top: 20px; left: 20px; z-index: 1000;">
+    <i class="fas fa-bug"></i> Debug
+  </button>
 
   <div class="container">
     <div class="header">
@@ -309,24 +314,36 @@
     
     // Cargar código de validación del guardia
     async function loadValidationCode() {
+      console.log('=== CARGANDO CÓDIGO DE VALIDACIÓN ===');
       try {
-        const res = await fetch(`${getApiUrl()}/api/checkin/validation-code`, {
+        const url = `${getApiUrl()}/api/checkin/validation-code`;
+        console.log('URL:', url);
+        
+        const res = await fetch(url, {
           credentials: 'include'
         });
+        
+        console.log('Response status:', res.status);
+        console.log('Response ok:', res.ok);
+        
         const result = await res.json();
+        console.log('Response data:', result);
         
         if (result.success) {
           userValidationCode = result.validation_code;
           document.getElementById('userValidationCode').textContent = userValidationCode;
-          console.log('Código de validación cargado:', userValidationCode);
+          console.log('✅ Código de validación cargado:', userValidationCode);
+          console.log('Tipo de userValidationCode:', typeof userValidationCode);
+          console.log('Longitud del código:', userValidationCode ? userValidationCode.length : 'NULL');
         } else {
-          console.error('Error al cargar código de validación:', result.message);
+          console.error('❌ Error al cargar código de validación:', result.message);
           showStatus('Error al cargar código de validación', 'error');
         }
       } catch (error) {
-        console.error('Error cargando código de validación:', error);
+        console.error('❌ Error cargando código de validación:', error);
         showStatus('Error de conexión al cargar código', 'error');
       }
+      console.log('=== FIN CARGA CÓDIGO ===');
     }
     
     // Cargar historial de check-ins
@@ -437,42 +454,66 @@
       document.getElementById('validationSection').style.display = 'block';
       const input = document.getElementById('validationCodeInput');
       
+      // Limpiar input anterior
+      input.value = '';
+      document.getElementById('codeValidationFeedback').textContent = '';
+      document.getElementById('confirmCheckinBtn').disabled = true;
+      
       // Auto-focus en el input
       setTimeout(() => {
         input.focus();
       }, 100);
       
-      // Agregar validación en tiempo real
-      input.addEventListener('input', function() {
-        const enteredCode = this.value.trim().toUpperCase();
-        const feedback = document.getElementById('codeValidationFeedback');
-        const confirmBtn = document.getElementById('confirmCheckinBtn');
-        
-        console.log('Código ingresado:', enteredCode, 'Código esperado:', userValidationCode);
-        
-        if (enteredCode.length === 0) {
-          feedback.textContent = '';
-          feedback.className = 'form-text';
-          confirmBtn.disabled = true;
-        } else if (userValidationCode && enteredCode === userValidationCode.toUpperCase()) {
-          feedback.textContent = '✓ Código correcto';
-          feedback.className = 'form-text code-match';
-          confirmBtn.disabled = false;
-        } else {
-          feedback.textContent = '✗ Código incorrecto';
-          feedback.className = 'form-text code-mismatch';
-          confirmBtn.disabled = true;
-        }
-      });
+      // Remover event listeners anteriores para evitar duplicados
+      input.removeEventListener('input', validateCodeInput);
+      input.removeEventListener('keypress', handleEnterKey);
       
-      // Permitir confirmar con Enter
-      input.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter' && !document.getElementById('confirmCheckinBtn').disabled) {
-          confirmCheckin();
-        }
-      });
+      // Agregar event listeners
+      input.addEventListener('input', validateCodeInput);
+      input.addEventListener('keypress', handleEnterKey);
       
       updateSteps(2);
+    }
+    
+    // Función para validar el código ingresado
+    function validateCodeInput() {
+      const enteredCode = this.value.trim().toUpperCase();
+      const feedback = document.getElementById('codeValidationFeedback');
+      const confirmBtn = document.getElementById('confirmCheckinBtn');
+      
+      console.log('=== VALIDACIÓN DE CÓDIGO ===');
+      console.log('Código ingresado (original):', this.value);
+      console.log('Código ingresado (procesado):', enteredCode);
+      console.log('Código esperado:', userValidationCode);
+      console.log('Código esperado (procesado):', userValidationCode ? userValidationCode.toUpperCase() : 'NULL');
+      console.log('Longitud código ingresado:', enteredCode.length);
+      console.log('userValidationCode existe:', !!userValidationCode);
+      
+      if (enteredCode.length === 0) {
+        feedback.textContent = '';
+        feedback.className = 'form-text';
+        confirmBtn.disabled = true;
+        console.log('→ Campo vacío, botón deshabilitado');
+      } else if (userValidationCode && enteredCode === userValidationCode.toUpperCase()) {
+        feedback.textContent = '✓ Código correcto';
+        feedback.className = 'form-text code-match';
+        confirmBtn.disabled = false;
+        console.log('→ Código correcto, botón habilitado');
+      } else {
+        feedback.textContent = '✗ Código incorrecto';
+        feedback.className = 'form-text code-mismatch';
+        confirmBtn.disabled = true;
+        console.log('→ Código incorrecto, botón deshabilitado');
+      }
+      console.log('Estado botón disabled:', confirmBtn.disabled);
+      console.log('=== FIN VALIDACIÓN ===');
+    }
+    
+    // Función para manejar la tecla Enter
+    function handleEnterKey(e) {
+      if (e.key === 'Enter' && !document.getElementById('confirmCheckinBtn').disabled) {
+        confirmCheckin();
+      }
     }
     
     // Confirmar check-in
@@ -574,14 +615,34 @@
       }
     }
     
-    // Manejar tecla Enter en el campo de validación
-    document.addEventListener('DOMContentLoaded', function() {
-      document.getElementById('validationCodeInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-          confirmCheckin();
-        }
-      });
-    });
+    // Función de debug temporal
+    function showDebugInfo() {
+      const debugInfo = {
+        userValidationCode: userValidationCode,
+        userValidationCodeType: typeof userValidationCode,
+        userValidationCodeLength: userValidationCode ? userValidationCode.length : 'NULL',
+        scannedToken: scannedToken,
+        isScanning: isScanning,
+        currentInput: document.getElementById('validationCodeInput').value,
+        buttonDisabled: document.getElementById('confirmCheckinBtn').disabled,
+        validationSectionVisible: document.getElementById('validationSection').style.display !== 'none'
+      };
+      
+      console.log('=== DEBUG INFO ===');
+      console.table(debugInfo);
+      console.log('=== END DEBUG ===');
+      
+      // Mostrar también en alert para facilitar visualización
+      alert(`DEBUG INFO:
+userValidationCode: ${userValidationCode}
+Tipo: ${typeof userValidationCode}
+Longitud: ${userValidationCode ? userValidationCode.length : 'NULL'}
+Input actual: "${document.getElementById('validationCodeInput').value}"
+Botón deshabilitado: ${document.getElementById('confirmCheckinBtn').disabled}
+Sección visible: ${document.getElementById('validationSection').style.display !== 'none'}`);
+    }
+    
+    // Manejar tecla Enter en el campo de validación (se maneja en showValidationSection)
     
     // Inicializar la aplicación
     async function init() {
