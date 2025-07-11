@@ -623,7 +623,7 @@ router.post('/generate-tokens', requireAdmin, async (req, res) => {
       
       try {
         await query(`
-          INSERT INTO plaza_tokens (plaza_id, token, creado_en)
+          INSERT INTO plaza_tokens (plaza_id, token, created_at)
           VALUES ($1, $2, NOW())
         `, [plaza.id, token]);
         

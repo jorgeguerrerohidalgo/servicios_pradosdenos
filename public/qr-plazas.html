@@ -191,6 +191,9 @@
             <button class="btn-primary" onclick="downloadAll()">
                 <i class="fas fa-download"></i> Descargar Todos
             </button>
+            <button class="btn-primary" onclick="window.location.href='setup-tokens.html'" style="background-color: #e67e22;">
+                <i class="fas fa-magic"></i> Configurar Tokens
+            </button>
         </div>
         
         <div id="qrGrid" class="qr-grid">
@@ -284,8 +287,11 @@
                             ${plazasSinToken.map(p => `<li>${p.nombre} (ID: ${p.id})</li>`).join('')}
                         </ul>
                         <div style="margin-top: 20px;">
+                            <button onclick="window.location.href='setup-tokens.html'" class="btn-success" style="margin-right: 10px;">
+                                <i class="fas fa-magic"></i> Configuración Inicial
+                            </button>
                             <button onclick="window.location.href='generar-tokens.html'" class="btn-success">
-                                <i class="fas fa-cog"></i> Generar Tokens Faltantes
+                                <i class="fas fa-cog"></i> Generar Tokens
                             </button>
                             <button onclick="generateQRCodes()" class="btn-primary">
                                 <i class="fas fa-refresh"></i> Reintentar
