@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico QR - Los Prados de Nos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <!-- Múltiples CDNs para QRCode como fallback -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="qrcode-fallback.js"></script>
+    <script>
+        // Verificar si QRCode se cargó, si no, intentar con CDN alternativo
+        function loadQRCodeLibrary() {
+            if (typeof QRCode === 'undefined') {
+                console.log('⚠️ CDN principal falló, intentando CDN alternativo...');
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js';
+                script.onload = () => {
+                    console.log('✅ QRCode cargado desde CDN alternativo');
+                    if (typeof QRCode === 'undefined') {
+                        loadThirdCDN();
+                    }
+                };
+                script.onerror = () => loadThirdCDN();
+                document.head.appendChild(script);
+            } else {
+                console.log('✅ QRCode cargado correctamente desde CDN principal');
+            }
+        }
+        
+        function loadThirdCDN() {
+            console.log('❌ CDN alternativo también falló, intentando tercera opción...');
+            const script2 = document.createElement('script');
+            script2.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js';
+            script2.onload = () => {
+                console.log('✅ QRCode cargado desde tercer CDN');
+                if (typeof QRCode === 'undefined') {
+                    useSimpleQRCode();
+                }
+            };
+            script2.onerror = () => useSimpleQRCode();
+            document.head.appendChild(script2);
+        }
+        
+        function useSimpleQRCode() {
+            console.log('❌ Todos los CDNs fallaron, usando fallback simple');
+            if (typeof SimpleQRCode !== 'undefined') {
+                window.QRCode = window.SimpleQRCode;
+                console.log('✅ Usando SimpleQRCode como fallback');
+            } else {
+                console.log('❌ Fallback también falló');
+            }
+        }
+        
+        // Verificar cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(loadQRCodeLibrary, 100);
+        });
+    </script>
+    <style>
+        .log-container {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.875rem;
+        }
+        .log-entry {
+            margin-bottom: 0.5rem;
+            padding: 0.25rem;
+            border-radius: 0.25rem;
+        }
+        .log-info { background-color: #cff4fc; }
+        .log-error { background-color: #f8d7da; }
+        .log-success { background-color: #d1e7dd; }
+        .qr-canvas {
+            margin: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4">🔍 Diagnóstico de Generación de QR</h1>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Controles de Prueba</h5>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-primary mb-2" onclick="testQRLibrary()">1. Probar Librería QR</button><br>
+                        <button class="btn btn-secondary mb-2" onclick="testStaticQR()">2. Probar QR Estático</button><br>
+                        <button class="btn btn-info mb-2" onclick="loadPlazasData()">3. Cargar Datos de Plazas</button><br>
+                        <button class="btn btn-warning mb-2" onclick="testTokens()">4. Probar Tokens Individuales</button><br>
+                        <button class="btn btn-success mb-2" onclick="generateAllQRs()">5. Generar Todos los QR</button><br>
+                        <button class="btn btn-danger mb-2" onclick="clearLog()">Limpiar Log</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Log de Diagnóstico</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="logContainer" class="log-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Resultados de Pruebas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="testResults"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>QR Generados</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="qrContainer" class="d-flex flex-wrap"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="text-center">
+                    <a href="qr-plazas.html" class="btn btn-primary">← Volver a QR Plazas</a>
+                    <a href="admin-panel.html" class="btn btn-secondary">Panel Admin</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let plazasData = [];
+        
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        function clearLog() {
+            document.getElementById('logContainer').innerHTML = '';
+            document.getElementById('testResults').innerHTML = '';
+            document.getElementById('qrContainer').innerHTML = '';
+        }
+
+        function testQRLibrary() {
+            log('Probando si la librería QRCode está disponible...', 'info');
+            
+            if (typeof QRCode === 'undefined') {
+                log('ERROR: La librería QRCode no está cargada', 'error');
+                return;
+            }
+            
+            log('✓ Librería QRCode disponible', 'success');
+            log(`Versión: ${QRCode.version || 'Desconocida'}`, 'info');
+            
+            // Probar métodos disponibles
+            const methods = ['toCanvas', 'toDataURL', 'toString'];
+            methods.forEach(method => {
+                if (typeof QRCode[method] === 'function') {
+                    log(`✓ Método ${method} disponible`, 'success');
+                } else {
+                    log(`✗ Método ${method} no disponible`, 'error');
+                }
+            });
+        }
+
+        function testStaticQR() {
+            log('Probando generación de QR con texto estático...', 'info');
+            
+            const canvas = document.createElement('canvas');
+            canvas.className = 'qr-canvas';
+            
+            const testText = 'TEST-QR-12345';
+            log(`Generando QR para: "${testText}"`, 'info');
+            
+            QRCode.toCanvas(canvas, testText, { width: 200 })
+                .then(() => {
+                    log('✓ QR estático generado correctamente', 'success');
+                    const container = document.getElementById('qrContainer');
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'text-center m-2';
+                    wrapper.innerHTML = `<div><strong>Prueba Estática</strong></div>`;
+                    wrapper.appendChild(canvas);
+                    container.appendChild(wrapper);
+                })
+                .catch(err => {
+                    log(`✗ Error generando QR estático: ${err.message}`, 'error');
+                    console.error('Error QR estático:', err);
+                });
+        }
+
+        async function loadPlazasData() {
+            log('Cargando datos de plazas desde la API...', 'info');
+            
+            try {
+                const response = await fetch('/api/plazas', {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                plazasData = data;
+                
+                log(`✓ Datos cargados: ${data.length} plazas`, 'success');
+                
+                // Mostrar información detallada de cada plaza
+                data.forEach((plaza, index) => {
+                    log(`Plaza ${index + 1}: ${plaza.nombre}`, 'info');
+                    log(`  - ID: ${plaza.id}`, 'info');
+                    log(`  - Token: ${plaza.token ? plaza.token.substring(0, 20) + '...' : 'NULL'}`, 'info');
+                    log(`  - Tipo token: ${typeof plaza.token}`, 'info');
+                    log(`  - Longitud token: ${plaza.token ? plaza.token.length : 0}`, 'info');
+                    
+                    if (plaza.token) {
+                        // Verificar caracteres especiales
+                        const hasSpecialChars = /[^\w\-]/.test(plaza.token);
+                        log(`  - Caracteres especiales: ${hasSpecialChars ? 'SÍ' : 'NO'}`, hasSpecialChars ? 'error' : 'success');
+                        
+                        // Verificar si es un token válido (formato esperado)
+                        const isValidFormat = /^[a-zA-Z0-9\-_]+$/.test(plaza.token);
+                        log(`  - Formato válido: ${isValidFormat ? 'SÍ' : 'NO'}`, isValidFormat ? 'success' : 'error');
+                    }
+                });
+                
+            } catch (error) {
+                log(`✗ Error cargando datos: ${error.message}`, 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        async function testTokens() {
+            if (plazasData.length === 0) {
+                log('No hay datos cargados. Ejecuta "Cargar Datos de Plazas" primero', 'error');
+                return;
+            }
+            
+            log('Probando generación de QR para cada token...', 'info');
+            
+            for (let i = 0; i < plazasData.length; i++) {
+                const plaza = plazasData[i];
+                log(`Probando plaza ${i + 1}: ${plaza.nombre}`, 'info');
+                
+                if (!plaza.token) {
+                    log(`  ✗ Plaza sin token`, 'error');
+                    continue;
+                }
+                
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.className = 'qr-canvas';
+                    
+                    await QRCode.toCanvas(canvas, plaza.token, { width: 150 });
+                    
+                    log(`  ✓ QR generado correctamente`, 'success');
+                    
+                    // Agregar al contenedor
+                    const container = document.getElementById('qrContainer');
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'text-center m-2';
+                    wrapper.innerHTML = `<div><strong>${plaza.nombre}</strong></div><div><small>Token: ${plaza.token.substring(0, 10)}...</small></div>`;
+                    wrapper.appendChild(canvas);
+                    container.appendChild(wrapper);
+                    
+                } catch (error) {
+                    log(`  ✗ Error generando QR: ${error.message}`, 'error');
+                    console.error(`Error QR para plaza ${plaza.nombre}:`, error);
+                    
+                    // Información adicional sobre el error
+                    log(`  - Token problemático: "${plaza.token}"`, 'error');
+                    log(`  - Longitud: ${plaza.token.length}`, 'error');
+                    log(`  - Primeros 50 chars: ${plaza.token.substring(0, 50)}`, 'error');
+                }
+                
+                // Pausa pequeña para no sobrecargar
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+        }
+
+        async function generateAllQRs() {
+            if (plazasData.length === 0) {
+                log('No hay datos cargados. Ejecuta "Cargar Datos de Plazas" primero', 'error');
+                return;
+            }
+            
+            log('Generando todos los QR de una vez...', 'info');
+            
+            const promises = plazasData.map(async (plaza, index) => {
+                if (!plaza.token) {
+                    log(`Plaza ${plaza.nombre}: Sin token`, 'error');
+                    return null;
+                }
+                
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.className = 'qr-canvas';
+                    
+                    await QRCode.toCanvas(canvas, plaza.token, { width: 150 });
+                    
+                    log(`Plaza ${plaza.nombre}: ✓ QR generado`, 'success');
+                    
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'text-center m-2';
+                    wrapper.innerHTML = `<div><strong>${plaza.nombre}</strong></div><div><small>Token: ${plaza.token.substring(0, 10)}...</small></div>`;
+                    wrapper.appendChild(canvas);
+                    
+                    return wrapper;
+                    
+                } catch (error) {
+                    log(`Plaza ${plaza.nombre}: ✗ Error: ${error.message}`, 'error');
+                    console.error(`Error QR para plaza ${plaza.nombre}:`, error);
+                    return null;
+                }
+            });
+            
+            try {
+                const results = await Promise.all(promises);
+                const container = document.getElementById('qrContainer');
+                
+                results.forEach(wrapper => {
+                    if (wrapper) {
+                        container.appendChild(wrapper);
+                    }
+                });
+                
+                const successCount = results.filter(r => r !== null).length;
+                log(`Completado: ${successCount}/${plazasData.length} QR generados`, 'success');
+                
+            } catch (error) {
+                log(`Error en generación masiva: ${error.message}`, 'error');
+                console.error('Error generación masiva:', error);
+            }
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Página de diagnóstico QR cargada', 'success');
+            testQRLibrary();
+        });
+    </script>
+</body>
+</html>
