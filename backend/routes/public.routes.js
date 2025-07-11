@@ -401,10 +401,30 @@ router.post('/generate-tokens-temp', async (req, res) => {
     console.log(`📊 Plazas sin token encontradas: ${plazasSinToken.length}`);
     
     if (plazasSinToken.length === 0) {
+      // Obtener estado actual para respuesta completa
+      const verificacion = await query(`
+        SELECT p.id, p.nombre, pt.token
+        FROM plazas p
+        LEFT JOIN plaza_tokens pt ON p.id = pt.plaza_id
+        WHERE p.activo = TRUE
+        ORDER BY p.nombre ASC
+      `);
+      
+      const conToken = verificacion.filter(p => p.token);
+      const sinToken = verificacion.filter(p => !p.token);
+      
       return res.json({ 
         success: true, 
         message: 'Todas las plazas ya tienen tokens asignados',
-        tokensGenerados: 0 
+        tokensGenerados: 0,
+        errores: [],
+        estadoFinal: {
+          totalPlazas: verificacion.length,
+          plazasConToken: conToken.length,
+          plazasSinToken: sinToken.length,
+          plazasConTokenNombres: conToken.map(p => p.nombre),
+          plazasSinTokenNombres: sinToken.map(p => p.nombre)
+        }
       });
     }
     
@@ -445,7 +465,7 @@ router.post('/generate-tokens-temp', async (req, res) => {
     
     res.json({
       success: true,
-      message: `Tokens generados exitosamente`,
+      message: tokensGenerados > 0 ? `Tokens generados exitosamente` : 'Proceso completado sin cambios',
       tokensGenerados,
       errores,
       estadoFinal: {
@@ -462,7 +482,16 @@ router.post('/generate-tokens-temp', async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: 'Error interno del servidor',
-      error: error.message 
+      error: error.message,
+      tokensGenerados: 0,
+      errores: [error.message],
+      estadoFinal: {
+        totalPlazas: 0,
+        plazasConToken: 0,
+        plazasSinToken: 0,
+        plazasConTokenNombres: [],
+        plazasSinTokenNombres: []
+      }
     });
   }
 });

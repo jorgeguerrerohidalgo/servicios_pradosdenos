@@ -208,7 +208,7 @@
             <i class="fas fa-magic"></i> Generar Tokens QR
         </button>
         
-        <div id="status" class="status"></div>
+        <div id="result"></div>
         
         <div class="navigation">
             <a href="qr-plazas.html">
@@ -223,18 +223,25 @@
     <script>
         async function generateTokens() {
             const generateBtn = document.getElementById('generateBtn');
-            const status = document.getElementById('status');
+            const result = document.getElementById('result');
             
             generateBtn.disabled = true;
             
-            status.innerHTML = `
-                <div class="loading">
-                    <i class="fas fa-spinner spinner"></i> Generando tokens QR...
-                </div>
-            `;
-            status.style.display = 'block';
+            result.innerHTML = '<div class="info">🔄 Probando conexión con el servidor...</div>';
             
             try {
+                // Primero verificar que el servidor esté ejecutándose
+                console.log('🔍 Verificando servidor...');
+                const healthCheck = await fetch('/api/plazas');
+                
+                if (!healthCheck.ok) {
+                    throw new Error(`Servidor no responde: ${healthCheck.status} ${healthCheck.statusText}`);
+                }
+                
+                console.log('✅ Servidor respondiendo correctamente');
+                
+                result.innerHTML = '<div class="info">🔄 Generando tokens QR...</div>';
+                
                 const response = await fetch('/api/generate-tokens-temp', {
                     method: 'POST',
                     headers: {
@@ -242,48 +249,55 @@
                     }
                 });
                 
+                console.log('📡 Respuesta del servidor:', response.status, response.statusText);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const data = await response.json();
+                console.log('📊 Datos recibidos:', data);
                 
                 if (data.success) {
-                    status.className = 'status alert alert-success';
+                    result.innerHTML = `
+                        <div class="success">
+                            <h4>✅ ¡Configuración Completada!</h4>
+                            <div class="details">
+                                <p><strong>Tokens generados:</strong> ${data.tokensGenerados || 0}</p>
+                                <p><strong>Total plazas:</strong> ${data.estadoFinal?.totalPlazas || 'N/A'}</p>
+                                <p><strong>Plazas con token:</strong> ${data.estadoFinal?.plazasConToken || 'N/A'}</p>
+                                <p><strong>Plazas sin token:</strong> ${data.estadoFinal?.plazasSinToken || 'N/A'}</p>
+                                
+                                ${data.estadoFinal?.plazasConTokenNombres?.length > 0 ? `
+                                    <h4>✅ Plazas configuradas correctamente:</h4>
+                                    <ul>
+                                        ${data.estadoFinal.plazasConTokenNombres.map(nombre => `<li>${nombre}</li>`).join('')}
+                                    </ul>
+                                ` : ''}
+                                
+                                ${data.estadoFinal?.plazasSinTokenNombres?.length > 0 ? `
+                                    <h4 style="color: #e74c3c;">⚠️ Plazas que aún necesitan configuración:</h4>
+                                    <ul>
+                                        ${data.estadoFinal.plazasSinTokenNombres.map(nombre => `<li>${nombre}</li>`).join('')}
+                                    </ul>
+                                ` : ''}
+                                
+                                ${data.errores?.length > 0 ? `
+                                    <h4>❌ Errores encontrados:</h4>
+                                    <ul>
+                                        ${data.errores.map(error => `<li>${error}</li>`).join('')}
+                                    </ul>
+                                ` : ''}
+                            </div>
+                            <br>
+                            <strong>Siguiente paso:</strong> Generar e imprimir los códigos QR
+                        </div>
+                    `;
                     
-                    // Actualizar pasos
+                    // Actualizar pasos visuales
                     document.querySelectorAll('.step')[0].classList.add('completed');
                     document.querySelectorAll('.step')[0].classList.remove('active');
                     document.querySelectorAll('.step')[1].classList.add('active');
-                    
-                    status.innerHTML = `
-                        <h4><i class="fas fa-check-circle"></i> ¡Configuración Completada!</h4>
-                        <div class="details">
-                            <p><strong>Tokens generados:</strong> ${data.tokensGenerados}</p>
-                            <p><strong>Total plazas:</strong> ${data.estadoFinal.totalPlazas}</p>
-                            <p><strong>Plazas con token:</strong> ${data.estadoFinal.plazasConToken}</p>
-                            <p><strong>Plazas sin token:</strong> ${data.estadoFinal.plazasSinToken}</p>
-                            
-                            ${data.estadoFinal.plazasConTokenNombres && data.estadoFinal.plazasConTokenNombres.length > 0 ? `
-                                <h4>✅ Plazas configuradas correctamente:</h4>
-                                <ul>
-                                    ${data.estadoFinal.plazasConTokenNombres.map(nombre => `<li>${nombre}</li>`).join('')}
-                                </ul>
-                            ` : ''}
-                            
-                            ${data.estadoFinal.plazasSinTokenNombres && data.estadoFinal.plazasSinTokenNombres.length > 0 ? `
-                                <h4 style="color: #e74c3c;">⚠️ Plazas que aún necesitan configuración:</h4>
-                                <ul>
-                                    ${data.estadoFinal.plazasSinTokenNombres.map(nombre => `<li>${nombre}</li>`).join('')}
-                                </ul>
-                            ` : ''}
-                            
-                            ${data.errores && data.errores.length > 0 ? `
-                                <h4>❌ Errores encontrados:</h4>
-                                <ul>
-                                    ${data.errores.map(error => `<li>${error}</li>`).join('')}
-                                </ul>
-                            ` : ''}
-                        </div>
-                        <br>
-                        <strong>Siguiente paso:</strong> Generar e imprimir los códigos QR
-                    `;
                     
                     // Mostrar mensaje de éxito
                     if (data.tokensGenerados > 0) {
@@ -292,23 +306,42 @@
                                 window.location.href = 'qr-plazas.html';
                             }
                         }, 2000);
+                    } else {
+                        setTimeout(() => {
+                            if (confirm('La configuración está completa.\n\n¿Desea ir a generar los códigos QR ahora?')) {
+                                window.location.href = 'qr-plazas.html';
+                            }
+                        }, 2000);
                     }
                     
                 } else {
-                    status.className = 'status alert alert-error';
-                    status.innerHTML = `
-                        <h4><i class="fas fa-exclamation-circle"></i> Error en la Configuración</h4>
-                        <p>${data.message}</p>
-                        ${data.error ? `<p><strong>Detalles técnicos:</strong> ${data.error}</p>` : ''}
+                    result.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Error en la Configuración</h4>
+                            <p>${data.message || 'Error desconocido'}</p>
+                            ${data.error ? `<p><strong>Detalles técnicos:</strong> ${data.error}</p>` : ''}
+                        </div>
                     `;
                 }
             } catch (error) {
-                console.error('Error:', error);
-                status.className = 'status alert alert-error';
-                status.innerHTML = `
-                    <h4><i class="fas fa-exclamation-circle"></i> Error de Conexión</h4>
-                    <p>No se pudo conectar con el servidor. Verifique que el servidor esté ejecutándose.</p>
-                    <p><strong>Error técnico:</strong> ${error.message}</p>
+                console.error('❌ Error completo:', error);
+                result.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Error de Conexión</h4>
+                        <p><strong>Problema:</strong> ${error.message}</p>
+                        <p><strong>Posibles causas:</strong></p>
+                        <ul>
+                            <li>El servidor no está ejecutándose</li>
+                            <li>Problemas de red o conectividad</li>
+                            <li>Error en la configuración del endpoint</li>
+                        </ul>
+                        <p><strong>Soluciones:</strong></p>
+                        <ul>
+                            <li>Verificar que el servidor esté iniciado</li>
+                            <li>Comprobar la consola del servidor por errores</li>
+                            <li>Revisar la configuración de la base de datos</li>
+                        </ul>
+                    </div>
                 `;
             } finally {
                 generateBtn.disabled = false;
