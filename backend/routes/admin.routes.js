@@ -669,4 +669,169 @@ router.post('/generate-tokens', requireAdmin, async (req, res) => {
   }
 });
 
+// ==================== CORRECCIÓN DE DUPLICADOS ====================
+
+// Verificar duplicados de plazas
+router.get('/check-duplicates', requireAdmin, async (req, res) => {
+  try {
+    console.log('🔍 Verificando duplicados de plazas...');
+    
+    // Buscar plazas duplicadas
+    const duplicados = await query(`
+      SELECT nombre, COUNT(*) as cantidad
+      FROM plazas
+      GROUP BY nombre
+      HAVING COUNT(*) > 1
+      ORDER BY cantidad DESC
+    `);
+    
+    if (duplicados.length === 0) {
+      return res.json({
+        success: true,
+        message: 'No hay plazas duplicadas',
+        duplicados: []
+      });
+    }
+    
+    // Obtener detalles de las plazas duplicadas
+    const detalles = await query(`
+      SELECT id, nombre, direccion, descripcion, activo, created_at
+      FROM plazas
+      WHERE nombre IN (
+        SELECT nombre
+        FROM plazas
+        GROUP BY nombre
+        HAVING COUNT(*) > 1
+      )
+      ORDER BY nombre, id
+    `);
+    
+    res.json({
+      success: true,
+      message: `Encontrados ${duplicados.length} grupos de plazas duplicadas`,
+      duplicados,
+      detalles
+    });
+    
+  } catch (error) {
+    console.error('Error verificando duplicados:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error verificando duplicados',
+      error: error.message 
+    });
+  }
+});
+
+// Corregir duplicados de plazas
+router.post('/fix-duplicates', requireAdmin, async (req, res) => {
+  try {
+    console.log('🛠️ Iniciando corrección de duplicados...');
+    
+    // Verificar si hay duplicados
+    const duplicados = await query(`
+      SELECT nombre, COUNT(*) as cantidad
+      FROM plazas
+      GROUP BY nombre
+      HAVING COUNT(*) > 1
+    `);
+    
+    if (duplicados.length === 0) {
+      return res.json({
+        success: true,
+        message: 'No hay plazas duplicadas para corregir',
+        eliminados: 0
+      });
+    }
+    
+    console.log(`🔍 Encontrados ${duplicados.length} grupos de duplicados`);
+    
+    // Obtener IDs de plazas duplicadas (conservar la primera)
+    const idsParaEliminar = await query(`
+      SELECT p2.id, p2.nombre
+      FROM plazas p1
+      JOIN plazas p2 ON p1.nombre = p2.nombre AND p1.id < p2.id
+      WHERE p1.nombre IN (
+        SELECT nombre
+        FROM plazas
+        GROUP BY nombre
+        HAVING COUNT(*) > 1
+      )
+    `);
+    
+    console.log(`🗑️ Plazas a eliminar: ${idsParaEliminar.length}`);
+    
+    let tokensEliminados = 0;
+    let checkinsAfectados = 0;
+    
+    if (idsParaEliminar.length > 0) {
+      const idsArray = idsParaEliminar.map(row => row.id);
+      
+      // Eliminar tokens de plazas duplicadas
+      const tokensResult = await query(`
+        DELETE FROM plaza_tokens
+        WHERE plaza_id = ANY($1::int[])
+      `, [idsArray]);
+      tokensEliminados = tokensResult.rowCount || 0;
+      
+      // Eliminar checkins asociados a plazas duplicadas
+      const checkinsResult = await query(`
+        DELETE FROM checkins
+        WHERE plaza_id = ANY($1::int[])
+      `, [idsArray]);
+      checkinsAfectados = checkinsResult.rowCount || 0;
+      
+      // Actualizar admin_users para quitar referencias a plazas duplicadas
+      await query(`
+        UPDATE admin_users
+        SET plaza_id = NULL
+        WHERE plaza_id = ANY($1::int[])
+      `, [idsArray]);
+      
+      // Finalmente, eliminar las plazas duplicadas
+      const plazasResult = await query(`
+        DELETE FROM plazas
+        WHERE id = ANY($1::int[])
+      `, [idsArray]);
+      
+      console.log(`✅ Eliminadas ${plazasResult.rowCount} plazas duplicadas`);
+      console.log(`🔑 Eliminados ${tokensEliminados} tokens`);
+      console.log(`📝 Afectados ${checkinsAfectados} checkins`);
+    }
+    
+    // Verificación final
+    const duplicadosFinales = await query(`
+      SELECT nombre, COUNT(*) as cantidad
+      FROM plazas
+      GROUP BY nombre
+      HAVING COUNT(*) > 1
+    `);
+    
+    const plazasFinales = await query(`
+      SELECT id, nombre, direccion, activo
+      FROM plazas
+      ORDER BY id
+    `);
+    
+    res.json({
+      success: true,
+      message: 'Duplicados corregidos exitosamente',
+      eliminados: idsParaEliminar.length,
+      tokensEliminados,
+      checkinsAfectados,
+      duplicadosRestantes: duplicadosFinales.length,
+      totalPlazas: plazasFinales.length,
+      plazasFinales
+    });
+    
+  } catch (error) {
+    console.error('Error corrigiendo duplicados:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error corrigiendo duplicados',
+      error: error.message 
+    });
+  }
+});
+
 module.exports = router;
