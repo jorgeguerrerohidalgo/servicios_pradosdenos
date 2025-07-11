@@ -148,10 +148,9 @@
     }
     .validation-input input {
       text-align: center;
-      font-size: 18px;
+      font-size: 20px;
       font-weight: bold;
       letter-spacing: 2px;
-      font-family: 'Courier New', monospace;
       text-transform: uppercase;
     }
     .validation-input input:focus {
@@ -177,11 +176,11 @@
       opacity: 0.6;
     }
     .code-match {
-      color: #27ae60;
+      color: #27ae60 !important;
       font-weight: bold;
     }
     .code-mismatch {
-      color: #e74c3c;
+      color: #e74c3c !important;
       font-weight: bold;
     }
     .scanner-controls {
@@ -319,7 +318,9 @@
         if (result.success) {
           userValidationCode = result.validation_code;
           document.getElementById('userValidationCode').textContent = userValidationCode;
+          console.log('Código de validación cargado:', userValidationCode);
         } else {
+          console.error('Error al cargar código de validación:', result.message);
           showStatus('Error al cargar código de validación', 'error');
         }
       } catch (error) {
@@ -447,11 +448,13 @@
         const feedback = document.getElementById('codeValidationFeedback');
         const confirmBtn = document.getElementById('confirmCheckinBtn');
         
+        console.log('Código ingresado:', enteredCode, 'Código esperado:', userValidationCode);
+        
         if (enteredCode.length === 0) {
           feedback.textContent = '';
           feedback.className = 'form-text';
           confirmBtn.disabled = true;
-        } else if (enteredCode === userValidationCode) {
+        } else if (userValidationCode && enteredCode === userValidationCode.toUpperCase()) {
           feedback.textContent = '✓ Código correcto';
           feedback.className = 'form-text code-match';
           confirmBtn.disabled = false;
@@ -482,7 +485,12 @@
         return;
       }
       
-      if (enteredCode !== userValidationCode) {
+      if (!userValidationCode) {
+        showStatus('Error: No se ha cargado el código de validación. Intenta recargar la página.', 'error');
+        return;
+      }
+      
+      if (enteredCode.toUpperCase() !== userValidationCode.toUpperCase()) {
         showStatus('Código de validación incorrecto. Revisa el código mostrado arriba.', 'error');
         return;
       }
