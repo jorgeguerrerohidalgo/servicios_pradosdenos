@@ -206,6 +206,11 @@
   <button class="btn btn-warning" onclick="simulateQRScan()" style="position: absolute; top: 70px; left: 20px; z-index: 1000;">
     <i class="fas fa-qrcode"></i> Simular QR
   </button>
+  
+  <!-- Botón para probar validación directa -->
+  <button class="btn btn-success" onclick="testDirectValidation()" style="position: absolute; top: 120px; left: 20px; z-index: 1000; font-size: 12px;">
+    <i class="fas fa-check"></i> Test Direct
+  </button>
 
   <div class="container">
     <div class="header">
@@ -469,22 +474,17 @@
       console.log('Input elemento:', input);
       console.log('userValidationCode en showValidationSection:', userValidationCode);
       
-      // Auto-focus en el input
-      setTimeout(() => {
-        input.focus();
-        console.log('Focus aplicado al input');
-      }, 100);
-      
-      // USAR LÓGICA DIRECTA COMO EN EL DIAGNÓSTICO
-      input.oninput = function() {
-        console.log('=== EVENT INPUT EJECUTADO ===');
-        const enteredCode = this.value.trim().toUpperCase();
+      // Función de validación reutilizable
+      function validateInput() {
+        console.log('=== VALIDANDO INPUT ===');
+        const enteredCode = input.value.trim().toUpperCase();
         const feedback = document.getElementById('codeValidationFeedback');
         const confirmBtn = document.getElementById('confirmCheckinBtn');
         
-        console.log('Código ingresado:', enteredCode);
+        console.log('Código ingresado (raw):', input.value);
+        console.log('Código ingresado (procesado):', enteredCode);
         console.log('Código esperado:', userValidationCode);
-        console.log('Códigos coinciden:', enteredCode === userValidationCode.toUpperCase());
+        console.log('Código esperado (procesado):', userValidationCode ? userValidationCode.toUpperCase() : 'NULL');
         
         if (enteredCode.length === 0) {
           feedback.textContent = '';
@@ -504,17 +504,41 @@
         }
         
         console.log('Estado final del botón disabled:', confirmBtn.disabled);
-      };
+        console.log('=== FIN VALIDACIÓN ===');
+      }
+      
+      // Limpiar event listeners anteriores
+      input.oninput = null;
+      input.onkeypress = null;
+      input.onkeyup = null;
+      
+      // Múltiples formas de capturar el evento
+      input.oninput = validateInput;
+      input.onkeyup = validateInput;
+      input.addEventListener('input', validateInput);
+      input.addEventListener('keyup', validateInput);
       
       // Event listener para Enter
-      input.onkeypress = function(e) {
+      function handleEnter(e) {
         if (e.key === 'Enter' && !document.getElementById('confirmCheckinBtn').disabled) {
           console.log('Enter presionado, ejecutando confirmCheckin()');
           confirmCheckin();
         }
-      };
+      }
+      
+      input.onkeypress = handleEnter;
+      input.addEventListener('keypress', handleEnter);
       
       console.log('Event listeners agregados correctamente');
+      console.log('input.oninput:', typeof input.oninput);
+      console.log('input.onkeyup:', typeof input.onkeyup);
+      
+      // Auto-focus en el input
+      setTimeout(() => {
+        input.focus();
+        console.log('Focus aplicado al input');
+      }, 100);
+      
       updateSteps(2);
     }
     
@@ -646,10 +670,120 @@ Sección visible: ${document.getElementById('validationSection').style.display !
     
     // Función para simular QR escaneado (debug)
     function simulateQRScan() {
-      console.log('Simulando escaneo QR...');
+      console.log('=== SIMULANDO ESCANEO QR ===');
       scannedToken = 'TEST_TOKEN_123';
+      console.log('Token simulado:', scannedToken);
+      console.log('userValidationCode disponible:', userValidationCode);
+      
       showValidationSection();
       showStatus('QR simulado. Ahora ingresa tu código de validación.', 'success');
+      
+      // Verificar que todo esté configurado correctamente
+      setTimeout(() => {
+        console.log('=== VERIFICACIÓN POST-SIMULACIÓN ===');
+        const input = document.getElementById('validationCodeInput');
+        const confirmBtn = document.getElementById('confirmCheckinBtn');
+        
+        console.log('Input existe:', !!input);
+        console.log('Input oninput:', typeof input.oninput);
+        console.log('Botón existe:', !!confirmBtn);
+        console.log('Botón disabled:', confirmBtn.disabled);
+        console.log('Sección visible:', document.getElementById('validationSection').style.display !== 'none');
+        
+        // Probar automáticamente el código
+        if (userValidationCode) {
+          console.log('Probando código automáticamente...');
+          input.value = userValidationCode;
+          if (input.oninput) {
+            input.oninput();
+          } else {
+            console.error('ERROR: No hay función oninput');
+          }
+          
+          console.log('Después de probar código:');
+          console.log('Input value:', input.value);
+          console.log('Botón disabled:', confirmBtn.disabled);
+        }
+      }, 500);
+    }
+    
+    // Función para hacer pruebas manuales (para usar en consola)
+    function testManualValidation(code) {
+      console.log('=== PRUEBA MANUAL ===');
+      const input = document.getElementById('validationCodeInput');
+      const confirmBtn = document.getElementById('confirmCheckinBtn');
+      
+      console.log('Código a probar:', code);
+      console.log('Estado inicial botón:', confirmBtn.disabled);
+      
+      input.value = code;
+      
+      // Disparar todos los eventos posibles
+      if (input.oninput) {
+        console.log('Ejecutando oninput...');
+        input.oninput();
+      }
+      
+      if (input.onkeyup) {
+        console.log('Ejecutando onkeyup...');
+        input.onkeyup();
+      }
+      
+      // Disparar eventos DOM
+      input.dispatchEvent(new Event('input'));
+      input.dispatchEvent(new Event('keyup'));
+      
+      console.log('Estado final botón:', confirmBtn.disabled);
+      console.log('Feedback:', document.getElementById('codeValidationFeedback').textContent);
+      
+      return !confirmBtn.disabled;
+    }
+    
+    // Hacer disponible globalmente para debugging
+    window.testManualValidation = testManualValidation;
+    window.simulateQRScan = simulateQRScan;
+    
+    // Función para probar validación directa
+    function testDirectValidation() {
+      console.log('=== PRUEBA DIRECTA ===');
+      
+      if (!userValidationCode) {
+        alert('Error: userValidationCode no está cargado');
+        return;
+      }
+      
+      // Simular QR si no está ya simulado
+      if (!scannedToken) {
+        simulateQRScan();
+        setTimeout(() => {
+          testDirectValidation();
+        }, 1000);
+        return;
+      }
+      
+      // Probar la validación directamente
+      const input = document.getElementById('validationCodeInput');
+      const confirmBtn = document.getElementById('confirmCheckinBtn');
+      
+      console.log('Código a probar:', userValidationCode);
+      console.log('Estado inicial botón:', confirmBtn.disabled);
+      
+      // Habilitar botón manualmente para probar
+      confirmBtn.disabled = false;
+      
+      // Actualizar feedback
+      const feedback = document.getElementById('codeValidationFeedback');
+      feedback.textContent = '✓ Código correcto (test directo)';
+      feedback.className = 'form-text code-match';
+      
+      // Rellenar input
+      input.value = userValidationCode;
+      
+      alert(`Test directo realizado:
+- Código: ${userValidationCode}
+- Botón habilitado: ${!confirmBtn.disabled}
+- Feedback: ${feedback.textContent}
+- Ahora puedes probar el check-in`);
     }
     
     // Manejar tecla Enter en el campo de validación (se maneja en showValidationSection)
