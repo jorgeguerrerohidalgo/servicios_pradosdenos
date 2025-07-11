@@ -1,5 +1,14 @@
 -- Script de migración para corregir inconsistencias en el esquema
--- Ejecutar en Supabase para corregir errores 500
+-- Ejec-- Actualizar plazas con datos de ejemplo
+UPDATE plazas SET 
+    direccion = 'Condominio Los Prados de Nos',
+    descripcion = 'Plaza de vigilancia y seguridad'
+WHERE direccion IS NULL;
+
+-- Generar códigos de validación únicos para guardias existentes
+UPDATE guardias 
+SET validation_code = LPAD(id::text, 4, '0') || LPAD(EXTRACT(EPOCH FROM NOW())::int % 1000, 3, '0')
+WHERE validation_code IS NULL;en Supabase para corregir errores 500
 
 -- Configurar zona horaria
 SET timezone = 'America/Santiago';
@@ -43,6 +52,10 @@ ALTER COLUMN plaza_id DROP NOT NULL;
 -- Hacer opcional el campo rut en guardias (no se usa en el código)
 ALTER TABLE guardias 
 ALTER COLUMN rut DROP NOT NULL;
+
+-- Agregar campo validation_code para validación de check-ins
+ALTER TABLE guardias 
+ADD COLUMN IF NOT EXISTS validation_code VARCHAR(10) UNIQUE;
 
 -- ===============================================
 -- VERIFICACIÓN DE DATOS

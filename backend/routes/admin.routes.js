@@ -18,7 +18,7 @@ router.get('/guardias', requireAdmin, async (req, res) => {
   try {
     const guardias = await query(`
       SELECT 
-        id, nombre, email, telefono, activo, 
+        id, nombre, email, telefono, activo, validation_code,
         created_at, last_login,
         CASE 
           WHEN last_login > NOW() - INTERVAL '7 days' THEN 'Activo'
@@ -53,14 +53,18 @@ router.post('/guardias', requireAdmin, async (req, res) => {
     }
     
     // Hash de la contraseña
+    const bcrypt = require('bcrypt');
     const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Generar código de validación único
+    const validationCode = await generateUniqueValidationCode();
     
     // Insertar guardia
     const result = await query(`
-      INSERT INTO guardias (nombre, email, telefono, password, activo) 
-      VALUES ($1, $2, $3, $4, true) 
-      RETURNING id, nombre, email, telefono, activo, created_at
-    `, [nombre, email, telefono, hashedPassword]);
+      INSERT INTO guardias (nombre, email, telefono, password, activo, validation_code) 
+      VALUES ($1, $2, $3, $4, true, $5) 
+      RETURNING id, nombre, email, telefono, activo, validation_code, created_at
+    `, [nombre, email, telefono, hashedPassword, validationCode]);
     
     res.json({ success: true, guardia: result[0] });
   } catch (error) {
@@ -68,6 +72,29 @@ router.post('/guardias', requireAdmin, async (req, res) => {
     res.status(500).json({ success: false, message: 'Error interno del servidor' });
   }
 });
+
+// Función para generar código de validación único
+async function generateUniqueValidationCode() {
+  let code;
+  let attempts = 0;
+  const maxAttempts = 10;
+  
+  do {
+    // Generar código de 4 dígitos
+    code = Math.floor(1000 + Math.random() * 9000).toString();
+    
+    // Verificar si ya existe
+    const existing = await query('SELECT id FROM guardias WHERE validation_code = $1', [code]);
+    if (existing.length === 0) {
+      return code;
+    }
+    
+    attempts++;
+  } while (attempts < maxAttempts);
+  
+  // Si no se pudo generar un código único, usar timestamp
+  return Date.now().toString().slice(-4);
+}
 
 // Actualizar guardia
 router.put('/guardias/:id', requireAdmin, async (req, res) => {
@@ -152,6 +179,34 @@ router.delete('/guardias/:id', requireAdmin, async (req, res) => {
     }
   } catch (error) {
     console.error('Error eliminando guardia:', error);
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
+  }
+});
+
+// Regenerar código de validación para un guardia
+router.post('/guardias/:id/regenerate-code', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Verificar que el guardia existe
+    const guardiaExists = await query('SELECT id FROM guardias WHERE id = $1', [id]);
+    if (guardiaExists.length === 0) {
+      return res.status(404).json({ success: false, message: 'Guardia no encontrado' });
+    }
+    
+    // Generar nuevo código de validación
+    const newValidationCode = await generateUniqueValidationCode();
+    
+    // Actualizar el código
+    await query('UPDATE guardias SET validation_code = $1 WHERE id = $2', [newValidationCode, id]);
+    
+    res.json({ 
+      success: true, 
+      message: 'Código de validación regenerado exitosamente',
+      validation_code: newValidationCode
+    });
+  } catch (error) {
+    console.error('Error regenerando código:', error);
     res.status(500).json({ success: false, message: 'Error interno del servidor' });
   }
 });

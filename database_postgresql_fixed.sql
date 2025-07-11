@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS plaza_tokens (
   FOREIGN KEY (plaza_id) REFERENCES plazas(id) ON DELETE CASCADE
 );
 
--- Tabla de guardias (CORREGIDA - rut opcional)
+-- Tabla de guardias (CORREGIDA - rut opcional y validation_code)
 CREATE TABLE IF NOT EXISTS guardias (
   id SERIAL PRIMARY KEY,
   nombre VARCHAR(100) NOT NULL,
@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS guardias (
   password VARCHAR(255) NOT NULL,
   telefono VARCHAR(20),
   activo BOOLEAN DEFAULT TRUE,
+  validation_code VARCHAR(10) UNIQUE, -- Código único para validación de check-ins
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   last_login TIMESTAMP NULL
@@ -124,12 +125,12 @@ INSERT INTO plaza_tokens (plaza_id, token) VALUES
 (19, 'qr-plaza-parque-union-sur-2025')
 ON CONFLICT (token) DO NOTHING;
 
--- Insertar guardias con contraseñas hasheadas (rut opcional)
-INSERT INTO guardias (nombre, rut, email, password, telefono, activo) VALUES
-('Carlos Mendoza Torres', '18.543.210-9', 'carlos.mendoza@pradosdenos.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+56912345678', TRUE),
-('María Elena Soto', '16.789.432-1', 'maria.soto@pradosdenos.com', '$2b$10$Hgw2GWfqF7dqLgGxw9v1b.qH7VkGZGK5kOOGK5kL5kOOGK5kL5k', '+56987654321', TRUE),
-('Juan Carlos Ramirez', '19.234.567-8', 'juan.ramirez@pradosdenos.com', '$2b$10$XYZ123abc456def789ghi012jkl345mno678pqr901stu234vwx567yz', '+56976543210', TRUE),
-('Patricia Morales Vega', '17.654.321-0', 'patricia.morales@pradosdenos.com', '$2b$10$ABC789def012ghi345jkl678mno901pqr234stu567vwx890yzA123Bc', '+56965432109', TRUE)
+-- Insertar guardias con contraseñas hasheadas y códigos de validación
+INSERT INTO guardias (nombre, rut, email, password, telefono, activo, validation_code) VALUES
+('Carlos Mendoza Torres', '18.543.210-9', 'carlos.mendoza@pradosdenos.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+56912345678', TRUE, '1001'),
+('María Elena Soto', '16.789.432-1', 'maria.soto@pradosdenos.com', '$2b$10$Hgw2GWfqF7dqLgGxw9v1b.qH7VkGZGK5kOOGK5kL5kOOGK5kL5k', '+56987654321', TRUE, '2002'),
+('Juan Carlos Ramirez', '19.234.567-8', 'juan.ramirez@pradosdenos.com', '$2b$10$XYZ123abc456def789ghi012jkl345mno678pqr901stu234vwx567yz', '+56976543210', TRUE, '3003'),
+('Patricia Morales Vega', '17.654.321-0', 'patricia.morales@pradosdenos.com', '$2b$10$ABC789def012ghi345jkl678mno901pqr234stu567vwx890yzA123Bc', '+56965432109', TRUE, '4004')
 ON CONFLICT (email) DO NOTHING;
 
 -- Insertar administradores del sistema (con campos opcionales)

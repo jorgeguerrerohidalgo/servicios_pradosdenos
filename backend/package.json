@@ -1,7 +1,7 @@
 {
-  "name": "checkin-plaza-backend",
-  "version": "1.0.0",
-  "description": "Sistema de check-in para plazas con autenticación de guardias",
+  "name": "portal-servicios-pradosdenos",
+  "version": "2.0.0",
+  "description": "Portal completo de servicios digitales para Los Prados de Nos con sistema de seguridad y administración",
   "main": "server.js",
   "engines": {
     "node": ">=18.0.0",
@@ -19,19 +19,28 @@
     "dotenv": "^16.6.1",
     "express": "^4.18.2",
     "express-session": "^1.17.3",
-    "mysql2": "^3.9.2",
     "pg": "^8.11.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
   "keywords": [
+    "portal",
+    "servicios",
+    "seguridad",
     "checkin",
     "qr",
-    "plaza",
+    "administracion",
     "express",
-    "nodejs"
+    "nodejs",
+    "postgresql",
+    "supabase",
+    "render"
   ],
-  "author": "Tu Nombre",
-  "license": "MIT"
+  "author": "Portal Los Prados de Nos",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tu-usuario/servicios_pradosdenos"
+  }
 }
