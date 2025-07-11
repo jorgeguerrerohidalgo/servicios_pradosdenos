@@ -1,6 +1,14 @@
 -- Script de inicialización CORREGIDO para PostgreSQL (Supabase)
 -- Configurar zona horaria para Santiago de Chile
-SET timezone = 'America/Santiago';
+SET timezone = '-- Insertar guardias con contraseñas hasheadas y códigos de validación
+INSERT INTO guardias (nombre, rut, email, password, telefono, activo, validation_code) 
+SELECT nombre, rut, email, password, telefono, activo, validation_code FROM (VALUES
+('Carlos Mendoza Torres', '18.543.210-9', 'carlos.mendoza@pradosdenos.com', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '+56912345678', TRUE, '1001'),
+('María Elena Soto', '16.789.432-1', 'maria.soto@pradosdenos.com', '$2b$10$Hgw2GWfqF7dqLgGxw9v1b.qH7VkGZGK5kOOGK5kL5kOOGK5kL5k', '+56987654321', TRUE, '2002'),
+('Juan Carlos Ramirez', '19.234.567-8', 'juan.ramirez@pradosdenos.com', '$2b$10$XYZ123abc456def789ghi012jkl345mno678pqr901stu234vwx567yz', '+56976543210', TRUE, '3003'),
+('Patricia Morales Vega', '17.654.321-0', 'patricia.morales@pradosdenos.com', '$2b$10$ABC789def012ghi345jkl678mno901pqr234stu567vwx890yzA123Bc', '+56965432109', TRUE, '4004')
+) AS nuevos_guardias(nombre, rut, email, password, telefono, activo, validation_code)
+WHERE NOT EXISTS (SELECT 1 FROM guardias WHERE guardias.email = nuevos_guardias.email);/Santiago';
 
 -- Tabla de plazas (CORREGIDA - con todos los campos que usa el backend)
 CREATE TABLE IF NOT EXISTS plazas (
@@ -80,7 +88,8 @@ CREATE INDEX IF NOT EXISTS idx_checkins_plaza_id ON checkins(plaza_id);
 CREATE INDEX IF NOT EXISTS idx_checkins_fecha ON checkins(fecha);
 
 -- Insertar datos de ejemplo (plazas con campos completos)
-INSERT INTO plazas (nombre, direccion, descripcion, activo) VALUES
+INSERT INTO plazas (nombre, direccion, descripcion, activo) 
+SELECT nombre, direccion, descripcion, activo FROM (VALUES
 ('Plaza La Coruña', 'Condominio Los Prados de Nos', 'Plaza de vigilancia y seguridad', TRUE),
 ('Plaza Valencia', 'Condominio Los Prados de Nos', 'Plaza de vigilancia y seguridad', TRUE), 
 ('Plaza Marbella', 'Condominio Los Prados de Nos', 'Plaza de vigilancia y seguridad', TRUE),
@@ -100,10 +109,12 @@ INSERT INTO plazas (nombre, direccion, descripcion, activo) VALUES
 ('Plaza Barcelona', 'Condominio Los Prados de Nos', 'Plaza de vigilancia y seguridad', TRUE),
 ('Plaza Parque Union Norte', 'Condominio Los Prados de Nos', 'Plaza de vigilancia y seguridad', TRUE),
 ('Plaza Parque Union Sur', 'Condominio Los Prados de Nos', 'Plaza de vigilancia y seguridad', TRUE)
-ON CONFLICT (nombre) DO NOTHING;
+) AS nuevas_plazas(nombre, direccion, descripcion, activo)
+WHERE NOT EXISTS (SELECT 1 FROM plazas WHERE plazas.nombre = nuevas_plazas.nombre);
 
 -- Insertar tokens QR para cada plaza
-INSERT INTO plaza_tokens (plaza_id, token) VALUES
+INSERT INTO plaza_tokens (plaza_id, token) 
+SELECT plaza_id, token FROM (VALUES
 (1, 'qr-plaza-la-coruna-2025'),
 (2, 'qr-plaza-valencia-2025'),
 (3, 'qr-plaza-marbella-2025'),
@@ -123,7 +134,8 @@ INSERT INTO plaza_tokens (plaza_id, token) VALUES
 (17, 'qr-plaza-barcelona-2025'),
 (18, 'qr-plaza-parque-union-norte-2025'),
 (19, 'qr-plaza-parque-union-sur-2025')
-ON CONFLICT (token) DO NOTHING;
+) AS nuevos_tokens(plaza_id, token)
+WHERE NOT EXISTS (SELECT 1 FROM plaza_tokens WHERE plaza_tokens.token = nuevos_tokens.token);
 
 -- Insertar guardias con contraseñas hasheadas y códigos de validación
 INSERT INTO guardias (nombre, rut, email, password, telefono, activo, validation_code) VALUES
@@ -134,14 +146,17 @@ INSERT INTO guardias (nombre, rut, email, password, telefono, activo, validation
 ON CONFLICT (email) DO NOTHING;
 
 -- Insertar administradores del sistema (con campos opcionales)
-INSERT INTO admin_users (nombre, apellido_paterno, apellido_materno, run, email, telefono, fecha_nacimiento, direccion, plaza_id, activo, password_hash) VALUES
-('Jorge', 'Guerrero', 'Hidalgo', '15.468.127-2', 'jorgeguerrerohidalgo@gmail.com', '+56912345678', '1982-04-24', 'Santiago de Compostela 4985', 1, TRUE, '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
-('Supervisor', 'Seguridad', 'Nocturno', '11.111.222-3', 'supervisor@pradosdenos.com', '+56987654321', '1982-05-20', 'Centro de Control Los Prados de Nos', 2, TRUE, '$2b$10$ABC123def456ghi789jkl012mno345pqr678stu901vwx234yzA567Bc')
-ON CONFLICT (email) DO NOTHING;
+INSERT INTO admin_users (nombre, apellido_paterno, apellido_materno, run, email, telefono, fecha_nacimiento, direccion, plaza_id, activo, password_hash) 
+SELECT nombre, apellido_paterno, apellido_materno, run, email, telefono, fecha_nacimiento, direccion, plaza_id, activo, password_hash FROM (VALUES
+('Jorge', 'Guerrero', 'Hidalgo', '15.468.127-2', 'jorgeguerrerohidalgo@gmail.com', '+56912345678', '1982-04-24'::date, 'Santiago de Compostela 4985', 1, TRUE, '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'),
+('Supervisor', 'Seguridad', 'Nocturno', '11.111.222-3', 'supervisor@pradosdenos.com', '+56987654321', '1982-05-20'::date, 'Centro de Control Los Prados de Nos', 2, TRUE, '$2b$10$ABC123def456ghi789jkl012mno345pqr678stu901vwx234yzA567Bc')
+) AS nuevos_admins(nombre, apellido_paterno, apellido_materno, run, email, telefono, fecha_nacimiento, direccion, plaza_id, activo, password_hash)
+WHERE NOT EXISTS (SELECT 1 FROM admin_users WHERE admin_users.email = nuevos_admins.email);
 
 -- Insertar check-ins de ejemplo con fechas realistas en zona horaria de Santiago
--- Rondas de los últimos 3 días con horarios típicos de seguridad
-INSERT INTO checkins (guardia_id, plaza_id, fecha, ip_address) VALUES
+-- Solo insertar si no existen check-ins previos para evitar duplicados
+INSERT INTO checkins (guardia_id, plaza_id, fecha, ip_address)
+SELECT guardia_id, plaza_id, fecha, ip_address FROM (VALUES
 -- Hoy - rondas matutinas
 (1, 1, (CURRENT_TIMESTAMP AT TIME ZONE 'America/Santiago') - INTERVAL '3 hours', '192.168.1.100'),
 (1, 2, (CURRENT_TIMESTAMP AT TIME ZONE 'America/Santiago') - INTERVAL '2 hours 45 minutes', '192.168.1.100'),
@@ -180,7 +195,8 @@ INSERT INTO checkins (guardia_id, plaza_id, fecha, ip_address) VALUES
 (4, 6, (CURRENT_TIMESTAMP AT TIME ZONE 'America/Santiago') - INTERVAL '2 days 1 hour 45 minutes', '192.168.1.103'),
 (4, 11, (CURRENT_TIMESTAMP AT TIME ZONE 'America/Santiago') - INTERVAL '2 days 1 hour 30 minutes', '192.168.1.103'),
 (4, 16, (CURRENT_TIMESTAMP AT TIME ZONE 'America/Santiago') - INTERVAL '2 days 1 hour 15 minutes', '192.168.1.103')
-ON CONFLICT DO NOTHING;
+) AS nuevos_checkins(guardia_id, plaza_id, fecha, ip_address)
+WHERE (SELECT COUNT(*) FROM checkins) = 0;
 
 -- Verificar datos insertados
 SELECT 'Configuración completada' as status, NOW() as timestamp;
