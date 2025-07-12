@@ -343,11 +343,15 @@
         <div id="codeValidationFeedback" class="form-text"></div>
       </div>
       <div class="d-grid gap-2">
-        <button id="confirmCheckinBtn" class="btn btn-success" onclick="confirmCheckin()" disabled>
+        <button id="confirmCheckinBtn" class="btn btn-secondary" disabled>
           <i class="fas fa-check"></i> Confirmar Check-in
         </button>
-        <button class="btn btn-secondary" onclick="resetProcess()">
+        <button class="btn btn-outline-secondary" onclick="resetProcess()">
           <i class="fas fa-arrow-left"></i> Volver a Escanear
+        </button>
+        <!-- Botón de prueba para debugging -->
+        <button class="btn btn-warning btn-sm" onclick="testValidation()" style="display: none;" id="testBtn">
+          <i class="fas fa-bug"></i> Probar Validación
         </button>
       </div>
     </div>
@@ -764,7 +768,7 @@
       // Silenciar errores de escaneo normales para evitar spam en consola
     }
     
-    // Mostrar sección de validación
+    // Mostrar sección de validación - VERSIÓN SIMPLIFICADA
     function showValidationSection() {
       log('Mostrando sección de validación');
       
@@ -772,42 +776,84 @@
       document.getElementById('validationSection').style.display = 'block';
       
       const input = document.getElementById('validationCodeInput');
+      const confirmBtn = document.getElementById('confirmCheckinBtn');
+      
+      // Limpiar estado
       input.value = '';
       document.getElementById('codeValidationFeedback').textContent = '';
-      document.getElementById('confirmCheckinBtn').disabled = true;
+      confirmBtn.disabled = true;
+      confirmBtn.className = 'btn btn-secondary';
       
-      // Configurar validación simple
-      input.addEventListener('input', validateCode);
-      input.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter' && !document.getElementById('confirmCheckinBtn').disabled) {
-          confirmCheckin();
+      // Event listeners simples y directos
+      input.oninput = validateCode;
+      input.onkeyup = validateCode;
+      
+      // Enter para confirmar
+      input.onkeypress = function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (!confirmBtn.disabled) {
+            log('Enter presionado - Ejecutando confirmCheckin()');
+            confirmCheckin();
+          }
         }
-      });
+      };
       
-      // Auto-focus
-      setTimeout(() => input.focus(), 100);
+      // Focus automático
+      setTimeout(() => {
+        input.focus();
+        log('Focus aplicado al input');
+      }, 200);
+      
       updateSteps(2);
+      
+      // Log para debugging
+      log('Sección de validación configurada');
+      log('userValidationCode disponible:', userValidationCode);
     }
     
-    // Validar código ingresado
+    // Validar código ingresado - VERSIÓN SIMPLIFICADA
     function validateCode() {
       const input = document.getElementById('validationCodeInput');
-      const enteredCode = input.value.trim().toUpperCase();
+      const enteredCode = input.value.trim();
       const feedback = document.getElementById('codeValidationFeedback');
       const confirmBtn = document.getElementById('confirmCheckinBtn');
       
+      log(`Validando código: "${enteredCode}" vs "${userValidationCode}"`);
+      
+      // Limpiar estado
+      feedback.textContent = '';
+      feedback.className = 'form-text';
+      confirmBtn.disabled = true;
+      confirmBtn.className = 'btn btn-success';
+      
+      // Verificar si hay algo que validar
+      if (!userValidationCode) {
+        feedback.textContent = 'Error: Código de guardia no disponible';
+        feedback.className = 'form-text text-danger';
+        return;
+      }
+      
       if (enteredCode.length === 0) {
-        feedback.textContent = '';
-        feedback.className = 'form-text';
-        confirmBtn.disabled = true;
-      } else if (userValidationCode && enteredCode === userValidationCode.toUpperCase()) {
-        feedback.textContent = '✓ Código correcto';
-        feedback.className = 'form-text code-match';
+        feedback.textContent = 'Ingresa tu código de validación';
+        return;
+      }
+      
+      // Comparación directa y simple
+      const isValid = enteredCode.toUpperCase() === userValidationCode.toUpperCase();
+      
+      if (isValid) {
+        feedback.textContent = '✓ Código correcto - ¡Listo para confirmar!';
+        feedback.className = 'form-text text-success fw-bold';
         confirmBtn.disabled = false;
+        confirmBtn.className = 'btn btn-success';
+        log('✅ Código válido - Botón habilitado');
       } else {
-        feedback.textContent = '✗ Código incorrecto';
-        feedback.className = 'form-text code-mismatch';
+        feedback.textContent = '✗ Código incorrecto - Revisa el código mostrado arriba';
+        feedback.className = 'form-text text-danger';
         confirmBtn.disabled = true;
+        confirmBtn.className = 'btn btn-secondary';
+        log('❌ Código inválido - Botón deshabilitado');
       }
     }
     
@@ -927,7 +973,12 @@
       // Mostrar información de diagnóstico
       if (diagnosticMode) {
         showDiagnosticInfo();
+        // Mostrar botón de prueba en modo debug
+        document.getElementById('testBtn').style.display = 'block';
       }
+      
+      // Configurar botón de confirmación
+      setupConfirmButton();
       
       // Verificar autenticación
       if (!(await checkAuth())) return;
@@ -961,6 +1012,83 @@
     
     // Inicializar cuando el DOM esté listo
     document.addEventListener('DOMContentLoaded', init);
+    
+    // ========== FUNCIONES DE DEBUGGING Y PRUEBAS ==========
+    
+    // Función para probar la validación manualmente
+    function testValidation() {
+      log('=== PRUEBA MANUAL DE VALIDACIÓN ===');
+      
+      if (!userValidationCode) {
+        alert('Error: No hay código de validación cargado');
+        return;
+      }
+      
+      const input = document.getElementById('validationCodeInput');
+      const confirmBtn = document.getElementById('confirmCheckinBtn');
+      
+      // Llenar automáticamente con el código correcto
+      input.value = userValidationCode;
+      
+      // Ejecutar validación
+      validateCode();
+      
+      log('Código insertado:', userValidationCode);
+      log('Input value:', input.value);
+      log('Botón disabled:', confirmBtn.disabled);
+      log('Botón className:', confirmBtn.className);
+      
+      alert(`Prueba completada:
+Código esperado: ${userValidationCode}
+Código ingresado: ${input.value}
+Botón habilitado: ${!confirmBtn.disabled}
+Clase del botón: ${confirmBtn.className}`);
+    }
+    
+    // Configurar botón con múltiples formas de capturar el click
+    function setupConfirmButton() {
+      const confirmBtn = document.getElementById('confirmCheckinBtn');
+      
+      if (!confirmBtn) {
+        log('Error: Botón de confirmación no encontrado');
+        return;
+      }
+      
+      // Limpiar event listeners anteriores
+      confirmBtn.onclick = null;
+      
+      // Método 1: onclick directo
+      confirmBtn.onclick = function() {
+        log('Click capturado via onclick');
+        if (!confirmBtn.disabled) {
+          confirmCheckin();
+        }
+      };
+      
+      // Método 2: addEventListener como backup
+      confirmBtn.addEventListener('click', function(e) {
+        log('Click capturado via addEventListener');
+        e.preventDefault();
+        if (!confirmBtn.disabled) {
+          confirmCheckin();
+        }
+      });
+      
+      // Método 3: mousedown como backup adicional
+      confirmBtn.addEventListener('mousedown', function(e) {
+        log('Mousedown capturado');
+        setTimeout(() => {
+          if (!confirmBtn.disabled) {
+            log('Ejecutando confirmCheckin desde mousedown');
+            confirmCheckin();
+          }
+        }, 50);
+      });
+      
+      log('Botón de confirmación configurado con múltiples event listeners');
+    }
+    
+    // ========== FIN FUNCIONES DE DEBUGGING ==========
   </script>
 </body>
 </html>
