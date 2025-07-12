@@ -1035,16 +1035,76 @@
       updateSteps(1);
     }
     
-    // Función de logout
+    // Función de logout mejorada
     async function logout() {
       try {
-        await fetch(`${getApiUrl()}/api/auth/logout`, {
-          credentials: 'include'
+        log('🔓 Iniciando proceso de logout...');
+        
+        // Mostrar confirmación
+        if (!confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+          return;
+        }
+        
+        // Detener escáner si está activo
+        if (isScanning && html5QrCode) {
+          try {
+            await html5QrCode.stop();
+            log('📷 Escáner detenido antes del logout');
+          } catch (error) {
+            log('Advertencia: Error deteniendo escáner: ' + error.message, 'warning');
+          }
+        }
+        
+        // Llamar al endpoint de logout
+        const response = await fetch(`${getApiUrl()}/api/auth/logout`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          }
         });
-        window.location.href = '/guardia-login.html';
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          log('✅ Logout exitoso');
+          
+          // Limpiar datos locales de seguridad
+          localStorage.removeItem('loginAttempts');
+          localStorage.removeItem('lockoutUntil');
+          
+          // Limpiar variables globales
+          scannedToken = null;
+          userValidationCode = null;
+          isScanning = false;
+          permissionsGranted = false;
+          
+          // Mostrar mensaje temporal
+          showStatus('Sesión cerrada correctamente', 'success');
+          
+          // Redireccionar después de un breve delay
+          setTimeout(() => {
+            window.location.href = '/guardia-login.html';
+          }, 1000);
+        } else {
+          log('❌ Error en logout: ' + result.message, 'error');
+          showStatus('Error al cerrar sesión. Redirigiendo...', 'warning');
+          
+          // Redireccionar de todas formas por seguridad
+          setTimeout(() => {
+            window.location.href = '/guardia-login.html';
+          }, 2000);
+        }
+        
       } catch (error) {
-        log('Error en logout: ' + error.message, 'error');
-        window.location.href = '/guardia-login.html';
+        log('❌ Error en logout: ' + error.message, 'error');
+        showStatus('Error de conexión. Redirigiendo...', 'warning');
+        
+        // Redireccionar de todas formas por seguridad
+        setTimeout(() => {
+          window.location.href = '/guardia-login.html';
+        }, 2000);
       }
     }
     

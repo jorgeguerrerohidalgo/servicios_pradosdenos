@@ -93,9 +93,54 @@
     const submitButton = form.querySelector('button[type="submit"]');
     const errorDiv = document.getElementById('error');
     
-    // Función para mostrar errores
+    // Contador de intentos fallidos
+    let loginAttempts = 0;
+    const maxAttempts = 5;
+    const lockoutTime = 15 * 60 * 1000; // 15 minutos
+    
+    // Verificar si está bloqueado localmente
+    function isLockedOut() {
+      const lockoutUntil = localStorage.getItem('lockoutUntil');
+      if (lockoutUntil && Date.now() < parseInt(lockoutUntil)) {
+        return true;
+      }
+      if (lockoutUntil && Date.now() >= parseInt(lockoutUntil)) {
+        localStorage.removeItem('lockoutUntil');
+        localStorage.removeItem('loginAttempts');
+        loginAttempts = 0;
+      }
+      return false;
+    }
+    
+    // Actualizar contador de intentos
+    function updateAttempts() {
+      loginAttempts = parseInt(localStorage.getItem('loginAttempts') || '0') + 1;
+      localStorage.setItem('loginAttempts', loginAttempts.toString());
+      
+      if (loginAttempts >= maxAttempts) {
+        const lockoutUntil = Date.now() + lockoutTime;
+        localStorage.setItem('lockoutUntil', lockoutUntil.toString());
+        showError(`Demasiados intentos fallidos. Bloqueado por 15 minutos.`);
+        return true;
+      }
+      return false;
+    }
+    
+    // Limpiar intentos en login exitoso
+    function clearAttempts() {
+      localStorage.removeItem('loginAttempts');
+      localStorage.removeItem('lockoutUntil');
+      loginAttempts = 0;
+    }
+    
+    // Función para mostrar errores con sanitización
     function showError(message) {
-      errorDiv.textContent = message;
+      // Sanitizar mensaje para prevenir XSS
+      const sanitized = message.replace(/[<>&"']/g, function(c) {
+        return {'<':'&lt;', '>':'&gt;', '&':'&amp;', '"':'&quot;', "'":"&#x27;"}[c];
+      });
+      
+      errorDiv.textContent = sanitized;
       setTimeout(() => {
         errorDiv.textContent = '';
       }, 5000);
@@ -106,24 +151,63 @@
       return window.location.origin;
     }
     
+    // Validación del lado del cliente
+    function validateForm(email, password) {
+      if (!email || !password) {
+        showError('Email y contraseña son requeridos');
+        return false;
+      }
+      
+      // Validación de email más estricta
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        showError('Formato de email inválido');
+        return false;
+      }
+      
+      if (password.length < 4) {
+        showError('Contraseña demasiado corta');
+        return false;
+      }
+      
+      return true;
+    }
+    
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      
+      // Verificar bloqueo local
+      if (isLockedOut()) {
+        const lockoutUntil = parseInt(localStorage.getItem('lockoutUntil'));
+        const remainingTime = Math.ceil((lockoutUntil - Date.now()) / 60000);
+        showError(`Cuenta bloqueada. Intenta en ${remainingTime} minutos.`);
+        return;
+      }
       
       // Limpiar errores previos
       errorDiv.textContent = '';
       
       // Deshabilitar botón durante el proceso
       submitButton.disabled = true;
-      submitButton.textContent = 'Ingresando...';
+      submitButton.textContent = 'Verificando...';
       
       try {
         const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
+        const email = formData.get('email').toLowerCase().trim();
+        const password = formData.get('password');
+        
+        // Validación del lado del cliente
+        if (!validateForm(email, password)) {
+          return;
+        }
+        
+        const data = { email, password };
         
         const response = await fetch(`${getApiUrl()}/api/auth/login`, {
           method: 'POST',
           headers: { 
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest' // Para detectar requests AJAX
           },
           credentials: 'include', // Importante para cookies de sesión
           body: JSON.stringify(data)
@@ -134,13 +218,32 @@
         if (response.ok) {
           // Login exitoso - verificar que sea un guardia
           if (result.guardia && result.guardia.tipo === 'guardia') {
-            window.location.href = '/guardia-checkin.html';
+            clearAttempts();
+            
+            // Pequeño delay para mejor UX
+            submitButton.textContent = '¡Acceso concedido!';
+            setTimeout(() => {
+              window.location.href = '/guardia-checkin.html';
+            }, 500);
           } else {
             showError('Acceso denegado. Solo guardias pueden acceder aquí.');
           }
         } else {
           // Error de login
-          showError(result.error || 'Credenciales inválidas');
+          const isBlocked = updateAttempts();
+          
+          if (!isBlocked) {
+            const remainingAttempts = maxAttempts - loginAttempts;
+            let errorMessage = result.error || 'Credenciales inválidas';
+            
+            if (response.status === 429) {
+              errorMessage = result.error || 'Demasiados intentos. Intenta más tarde.';
+            } else if (remainingAttempts > 0) {
+              errorMessage += ` (${remainingAttempts} intentos restantes)`;
+            }
+            
+            showError(errorMessage);
+          }
         }
       } catch (error) {
         console.error('Error de conexión:', error);
@@ -155,6 +258,24 @@
     // Verificar si ya está logueado
     window.addEventListener('load', async () => {
       try {
+        // Verificar bloqueo al cargar
+        if (isLockedOut()) {
+          const lockoutUntil = parseInt(localStorage.getItem('lockoutUntil'));
+          const remainingTime = Math.ceil((lockoutUntil - Date.now()) / 60000);
+          showError(`Cuenta bloqueada. Intenta en ${remainingTime} minutos.`);
+          submitButton.disabled = true;
+          
+          // Rehabilitar cuando expire el bloqueo
+          setTimeout(() => {
+            localStorage.removeItem('lockoutUntil');
+            localStorage.removeItem('loginAttempts');
+            submitButton.disabled = false;
+            errorDiv.textContent = '';
+          }, lockoutUntil - Date.now());
+          
+          return;
+        }
+        
         const response = await fetch(`${getApiUrl()}/api/auth/check`, {
           credentials: 'include'
         });
@@ -167,6 +288,32 @@
         // No hacer nada si falla la verificación
         console.log('No hay sesión activa');
       }
+    });
+    
+    // Manejar visibilidad de contraseña (opcional)
+    const passwordInput = form.querySelector('input[type="password"]');
+    passwordInput.addEventListener('input', function() {
+      // Opcional: validación en tiempo real
+      if (this.value.length > 0 && this.value.length < 4) {
+        this.setCustomValidity('Contraseña demasiado corta');
+      } else {
+        this.setCustomValidity('');
+      }
+    });
+    
+    // Prevenir envío múltiple del formulario
+    let isSubmitting = false;
+    form.addEventListener('submit', function(e) {
+      if (isSubmitting) {
+        e.preventDefault();
+        return false;
+      }
+      isSubmitting = true;
+      
+      // Reset después de un tiempo
+      setTimeout(() => {
+        isSubmitting = false;
+      }, 3000);
     });
   </script>
 </body>

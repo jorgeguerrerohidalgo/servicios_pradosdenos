@@ -6,8 +6,16 @@ process.env.TZ = 'America/Santiago';
 const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
+const helmet = require('helmet');
 const path = require('path');
 const app = express();
+
+// Importar middleware de seguridad
+const { 
+  apiLimiter, 
+  securityHeaders, 
+  cleanExpiredSessions 
+} = require('./middleware/security');
 
 // Importar rutas
 const authRoutes = require('./routes/auth.routes');
@@ -20,48 +28,148 @@ const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const isProduction = NODE_ENV === 'production';
 
-// Configuración de CORS para producción
+// ========== CONFIGURACIÓN DE SEGURIDAD ==========
+
+// Helmet para headers de seguridad básicos
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        "'self'", 
+        "'unsafe-inline'", // Necesario para scripts inline
+        "https://unpkg.com",
+        "https://cdn.jsdelivr.net",
+        "https://cdnjs.cloudflare.com"
+      ],
+      styleSrc: [
+        "'self'", 
+        "'unsafe-inline'", // Necesario para estilos inline
+        "https://cdn.jsdelivr.net",
+        "https://cdnjs.cloudflare.com"
+      ],
+      fontSrc: [
+        "'self'",
+        "https://cdnjs.cloudflare.com"
+      ],
+      imgSrc: ["'self'", "data:"],
+      connectSrc: ["'self'"]
+    }
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  }
+}));
+
+// Headers de seguridad personalizados
+app.use(securityHeaders);
+
+// Rate limiting general
+app.use('/api/', apiLimiter);
+
+// Configuración de CORS mejorada
 const corsOptions = {
-  origin: isProduction 
-    ? [process.env.FRONTEND_URL, process.env.RENDER_EXTERNAL_URL] 
-    : ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  origin: function (origin, callback) {
+    const allowedOrigins = isProduction 
+      ? [
+          process.env.FRONTEND_URL, 
+          process.env.RENDER_EXTERNAL_URL,
+          'https://servicios-prados-de-nos.onrender.com'
+        ].filter(Boolean)
+      : [
+          'http://localhost:3000', 
+          'http://127.0.0.1:3000',
+          'http://localhost:5000'
+        ];
+    
+    // Permitir requests sin origin (mobile apps, postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log(`🚨 CORS: Origin bloqueado: ${origin}`);
+      callback(new Error('Bloqueado por política CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200 // Para soporte legacy IE11
 };
 
-// Middlewares
-app.use(cors(corsOptions));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// ========== MIDDLEWARES BÁSICOS ==========
 
-// Configuración de sesiones para producción
+app.use(cors(corsOptions));
+app.use(express.json({ 
+  limit: '1mb', // Reducido para seguridad
+  strict: true
+}));
+app.use(express.urlencoded({ 
+  extended: true, 
+  limit: '1mb',
+  parameterLimit: 20 // Limitar parámetros
+}));
+
+// Configuración de sesiones segura
 app.use(session({
   secret: process.env.SESSION_SECRET || 'checkin-secret-key-change-in-production',
   resave: false,
   saveUninitialized: false,
+  rolling: true, // Renovar sesión en cada request
   cookie: { 
-    secure: false, // Deshabilitado temporalmente para debugging
+    secure: isProduction, // HTTPS en producción
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, // 24 horas
-    sameSite: 'lax' // Cambiado de 'none' a 'lax' para mejor compatibilidad
+    maxAge: 8 * 60 * 60 * 1000, // 8 horas (reducido)
+    sameSite: isProduction ? 'none' : 'lax' // Para CORS en producción
   },
-  name: 'checkin.sid'
+  name: 'checkin.sid',
+  // Generar IDs de sesión más seguros
+  genid: function(req) {
+    const crypto = require('crypto');
+    return crypto.randomBytes(32).toString('hex');
+  }
 }));
+
+// Middleware de limpieza automática (ejecutar cada hora)
+let lastCleanup = Date.now();
+app.use((req, res, next) => {
+  const now = Date.now();
+  if (now - lastCleanup > 60 * 60 * 1000) { // 1 hora
+    cleanExpiredSessions(req, res, () => {});
+    lastCleanup = now;
+  }
+  next();
+});
+
+// ========== LOGS Y MONITOREO ==========
 
 // Advertencia sobre MemoryStore en producción
 if (isProduction) {
-  console.log('⚠️  NOTA: Se está usando MemoryStore para sesiones en producción.');
-  console.log('⚠️  Para producción real, considera usar connect-redis o similar.');
+  console.log('⚠️  SECURITY: Se está usando MemoryStore para sesiones en producción.');
+  console.log('⚠️  SECURITY: Para producción real, considera usar connect-redis o similar.');
 }
 
-// Middleware de logging en producción
-if (isProduction) {
-  app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - IP: ${req.ip}`);
-    next();
-  });
-}
+// Middleware de logging mejorado
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  const ip = req.ip || req.connection.remoteAddress;
+  const userAgent = req.get('User-Agent') || 'Unknown';
+  
+  if (isProduction || process.env.LOG_REQUESTS === 'true') {
+    console.log(`[${timestamp}] ${req.method} ${req.path} - IP: ${ip} - UA: ${userAgent.substring(0, 50)}`);
+  }
+  
+  // Log de requests sospechosos
+  const suspiciousPaths = ['/admin', '/.env', '/config', '/wp-admin', '/phpmyadmin'];
+  if (suspiciousPaths.some(path => req.path.toLowerCase().includes(path))) {
+    console.log(`🚨 SECURITY: Request sospechoso desde ${ip}: ${req.method} ${req.path}`);
+  }
+  
+  next();
+});
 
 // Health check endpoint para Render
 app.get('/health', (req, res) => {
