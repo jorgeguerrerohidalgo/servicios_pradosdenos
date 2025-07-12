@@ -233,9 +233,12 @@
     <i class="fas fa-tools"></i> Repair Button
   </button>
   
-  <!-- Botón de emergencia -->
-  <button class="btn btn-danger" onclick="emergencyCheckin()" style="position: absolute; top: 420px; left: 20px; z-index: 1000; font-size: 10px; background: red;">
-    <i class="fas fa-exclamation-triangle"></i> Emergency Check-in
+  <button class="btn btn-success" onclick="testEventSystem()" style="position: absolute; top: 420px; left: 20px; z-index: 1000; font-size: 10px;">
+    <i class="fas fa-play"></i> Test Events
+  </button>
+  
+  <button class="btn btn-info" onclick="checkEventSystem()" style="position: absolute; top: 470px; left: 20px; z-index: 1000; font-size: 10px;">
+    <i class="fas fa-info"></i> Check System
   </button>
 
   <div class="container">
@@ -293,7 +296,7 @@
         <div id="codeValidationFeedback" class="form-text"></div>
       </div>
       <div class="d-grid gap-2">
-        <button id="confirmCheckinBtn" class="btn btn-success" onclick="confirmCheckin()" disabled>
+        <button id="confirmCheckinBtn" class="btn btn-success" data-action="confirm-checkin" disabled>
           <i class="fas fa-check"></i> Confirmar Check-in
         </button>
         <button class="btn btn-secondary" onclick="resetProcess()">
@@ -522,9 +525,6 @@
           feedback.className = 'form-text code-match';
           confirmBtn.disabled = false;
           console.log('→ Código correcto, botón HABILITADO');
-          
-          // 🔧 SOLUCIÓN: Asegurar que el botón funcione cuando se habilita
-          ensureButtonWorks();
         } else {
           feedback.textContent = '✗ Código incorrecto';
           feedback.className = 'form-text code-mismatch';
@@ -562,9 +562,6 @@
       console.log('input.oninput:', typeof input.oninput);
       console.log('input.onkeyup:', typeof input.onkeyup);
       
-      // 🔧 SOLUCIÓN: Configurar el botón de forma robusta
-      setupButtonRobustly();
-      
       // Auto-focus en el input
       setTimeout(() => {
         input.focus();
@@ -578,18 +575,21 @@
     async function confirmCheckin() {
       console.log('🚀 === CONFIRM CHECKIN EJECUTADO ===');
       console.log('Timestamp:', new Date().toISOString());
+      console.log('Stack trace:', new Error().stack);
       
       // Mostrar alerta visual para debugging
       const debugAlert = document.createElement('div');
-      debugAlert.className = 'alert alert-info';
-      debugAlert.innerHTML = '<strong>DEBUG:</strong> confirmCheckin() ejecutado - ' + new Date().toLocaleTimeString();
+      debugAlert.className = 'alert alert-success';
+      debugAlert.innerHTML = '<strong>✅ SUCCESS:</strong> confirmCheckin() ejecutado correctamente - ' + new Date().toLocaleTimeString();
       debugAlert.style.position = 'fixed';
       debugAlert.style.top = '10px';
       debugAlert.style.right = '10px';
       debugAlert.style.zIndex = '9999';
       debugAlert.style.minWidth = '300px';
+      debugAlert.style.border = '3px solid #28a745';
+      debugAlert.style.fontWeight = 'bold';
       document.body.appendChild(debugAlert);
-      setTimeout(() => debugAlert.remove(), 3000);
+      setTimeout(() => debugAlert.remove(), 5000);
       
       const enteredCode = document.getElementById('validationCodeInput').value.trim();
       const confirmBtn = document.getElementById('confirmCheckinBtn');
@@ -815,35 +815,34 @@ Sección visible: ${document.getElementById('validationSection').style.display !
       console.log('Código a probar:', userValidationCode);
       console.log('Estado inicial botón:', confirmBtn.disabled);
       
-      // Rellenar input y validar
+      // Habilitar botón manualmente para probar
+      confirmBtn.disabled = false;
+      confirmBtn.classList.remove('btn-secondary');
+      confirmBtn.classList.add('btn-success');
+      
+      // Actualizar feedback
+      const feedback = document.getElementById('codeValidationFeedback');
+      feedback.textContent = '✓ Código correcto (test directo)';
+      feedback.className = 'form-text code-match';
+      
+      // Rellenar input
       input.value = userValidationCode;
       
-      // Disparar validación
-      if (input.oninput) {
-        input.oninput();
-      }
+      // Verificar que el sistema de events esté funcionando
+      console.log('🔍 Verificando sistema de events...');
       
-      // 🔧 SOLUCIÓN: Asegurar que el botón funcione después de habilitarlo
+      // Simular un click programático para probar
       setTimeout(() => {
-        confirmBtn.disabled = false;
-        ensureButtonWorks();
-        
-        // Actualizar feedback
-        const feedback = document.getElementById('codeValidationFeedback');
-        feedback.textContent = '✓ Código correcto (test directo)';
-        feedback.className = 'form-text code-match';
-        
-        console.log('✅ Test directo completado');
-        console.log('Botón disabled:', confirmBtn.disabled);
-        console.log('Botón onclick:', confirmBtn.onclick);
-        
-        alert(`Test directo realizado:
+        console.log('🖱️ Simulando click programático...');
+        confirmBtn.click();
+      }, 500);
+      
+      alert(`Test directo realizado:
 - Código: ${userValidationCode}
 - Botón habilitado: ${!confirmBtn.disabled}
 - Feedback: ${feedback.textContent}
-- onclick definido: ${confirmBtn.onclick ? 'Sí' : 'No'}
-- Ahora puedes probar el check-in`);
-      }, 100);
+- Sistema de events configurado: ${typeof setupEventDelegation === 'function'}
+- En 500ms se simulará un click automático para probar`);
     }
     
     // Función de debugging para probar el evento onclick
@@ -989,275 +988,262 @@ Sección visible: ${document.getElementById('validationSection').style.display !
         return;
       }
       
-      // Usar las funciones robustas
-      setupButtonRobustly();
-      ensureButtonWorks();
-      
-      // Verificar que esté habilitado si el código es correcto
-      const input = document.getElementById('validationCodeInput');
-      const enteredCode = input.value.trim().toUpperCase();
-      
-      if (userValidationCode && enteredCode === userValidationCode.toUpperCase()) {
-        console.log('✅ Código correcto, habilitando botón');
-        confirmBtn.disabled = false;
-        
-        const feedback = document.getElementById('codeValidationFeedback');
-        feedback.textContent = '✓ Código correcto';
-        feedback.className = 'form-text code-match';
-      }
-      
-      console.log('✅ Botón reparado completamente');
-      console.log('Botón disabled:', confirmBtn.disabled);
-      console.log('Botón onclick:', confirmBtn.onclick);
-      
-      // Mostrar estado del botón
-      alert(`Botón reparado:
-- Disabled: ${confirmBtn.disabled}
-- onclick: ${confirmBtn.onclick ? 'Definido' : 'No definido'}
-- Posición: ${confirmBtn.getBoundingClientRect().top}px
-- Z-index: ${window.getComputedStyle(confirmBtn).zIndex}`);
-    }
-
-    // 🔧 SOLUCIÓN: Configurar el botón de forma robusta
-    function setupButtonRobustly() {
-      console.log('=== CONFIGURANDO BOTÓN ROBUSTAMENTE ===');
-      const confirmBtn = document.getElementById('confirmCheckinBtn');
-      
-      if (!confirmBtn) {
-        console.error('❌ Botón no encontrado');
-        return;
-      }
-      
       // Verificar el onclick original
       console.log('onclick original:', confirmBtn.onclick);
       
-      // Asegurar que el onclick funcione
-      if (!confirmBtn.onclick) {
-        console.log('⚠️ No hay onclick, asignando...');
-        confirmBtn.onclick = function() {
-          console.log('onclick asignado ejecutado');
-          confirmCheckin();
-        };
-      }
+      // Eliminar y volver a asignar el onclick
+      confirmBtn.onclick = null;
+      confirmBtn.onclick = function() {
+        console.log('onclick reparado ejecutado');
+        confirmCheckin();
+      };
       
-      // Añadir event listener como backup ROBUSTO
+      // También añadir event listener como backup
       confirmBtn.addEventListener('click', function(e) {
-        console.log('🔧 Event listener backup ejecutado');
-        console.log('Botón disabled:', confirmBtn.disabled);
-        console.log('Event target:', e.target);
-        console.log('Event currentTarget:', e.currentTarget);
-        
+        console.log('Event listener backup ejecutado');
         if (!confirmBtn.disabled) {
-          console.log('✅ Ejecutando confirmCheckin desde event listener backup');
-          e.preventDefault();
-          e.stopPropagation();
+          console.log('Ejecutando confirmCheckin desde event listener');
           confirmCheckin();
-        } else {
-          console.log('⚠️ Botón deshabilitado, no ejecutando');
         }
-      }, { passive: false });
+      });
       
-      // Añadir event listener para mousedown como backup adicional
-      confirmBtn.addEventListener('mousedown', function(e) {
-        console.log('🔧 Mousedown backup ejecutado');
-        if (!confirmBtn.disabled) {
-          console.log('✅ Ejecutando confirmCheckin desde mousedown backup');
-          setTimeout(() => {
-            confirmCheckin();
-          }, 100);
-        }
-      }, { passive: false });
-      
-      // Corregir estilos que puedan interferir
+      // Verificar y corregir estilos
       confirmBtn.style.pointerEvents = 'auto';
       confirmBtn.style.position = 'relative';
       confirmBtn.style.zIndex = '1000';
       
-      console.log('✅ Botón configurado robustamente');
+      // Forzar repaint
+      confirmBtn.style.display = 'none';
+      confirmBtn.offsetHeight; // Trigger reflow
+      confirmBtn.style.display = 'inline-block';
+      
+      console.log('✅ Botón reparado');
+      console.log('Nuevo onclick:', confirmBtn.onclick);
     }
     
-    // 🔧 SOLUCIÓN: Asegurar que el botón funcione cuando se habilita
-    function ensureButtonWorks() {
-      console.log('=== ASEGURANDO QUE EL BOTÓN FUNCIONE ===');
-      const confirmBtn = document.getElementById('confirmCheckinBtn');
+    // Función para probar el sistema de event delegation
+    function testEventSystem() {
+      console.log('=== PROBANDO SISTEMA DE EVENTS ===');
       
+      const confirmBtn = document.getElementById('confirmCheckinBtn');
       if (!confirmBtn) {
         console.error('❌ Botón no encontrado');
+        alert('Error: Botón no encontrado');
         return;
       }
       
-      // Verificar que el botón esté accesible
-      setTimeout(() => {
-        const rect = confirmBtn.getBoundingClientRect();
-        console.log('Botón rect:', rect);
-        
-        // Verificar que no hay elementos superpuestos
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        const elementsAtCenter = document.elementsFromPoint(centerX, centerY);
-        const buttonIndex = elementsAtCenter.indexOf(confirmBtn);
-        
-        console.log('Elementos en el centro:', elementsAtCenter.length);
-        console.log('Índice del botón:', buttonIndex);
-        
-        if (buttonIndex > 0) {
-          console.log('⚠️ Elementos superpuestos detectados, corrigiendo...');
-          // Incrementar z-index para asegurar que esté encima
-          confirmBtn.style.zIndex = '9999';
-          confirmBtn.style.position = 'relative';
-        }
-        
-        // Verificar que el onclick funcione
-        if (!confirmBtn.onclick) {
-          console.log('⚠️ onclick perdido, restaurando...');
-          confirmBtn.onclick = function() {
-            console.log('onclick restaurado ejecutado');
-            confirmCheckin();
-          };
-        }
-      }, 100);
-    }
-
-    // 🔧 SOLUCIÓN: Monitor automático del botón
-    function startButtonMonitor() {
-      console.log('=== INICIANDO MONITOR DEL BOTÓN ===');
+      // Habilitar botón temporalmente para prueba
+      const wasDisabled = confirmBtn.disabled;
+      confirmBtn.disabled = false;
+      confirmBtn.classList.remove('btn-secondary');
+      confirmBtn.classList.add('btn-success');
       
-      // Verificar el botón cada 2 segundos
-      setInterval(() => {
-        const confirmBtn = document.getElementById('confirmCheckinBtn');
-        
-        if (!confirmBtn) return;
-        
-        // Si el botón está habilitado pero no tiene onclick, repararlo
-        if (!confirmBtn.disabled && !confirmBtn.onclick) {
-          console.log('⚠️ Botón habilitado sin onclick detectado, reparando...');
-          setupButtonRobustly();
+      console.log('Botón habilitado para prueba');
+      
+      // Simular diferentes tipos de eventos
+      setTimeout(() => {
+        console.log('🖱️ Probando click()...');
+        confirmBtn.click();
+      }, 500);
+      
+      setTimeout(() => {
+        console.log('🖱️ Probando MouseEvent...');
+        const clickEvent = new MouseEvent('click', {
+          bubbles: true,
+          cancelable: true,
+          view: window
+        });
+        confirmBtn.dispatchEvent(clickEvent);
+      }, 1000);
+      
+      setTimeout(() => {
+        console.log('🖱️ Probando PointerEvent...');
+        const pointerEvent = new PointerEvent('click', {
+          bubbles: true,
+          cancelable: true,
+          view: window
+        });
+        confirmBtn.dispatchEvent(pointerEvent);
+      }, 1500);
+      
+      // Restaurar estado original después de las pruebas
+      setTimeout(() => {
+        confirmBtn.disabled = wasDisabled;
+        if (wasDisabled) {
+          confirmBtn.classList.remove('btn-success');
+          confirmBtn.classList.add('btn-secondary');
         }
-        
-        // Verificar que no hay overlays cuando está habilitado
-        if (!confirmBtn.disabled) {
-          const rect = confirmBtn.getBoundingClientRect();
-          const centerX = rect.left + rect.width / 2;
-          const centerY = rect.top + rect.height / 2;
-          const elementsAtCenter = document.elementsFromPoint(centerX, centerY);
-          const buttonIndex = elementsAtCenter.indexOf(confirmBtn);
-          
-          if (buttonIndex > 0) {
-            console.log('⚠️ Overlay detectado, corrigiendo z-index...');
-            confirmBtn.style.zIndex = '9999';
-            confirmBtn.style.position = 'relative';
-          }
-        }
+        console.log('Estado del botón restaurado');
       }, 2000);
       
-      console.log('✅ Monitor del botón iniciado');
-    }
-
-    // 🔧 SOLUCIÓN: Check-in de emergencia
-    function emergencyCheckin() {
-      console.log('=== EMERGENCY CHECK-IN ===');
-      
-      const input = document.getElementById('validationCodeInput');
-      const confirmBtn = document.getElementById('confirmCheckinBtn');
-      
-      if (!userValidationCode) {
-        alert('Error: No se ha cargado el código de validación');
-        return;
-      }
-      
-      if (!scannedToken) {
-        alert('Error: No se ha escaneado ningún QR. Usa "Simular QR" primero.');
-        return;
-      }
-      
-      const enteredCode = input.value.trim();
-      
-      if (!enteredCode) {
-        alert('Por favor ingresa tu código de validación');
-        return;
-      }
-      
-      if (enteredCode.toUpperCase() !== userValidationCode.toUpperCase()) {
-        alert('Código de validación incorrecto');
-        return;
-      }
-      
-      // Confirmar la acción
-      if (confirm('¿Estás seguro de que quieres realizar el check-in de emergencia?')) {
-        console.log('✅ Ejecutando check-in de emergencia...');
-        
-        // Forzar la ejecución
-        confirmBtn.disabled = false;
-        confirmCheckin();
-      }
-    }
-
-    // 🔧 SOLUCIÓN: Indicador visual del estado del botón
-    function addButtonStatusIndicator() {
-      const confirmBtn = document.getElementById('confirmCheckinBtn');
-      
-      if (!confirmBtn) return;
-      
-      // Crear indicador si no existe
-      let indicator = document.getElementById('buttonStatusIndicator');
-      if (!indicator) {
-        indicator = document.createElement('div');
-        indicator.id = 'buttonStatusIndicator';
-        indicator.style.cssText = `
-          position: absolute;
-          top: -10px;
-          right: -10px;
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          background: red;
-          z-index: 10000;
-          opacity: 0.8;
-          pointer-events: none;
-        `;
-        confirmBtn.parentElement.style.position = 'relative';
-        confirmBtn.parentElement.appendChild(indicator);
-      }
-      
-      // Actualizar color basado en el estado
-      const updateIndicator = () => {
-        if (confirmBtn.disabled) {
-          indicator.style.background = 'gray';
-          indicator.title = 'Botón deshabilitado';
-        } else if (confirmBtn.onclick) {
-          indicator.style.background = 'green';
-          indicator.title = 'Botón funcional';
-        } else {
-          indicator.style.background = 'red';
-          indicator.title = 'Botón sin onclick';
-        }
-      };
-      
-      updateIndicator();
-      
-      // Actualizar cada segundo
-      setInterval(updateIndicator, 1000);
+      alert('Probando sistema de events...\nRevisa la consola para ver los resultados.\nSe probarán 3 tipos de eventos en 0.5, 1.0 y 1.5 segundos.');
     }
 
     // Manejar tecla Enter en el campo de validación (se maneja en showValidationSection)
     
+    // ========== SISTEMA DE EVENT DELEGATION ==========
+    // Este sistema evita que la librería html5-qrcode interfiera con los eventos del botón
+    
+    // Variable para rastrear si el sistema está configurado
+    let eventSystemInitialized = false;
+    
+    function setupEventDelegation() {
+      console.log('🔧 Configurando event delegation...');
+      
+      if (eventSystemInitialized) {
+        console.log('⚠️ Sistema de events ya inicializado');
+        return;
+      }
+      
+      // Event delegation a nivel de documento
+      document.addEventListener('click', function(e) {
+        // Verificar si el clic fue en el botón de confirmar check-in
+        if (e.target && e.target.id === 'confirmCheckinBtn') {
+          console.log('🎯 Click capturado via event delegation');
+          
+          // Prevenir que otros handlers interfieran
+          e.preventDefault();
+          e.stopPropagation();
+          
+          // Verificar que el botón no esté deshabilitado
+          if (!e.target.disabled) {
+            console.log('✅ Botón habilitado, ejecutando confirmCheckin()');
+            confirmCheckin();
+          } else {
+            console.log('⚠️ Botón deshabilitado, no ejecutando confirmCheckin()');
+          }
+        }
+        
+        // También capturar clics en botones con data-action
+        if (e.target && e.target.dataset && e.target.dataset.action === 'confirm-checkin') {
+          console.log('🎯 Click capturado via data-action');
+          
+          e.preventDefault();
+          e.stopPropagation();
+          
+          if (!e.target.disabled) {
+            console.log('✅ Botón habilitado (data-action), ejecutando confirmCheckin()');
+            confirmCheckin();
+          } else {
+            console.log('⚠️ Botón deshabilitado (data-action), no ejecutando confirmCheckin()');
+          }
+        }
+      }, true); // Usar capture=true para capturar antes que otros handlers
+      
+      // Backup: event listener directo cuando el botón se crea
+      function attachDirectListener() {
+        const confirmBtn = document.getElementById('confirmCheckinBtn');
+        if (confirmBtn) {
+          console.log('🔧 Añadiendo event listener directo al botón');
+          
+          // Remover listeners anteriores si existen
+          confirmBtn.removeEventListener('click', handleConfirmClick);
+          
+          // Añadir nuevo listener
+          confirmBtn.addEventListener('click', handleConfirmClick, { capture: true });
+          
+          // También manejar con mousedown como backup
+          confirmBtn.addEventListener('mousedown', function(e) {
+            if (!confirmBtn.disabled) {
+              console.log('🖱️ Mousedown capturado, preparando confirmCheckin()');
+              setTimeout(() => {
+                if (!confirmBtn.disabled) {
+                  console.log('🖱️ Ejecutando confirmCheckin() desde mousedown');
+                  confirmCheckin();
+                }
+              }, 10);
+            }
+          });
+          
+          // Añadir listener para touchstart (dispositivos móviles)
+          confirmBtn.addEventListener('touchstart', function(e) {
+            if (!confirmBtn.disabled) {
+              console.log('📱 Touchstart capturado');
+              setTimeout(() => {
+                if (!confirmBtn.disabled) {
+                  console.log('📱 Ejecutando confirmCheckin() desde touchstart');
+                  confirmCheckin();
+                }
+              }, 10);
+            }
+          });
+        }
+      }
+      
+      // Handler para el click directo
+      function handleConfirmClick(e) {
+        console.log('🎯 Click directo capturado');
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (!e.target.disabled) {
+          console.log('✅ Ejecutando confirmCheckin() desde click directo');
+          confirmCheckin();
+        }
+      }
+      
+      // Configurar listeners directos cuando el DOM esté listo
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', attachDirectListener);
+      } else {
+        attachDirectListener();
+      }
+      
+      // Re-configurar listeners cuando se muestre la sección de validación
+      const originalShowValidationSection = showValidationSection;
+      showValidationSection = function() {
+        originalShowValidationSection();
+        setTimeout(attachDirectListener, 100); // Pequeño delay para asegurar que el DOM esté actualizado
+      };
+      
+      eventSystemInitialized = true;
+      console.log('✅ Sistema de event delegation configurado correctamente');
+    }
+    
+    // Función para verificar el estado del sistema de events
+    function checkEventSystem() {
+      console.log('=== ESTADO DEL SISTEMA DE EVENTS ===');
+      console.log('Sistema inicializado:', eventSystemInitialized);
+      
+      const confirmBtn = document.getElementById('confirmCheckinBtn');
+      if (confirmBtn) {
+        console.log('Botón encontrado:', true);
+        console.log('Botón ID:', confirmBtn.id);
+        console.log('Botón data-action:', confirmBtn.dataset.action);
+        console.log('Botón disabled:', confirmBtn.disabled);
+        console.log('Botón clases:', confirmBtn.classList.toString());
+      } else {
+        console.log('Botón encontrado:', false);
+      }
+      
+      // Verificar handlers a nivel de documento
+      console.log('Document click listeners configurados:', eventSystemInitialized);
+      
+      return {
+        initialized: eventSystemInitialized,
+        buttonExists: !!confirmBtn,
+        buttonDisabled: confirmBtn ? confirmBtn.disabled : null
+      };
+    }
+    
+    // ========== FIN SISTEMA DE EVENT DELEGATION ==========
+    
     // Inicializar la aplicación
     async function init() {
+      console.log('🚀 Iniciando aplicación...');
+      
+      // Configurar event delegation ANTES de verificar autenticación
+      setupEventDelegation();
+      
       if (!(await checkAuth())) return;
       
       await loadValidationCode();
       await loadHistory();
       
-      // 🔧 SOLUCIÓN: Configurar el botón de forma robusta al inicializar
-      setTimeout(() => {
-        setupButtonRobustly();
-        startButtonMonitor();
-        addButtonStatusIndicator();
-        console.log('✅ Botón configurado robustamente en init()');
-      }, 500);
-      
       // Auto-iniciar escáner
       setTimeout(startScanning, 1000);
+      
+      console.log('✅ Aplicación inicializada correctamente');
     }
     
     // Inicializar cuando la página esté lista
