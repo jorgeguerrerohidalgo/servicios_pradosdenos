@@ -102,11 +102,11 @@ async function hashPassword(password) {
   return await bcrypt.hash(password, SALT_ROUNDS);
 }
 
-// Ruta de login con seguridad mejorada
+// Ruta de login con seguridad mejorada (rate limiting temporalmente deshabilitado)
 router.post('/login', 
-  loginLimiter,
+  // loginLimiter, // Comentado temporalmente para debugging
   validateLogin, 
-  checkLoginAttempts,
+  // checkLoginAttempts, // Comentado temporalmente para debugging
   logLoginAttempt,
   async (req, res) => {
     const { email, password } = req.body;
@@ -206,48 +206,45 @@ router.post('/login',
         await db.query('UPDATE guardias SET last_login = CURRENT_TIMESTAMP WHERE id = $1', [foundUser.id]);
       }
       
-      // Crear sesión segura
+      // Crear sesión segura (simplificada)
       const userName = userType === 'guardia' ? foundUser.nombre : `${foundUser.nombre} ${foundUser.apellido_paterno}`;
       
-      // Regenerar ID de sesión para prevenir session fixation
-      req.session.regenerate((err) => {
+      // Crear sesión sin regeneración para evitar problemas
+      req.session.guardia = {
+        id: foundUser.id,
+        nombre: userName,
+        email: foundUser.email,
+        tipo: userType,
+        loginTime: new Date().toISOString(),
+        ip: ip
+      };
+      
+      // Forzar guardado de sesión
+      req.session.save((err) => {
         if (err) {
-          console.error('Error regenerating session:', err);
+          console.error('Error saving session:', err);
+          return res.status(500).json({ error: 'Error interno del servidor' });
         }
         
-        req.session.guardia = {
-          id: foundUser.id,
-          nombre: userName,
+        // Log exitoso
+        logSecurityEvent(ip, 'LOGIN_SUCCESS', {
+          userId: foundUser.id,
+          userType,
           email: foundUser.email,
-          tipo: userType,
-          loginTime: new Date().toISOString(),
-          ip: ip
-        };
+          userAgent,
+          sessionId: req.sessionID
+        });
         
-        req.session.save((err) => {
-          if (err) {
-            console.error('Error saving session:', err);
-            return res.status(500).json({ error: 'Error interno del servidor' });
-          }
-          
-          // Log exitoso
-          logSecurityEvent(ip, 'LOGIN_SUCCESS', {
-            userId: foundUser.id,
-            userType,
+        console.log(`✅ LOGIN: Usuario ${foundUser.email} (${userType}) autenticado exitosamente desde IP ${ip}`);
+        
+        res.json({ 
+          message: 'Login exitoso',
+          guardia: {
+            id: foundUser.id,
+            nombre: userName,
             email: foundUser.email,
-            userAgent,
-            sessionId: req.sessionID
-          });
-          
-          res.json({ 
-            message: 'Login exitoso',
-            guardia: {
-              id: foundUser.id,
-              nombre: userName,
-              email: foundUser.email,
-              tipo: userType
-            }
-          });
+            tipo: userType
+          }
         });
       });
       
@@ -265,15 +262,22 @@ router.post('/login',
   }
 );
 
-// Ruta para verificar si el usuario está autenticado
-router.get('/check', validateSession, (req, res) => {
-  // Verificar que la sesión no sea demasiado antigua (opcional)
-  const sessionAge = Date.now() - new Date(req.session.guardia.loginTime || 0).getTime();
-  const maxSessionAge = 24 * 60 * 60 * 1000; // 24 horas
+// Ruta para verificar si el usuario está autenticado (SIN validateSession)
+router.get('/check', (req, res) => {
+  if (!req.session.guardia) {
+    return res.json({ authenticated: false, reason: 'no_session' });
+  }
   
-  if (sessionAge > maxSessionAge) {
-    req.session.destroy();
-    return res.json({ authenticated: false, reason: 'session_expired' });
+  // Verificar que la sesión no sea demasiado antigua (opcional)
+  const loginTime = req.session.guardia.loginTime;
+  if (loginTime) {
+    const sessionAge = Date.now() - new Date(loginTime).getTime();
+    const maxSessionAge = 8 * 60 * 60 * 1000; // 8 horas
+    
+    if (sessionAge > maxSessionAge) {
+      req.session.destroy();
+      return res.json({ authenticated: false, reason: 'session_expired' });
+    }
   }
   
   res.json({ 

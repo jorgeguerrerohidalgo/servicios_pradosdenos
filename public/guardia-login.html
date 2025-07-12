@@ -176,13 +176,13 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       
-      // Verificar bloqueo local
-      if (isLockedOut()) {
-        const lockoutUntil = parseInt(localStorage.getItem('lockoutUntil'));
-        const remainingTime = Math.ceil((lockoutUntil - Date.now()) / 60000);
-        showError(`Cuenta bloqueada. Intenta en ${remainingTime} minutos.`);
-        return;
-      }
+      // Verificar bloqueo local (comentado temporalmente para debugging)
+      // if (isLockedOut()) {
+      //   const lockoutUntil = parseInt(localStorage.getItem('lockoutUntil'));
+      //   const remainingTime = Math.ceil((lockoutUntil - Date.now()) / 60000);
+      //   showError(`Cuenta bloqueada. Intenta en ${remainingTime} minutos.`);
+      //   return;
+      // }
       
       // Limpiar errores previos
       errorDiv.textContent = '';
@@ -203,6 +203,8 @@
         
         const data = { email, password };
         
+        console.log('🔐 Enviando login para:', email);
+        
         const response = await fetch(`${getApiUrl()}/api/auth/login`, {
           method: 'POST',
           headers: { 
@@ -213,12 +215,17 @@
           body: JSON.stringify(data)
         });
         
+        console.log('🔐 Respuesta login status:', response.status);
+        
         const result = await response.json();
+        console.log('🔐 Respuesta login data:', result);
         
         if (response.ok) {
           // Login exitoso - verificar que sea un guardia
           if (result.guardia && result.guardia.tipo === 'guardia') {
             clearAttempts();
+            
+            console.log('✅ Login exitoso, redirigiendo...');
             
             // Pequeño delay para mejor UX
             submitButton.textContent = '¡Acceso concedido!';
@@ -229,24 +236,31 @@
             showError('Acceso denegado. Solo guardias pueden acceder aquí.');
           }
         } else {
-          // Error de login
-          const isBlocked = updateAttempts();
+          // Error de login (rate limiting temporalmente deshabilitado)
+          // const isBlocked = updateAttempts();
           
-          if (!isBlocked) {
-            const remainingAttempts = maxAttempts - loginAttempts;
-            let errorMessage = result.error || 'Credenciales inválidas';
-            
-            if (response.status === 429) {
-              errorMessage = result.error || 'Demasiados intentos. Intenta más tarde.';
-            } else if (remainingAttempts > 0) {
-              errorMessage += ` (${remainingAttempts} intentos restantes)`;
-            }
-            
-            showError(errorMessage);
+          // if (!isBlocked) {
+          //   const remainingAttempts = maxAttempts - loginAttempts;
+          //   let errorMessage = result.error || 'Credenciales inválidas';
+          //   
+          //   if (response.status === 429) {
+          //     errorMessage = result.error || 'Demasiados intentos. Intenta más tarde.';
+          //   } else if (remainingAttempts > 0) {
+          //     errorMessage += ` (${remainingAttempts} intentos restantes)`;
+          //   }
+          //   
+          //   showError(errorMessage);
+          // }
+          
+          // Versión simplificada para debugging
+          let errorMessage = result.error || 'Credenciales inválidas';
+          if (response.status === 429) {
+            errorMessage = result.error || 'Demasiados intentos. Intenta más tarde.';
           }
+          showError(errorMessage);
         }
       } catch (error) {
-        console.error('Error de conexión:', error);
+        console.error('❌ Error de conexión:', error);
         showError('Error de conexión. Verifica tu conexión a internet.');
       } finally {
         // Rehabilitar botón

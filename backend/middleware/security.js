@@ -48,25 +48,56 @@ const apiLimiter = rateLimit({
 // Middleware para logging de eventos de seguridad
 async function logSecurityEvent(ip, eventType, details = {}) {
   try {
-    await query(
-      'INSERT INTO security_logs (ip_address, event_type, details, created_at) VALUES ($1, $2, $3, CURRENT_TIMESTAMP)',
-      [ip, eventType, JSON.stringify(details)]
-    );
+    // Verificar si la tabla existe antes de insertar
+    const tableExists = await query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'security_logs'
+      );
+    `);
+    
+    if (tableExists[0].exists) {
+      await query(
+        'INSERT INTO security_logs (ip_address, event_type, details, created_at) VALUES ($1, $2, $3, CURRENT_TIMESTAMP)',
+        [ip, eventType, JSON.stringify(details)]
+      );
+    } else {
+      // Si la tabla no existe, solo loggear en consola
+      console.log(`📋 SECURITY LOG: ${eventType} from ${ip}:`, details);
+    }
   } catch (error) {
     console.error('Error logging security event:', error);
+    // Fallback: loggear en consola
+    console.log(`📋 SECURITY LOG (fallback): ${eventType} from ${ip}:`, details);
   }
 }
 
 // Middleware para validar sesiones
 function validateSession(req, res, next) {
-  if (!req.session.guardia) {
+  if (!req.session || !req.session.guardia) {
     logSecurityEvent(req.ip, 'UNAUTHORIZED_ACCESS', {
       endpoint: req.path,
       userAgent: req.get('User-Agent'),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      reason: 'NO_SESSION'
     });
     return res.status(401).json({ error: 'No autenticado' });
   }
+  
+  // Verificar que la sesión tenga los campos requeridos
+  const guardia = req.session.guardia;
+  if (!guardia.id || !guardia.tipo) {
+    logSecurityEvent(req.ip, 'UNAUTHORIZED_ACCESS', {
+      endpoint: req.path,
+      userAgent: req.get('User-Agent'),
+      timestamp: new Date().toISOString(),
+      reason: 'INVALID_SESSION_DATA',
+      sessionData: guardia
+    });
+    return res.status(401).json({ error: 'Sesión inválida' });
+  }
+  
   next();
 }
 

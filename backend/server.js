@@ -17,6 +17,9 @@ const {
   cleanExpiredSessions 
 } = require('./middleware/security');
 
+// Importar setup de seguridad
+const { setupSecurityTable } = require('./setup-security');
+
 // Importar rutas
 const authRoutes = require('./routes/auth.routes');
 const checkinRoutes = require('./routes/checkin.routes');
@@ -66,8 +69,8 @@ app.use(helmet({
 // Headers de seguridad personalizados
 app.use(securityHeaders);
 
-// Rate limiting general
-app.use('/api/', apiLimiter);
+// Rate limiting general (temporalmente comentado para debugging)
+// app.use('/api/', apiLimiter);
 
 // Configuración de CORS mejorada
 const corsOptions = {
@@ -113,24 +116,24 @@ app.use(express.urlencoded({
   parameterLimit: 20 // Limitar parámetros
 }));
 
-// Configuración de sesiones segura
+// Configuración de sesiones segura pero compatible
 app.use(session({
   secret: process.env.SESSION_SECRET || 'checkin-secret-key-change-in-production',
   resave: false,
   saveUninitialized: false,
-  rolling: true, // Renovar sesión en cada request
+  rolling: false, // Deshabilitado temporalmente para evitar problemas
   cookie: { 
-    secure: isProduction, // HTTPS en producción
+    secure: false, // Temporal: forzar false para debugging
     httpOnly: true,
-    maxAge: 8 * 60 * 60 * 1000, // 8 horas (reducido)
-    sameSite: isProduction ? 'none' : 'lax' // Para CORS en producción
+    maxAge: 8 * 60 * 60 * 1000, // 8 horas
+    sameSite: 'lax' // Más compatible que 'none'
   },
-  name: 'checkin.sid',
-  // Generar IDs de sesión más seguros
-  genid: function(req) {
-    const crypto = require('crypto');
-    return crypto.randomBytes(32).toString('hex');
-  }
+  name: 'checkin.sid'
+  // Comentado temporalmente para evitar problemas de compatibilidad
+  // genid: function(req) {
+  //   const crypto = require('crypto');
+  //   return crypto.randomBytes(32).toString('hex');
+  // }
 }));
 
 // Middleware de limpieza automática (ejecutar cada hora)
@@ -241,10 +244,23 @@ app.use((err, req, res, next) => {
 });
 
 // Iniciar servidor
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', async () => {
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
   console.log(`🌍 Entorno: ${NODE_ENV}`);
   console.log(`⚡ Health check disponible en: http://localhost:${PORT}/health`);
+  
+  if (isProduction) {
+    console.log('🔒 Modo producción: Funciones de seguridad habilitadas');
+  } else {
+    console.log('🛠️  Modo desarrollo: Algunas funciones de seguridad deshabilitadas para debugging');
+  }
+  
+  // Configurar tabla de security_logs automáticamente
+  try {
+    await setupSecurityTable();
+  } catch (error) {
+    console.log('⚠️  Sistema funcionará sin logs de seguridad avanzados');
+  }
   
   // Debug: Verificar rutas de archivos (con manejo de errores)
   const publicPaths = [

@@ -427,8 +427,14 @@
         const result = await res.json();
         log('🔐 Datos de autenticación:', result);
         
-        if (!result.authenticated || result.guardia.tipo !== 'guardia') {
-          log('❌ Autenticación fallida, redirigiendo...', 'error');
+        if (!result.authenticated) {
+          log('❌ No autenticado - Razón:', result.reason || 'desconocida', 'warning');
+          window.location.href = '/guardia-login.html';
+          return false;
+        }
+        
+        if (result.guardia.tipo !== 'guardia') {
+          log('❌ Tipo de usuario incorrecto:', result.guardia.tipo, 'error');
           window.location.href = '/guardia-login.html';
           return false;
         }
