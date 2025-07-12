@@ -55,11 +55,18 @@ jspm_packages/
 .cache
 .parcel-cache
 
+# Testing files (should not be in production)
+testing/
+test/
+*.test.js
+*.spec.js
+
 # IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
 # OS generated files
 .DS_Store
@@ -69,3 +76,21 @@ jspm_packages/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Backup files
+*.bak
+*.backup
+
+# Local configuration files
+config.local.js
+config.local.json
