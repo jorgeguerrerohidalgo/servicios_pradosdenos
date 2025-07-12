@@ -460,9 +460,10 @@
         log('Datos parseados:', result);
         
         if (result.success) {
-          userValidationCode = result.validation_code;
+          userValidationCode = String(result.validation_code); // Asegurar que sea string
           document.getElementById('userValidationCode').textContent = userValidationCode;
           log('✅ Código de validación cargado exitosamente: ' + userValidationCode);
+          log('🔍 Tipo de dato del código:', typeof userValidationCode);
         } else {
           log('❌ Error al cargar código de validación: ' + result.message, 'error');
           showStatus('Error al cargar código de validación: ' + result.message, 'error');
@@ -861,8 +862,18 @@
         return;
       }
       
-      // Comparación directa y simple
-      const isValid = enteredCode.toUpperCase() === userValidationCode.toUpperCase();
+      // Convertir ambos a string para asegurar compatibilidad
+      const userCodeStr = String(userValidationCode);
+      const enteredCodeStr = String(enteredCode);
+      
+      // Comparación directa y simple (case insensitive)
+      const isValid = enteredCodeStr.toUpperCase() === userCodeStr.toUpperCase();
+      
+      log(`🔍 Comparación detallada:`);
+      log(`- Código ingresado: "${enteredCodeStr}" (tipo: ${typeof enteredCodeStr})`);
+      log(`- Código esperado: "${userCodeStr}" (tipo: ${typeof userCodeStr})`);
+      log(`- Comparación: "${enteredCodeStr.toUpperCase()}" === "${userCodeStr.toUpperCase()}"`);
+      log(`- Resultado: ${isValid}`);
       
       if (isValid) {
         feedback.textContent = '✓ Código correcto - ¡Listo para confirmar!';
@@ -876,7 +887,6 @@
         log('- disabled:', confirmBtn.disabled);
         log('- className:', confirmBtn.className);
         log('- onclick existe:', typeof confirmBtn.onclick);
-        log('- addEventListener count:', confirmBtn.getEventListeners ? 'disponible' : 'no disponible');
         
         // Re-configurar event listeners como medida de seguridad
         setTimeout(() => {
@@ -1229,9 +1239,10 @@ Click simulado: ${!confirmBtn.disabled ? 'Ejecutado' : 'No ejecutado (botón des
           log('Respuesta como JSON:', json);
           
           if (json.success && json.validation_code) {
-            userValidationCode = json.validation_code;
+            userValidationCode = String(json.validation_code); // Asegurar que sea string
             document.getElementById('userValidationCode').textContent = userValidationCode;
             log('✅ Código cargado manualmente:', userValidationCode);
+            log('🔍 Tipo de dato del código:', typeof userValidationCode);
             alert(`Código cargado exitosamente: ${userValidationCode}`);
           } else {
             log('❌ Error en la respuesta:', json);
