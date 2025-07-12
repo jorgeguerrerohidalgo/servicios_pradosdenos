@@ -353,6 +353,10 @@
         <button class="btn btn-warning btn-sm" onclick="testValidation()" style="display: none;" id="testBtn">
           <i class="fas fa-bug"></i> Probar Validación
         </button>
+        <!-- Botón de prueba para cargar código -->
+        <button class="btn btn-info btn-sm" onclick="testLoadValidationCode()" style="display: none;" id="testLoadBtn">
+          <i class="fas fa-download"></i> Probar Carga de Código
+        </button>
       </div>
     </div>
 
@@ -436,22 +440,32 @@
     // Cargar código de validación del guardia
     async function loadValidationCode() {
       try {
+        log('Intentando cargar código de validación...');
+        
         const res = await fetch(`${getApiUrl()}/api/checkin/validation-code`, {
           credentials: 'include'
         });
+        
+        log('Respuesta del servidor recibida:', res.status);
+        
         const result = await res.json();
+        log('Datos parseados:', result);
         
         if (result.success) {
           userValidationCode = result.validation_code;
           document.getElementById('userValidationCode').textContent = userValidationCode;
-          log('Código de validación cargado: ' + userValidationCode);
+          log('✅ Código de validación cargado exitosamente: ' + userValidationCode);
         } else {
-          log('Error al cargar código de validación: ' + result.message, 'error');
-          showStatus('Error al cargar código de validación', 'error');
+          log('❌ Error al cargar código de validación: ' + result.message, 'error');
+          showStatus('Error al cargar código de validación: ' + result.message, 'error');
         }
       } catch (error) {
-        log('Error cargando código de validación: ' + error.message, 'error');
+        log('❌ Error cargando código de validación: ' + error.message, 'error');
         showStatus('Error de conexión al cargar código', 'error');
+        
+        // Mostrar información de debugging adicional
+        log('URL intentada:', `${getApiUrl()}/api/checkin/validation-code`);
+        log('Error completo:', error);
       }
     }
     
@@ -986,18 +1000,35 @@
       // Mostrar información de diagnóstico
       if (diagnosticMode) {
         showDiagnosticInfo();
-        // Mostrar botón de prueba en modo debug
+        // Mostrar botones de prueba en modo debug
         document.getElementById('testBtn').style.display = 'block';
+        document.getElementById('testLoadBtn').style.display = 'block';
       }
       
       // Configurar botón de confirmación
       setupConfirmButton();
       
-      // Verificar autenticación
-      if (!(await checkAuth())) return;
+      // Verificar autenticación PRIMERO
+      log('🔐 Verificando autenticación...');
+      if (!(await checkAuth())) {
+        log('❌ Autenticación falló, redirigiendo...');
+        return;
+      }
+      log('✅ Autenticación exitosa');
       
-      // Cargar datos
+      // Cargar código de validación ANTES que todo lo demás
+      log('🔑 Cargando código de validación...');
       await loadValidationCode();
+      
+      // Verificar que se cargó correctamente
+      if (!userValidationCode) {
+        log('⚠️ ALERTA: Código de validación no se cargó correctamente');
+        showStatus('Error crítico: No se pudo cargar el código de validación', 'error');
+        return;
+      }
+      
+      // Cargar historial
+      log('📋 Cargando historial...');
       await loadHistory();
       
       // Verificar permisos automáticamente
@@ -1008,7 +1039,10 @@
         }
       }, 1000);
       
-      log('Aplicación inicializada correctamente');
+      log('🚀 Aplicación inicializada correctamente');
+      log('📊 Estado final:');
+      log('- userValidationCode:', userValidationCode);
+      log('- URL API:', getApiUrl());
     }
     
     // Limpiar al salir
@@ -1139,6 +1173,54 @@ Click simulado: ${!confirmBtn.disabled ? 'Ejecutado' : 'No ejecutado (botón des
       log('- Botón ID:', freshBtn.id);
       log('- Botón disabled inicial:', freshBtn.disabled);
       log('- Botón className inicial:', freshBtn.className);
+    }
+    
+    // Función para probar la carga del código manualmente
+    async function testLoadValidationCode() {
+      log('=== PRUEBA MANUAL DE CARGA DE CÓDIGO ===');
+      
+      const apiUrl = getApiUrl();
+      log('URL de API:', apiUrl);
+      log('URL completa:', `${apiUrl}/api/checkin/validation-code`);
+      
+      try {
+        const response = await fetch(`${apiUrl}/api/checkin/validation-code`, {
+          credentials: 'include',
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        log('Status de respuesta:', response.status);
+        log('Headers de respuesta:', [...response.headers.entries()]);
+        
+        const text = await response.text();
+        log('Respuesta como texto:', text);
+        
+        try {
+          const json = JSON.parse(text);
+          log('Respuesta como JSON:', json);
+          
+          if (json.success && json.validation_code) {
+            userValidationCode = json.validation_code;
+            document.getElementById('userValidationCode').textContent = userValidationCode;
+            log('✅ Código cargado manualmente:', userValidationCode);
+            alert(`Código cargado exitosamente: ${userValidationCode}`);
+          } else {
+            log('❌ Error en la respuesta:', json);
+            alert(`Error: ${json.message || 'Respuesta inválida'}`);
+          }
+        } catch (parseError) {
+          log('❌ Error parseando JSON:', parseError);
+          alert(`Error parseando respuesta: ${parseError.message}`);
+        }
+        
+      } catch (error) {
+        log('❌ Error en la petición:', error);
+        alert(`Error de red: ${error.message}`);
+      }
     }
     
     // ========== FIN FUNCIONES DE DEBUGGING ==========
