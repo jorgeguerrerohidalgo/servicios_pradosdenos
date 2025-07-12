@@ -847,7 +847,20 @@
         feedback.className = 'form-text text-success fw-bold';
         confirmBtn.disabled = false;
         confirmBtn.className = 'btn btn-success';
+        
+        // Logging detallado para debugging
         log('✅ Código válido - Botón habilitado');
+        log('Estado del botón después de habilitar:');
+        log('- disabled:', confirmBtn.disabled);
+        log('- className:', confirmBtn.className);
+        log('- onclick existe:', typeof confirmBtn.onclick);
+        log('- addEventListener count:', confirmBtn.getEventListeners ? 'disponible' : 'no disponible');
+        
+        // Re-configurar event listeners como medida de seguridad
+        setTimeout(() => {
+          setupConfirmButton();
+        }, 100);
+        
       } else {
         feedback.textContent = '✗ Código incorrecto - Revisa el código mostrado arriba';
         feedback.className = 'form-text text-danger';
@@ -1038,11 +1051,22 @@
       log('Botón disabled:', confirmBtn.disabled);
       log('Botón className:', confirmBtn.className);
       
+      // Prueba de click manual
+      log('=== PROBANDO CLICK MANUAL ===');
+      
+      if (!confirmBtn.disabled) {
+        log('🔥 Simulando click manual...');
+        confirmBtn.click();
+      } else {
+        log('❌ No se puede hacer click - botón deshabilitado');
+      }
+      
       alert(`Prueba completada:
 Código esperado: ${userValidationCode}
 Código ingresado: ${input.value}
 Botón habilitado: ${!confirmBtn.disabled}
-Clase del botón: ${confirmBtn.className}`);
+Clase del botón: ${confirmBtn.className}
+Click simulado: ${!confirmBtn.disabled ? 'Ejecutado' : 'No ejecutado (botón deshabilitado)'}`);
     }
     
     // Configurar botón con múltiples formas de capturar el click
@@ -1054,38 +1078,67 @@ Clase del botón: ${confirmBtn.className}`);
         return;
       }
       
-      // Limpiar event listeners anteriores
-      confirmBtn.onclick = null;
+      log('Configurando botón de confirmación...');
       
-      // Método 1: onclick directo
-      confirmBtn.onclick = function() {
-        log('Click capturado via onclick');
-        if (!confirmBtn.disabled) {
+      // Limpiar ALL event listeners anteriores clonando el elemento
+      const newBtn = confirmBtn.cloneNode(true);
+      confirmBtn.parentNode.replaceChild(newBtn, confirmBtn);
+      
+      // Obtener referencia del nuevo botón
+      const freshBtn = document.getElementById('confirmCheckinBtn');
+      
+      // Método 1: onclick directo con logging detallado
+      freshBtn.onclick = function(e) {
+        log('🔥 CLICK CAPTURADO VIA ONCLICK');
+        log('- Event target:', e.target);
+        log('- Button disabled:', freshBtn.disabled);
+        log('- Event type:', e.type);
+        
+        if (!freshBtn.disabled) {
+          log('🚀 Ejecutando confirmCheckin()...');
           confirmCheckin();
+        } else {
+          log('❌ Botón está deshabilitado, no se ejecuta');
         }
       };
       
-      // Método 2: addEventListener como backup
-      confirmBtn.addEventListener('click', function(e) {
-        log('Click capturado via addEventListener');
+      // Método 2: addEventListener con prevención de propagación
+      freshBtn.addEventListener('click', function(e) {
+        log('🔥 CLICK CAPTURADO VIA ADDEVENTLISTENER');
         e.preventDefault();
-        if (!confirmBtn.disabled) {
+        e.stopPropagation();
+        
+        if (!freshBtn.disabled) {
+          log('🚀 Ejecutando confirmCheckin() desde addEventListener...');
+          confirmCheckin();
+        }
+      }, { once: false });
+      
+      // Método 3: touchend para dispositivos móviles
+      freshBtn.addEventListener('touchend', function(e) {
+        log('🔥 TOUCHEND CAPTURADO');
+        e.preventDefault();
+        
+        if (!freshBtn.disabled) {
+          log('🚀 Ejecutando confirmCheckin() desde touchend...');
           confirmCheckin();
         }
       });
       
-      // Método 3: mousedown como backup adicional
-      confirmBtn.addEventListener('mousedown', function(e) {
-        log('Mousedown capturado');
-        setTimeout(() => {
-          if (!confirmBtn.disabled) {
-            log('Ejecutando confirmCheckin desde mousedown');
-            confirmCheckin();
-          }
-        }, 50);
+      // Método 4: pointerup como backup universal
+      freshBtn.addEventListener('pointerup', function(e) {
+        log('🔥 POINTERUP CAPTURADO');
+        
+        if (!freshBtn.disabled) {
+          log('🚀 Ejecutando confirmCheckin() desde pointerup...');
+          confirmCheckin();
+        }
       });
       
-      log('Botón de confirmación configurado con múltiples event listeners');
+      log('✅ Botón configurado con 4 tipos de event listeners');
+      log('- Botón ID:', freshBtn.id);
+      log('- Botón disabled inicial:', freshBtn.disabled);
+      log('- Botón className inicial:', freshBtn.className);
     }
     
     // ========== FIN FUNCIONES DE DEBUGGING ==========
