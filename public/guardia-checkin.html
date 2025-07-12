@@ -394,7 +394,7 @@
     // Función para logging con timestamp
     function log(message, type = 'info') {
       const timestamp = new Date().toLocaleTimeString();
-      console.log(`[${timestamp}] [${type.toUpperCase()}] ${message}`);
+      console.log(`[${timestamp}] [${String(type).toUpperCase()}] ${message}`);
     }
     
     // Mostrar información de diagnóstico
@@ -416,22 +416,30 @@
     // Verificar autenticación
     async function checkAuth() {
       try {
+        log('🔐 Enviando petición de autenticación...');
+        
         const res = await fetch(`${getApiUrl()}/api/auth/check`, {
           credentials: 'include'
         });
+        
+        log('🔐 Respuesta recibida, status:', res.status);
+        
         const result = await res.json();
+        log('🔐 Datos de autenticación:', result);
         
         if (!result.authenticated || result.guardia.tipo !== 'guardia') {
+          log('❌ Autenticación fallida, redirigiendo...', 'error');
           window.location.href = '/guardia-login.html';
           return false;
         }
         
+        log('✅ Autenticación exitosa:', result.guardia.nombre);
         document.getElementById('welcomeMessage').textContent = 
           `Bienvenido ${result.guardia.nombre}`;
         
         return true;
       } catch (error) {
-        log('Error verificando autenticación: ' + error.message, 'error');
+        log('❌ Error verificando autenticación: ' + error.message, 'error');
         window.location.href = '/guardia-login.html';
         return false;
       }
@@ -1184,6 +1192,23 @@ Click simulado: ${!confirmBtn.disabled ? 'Ejecutado' : 'No ejecutado (botón des
       log('URL completa:', `${apiUrl}/api/checkin/validation-code`);
       
       try {
+        // Primero verificar si el usuario está autenticado
+        log('1. Verificando autenticación...');
+        const authResponse = await fetch(`${apiUrl}/api/auth/check`, {
+          credentials: 'include'
+        });
+        
+        log('Status autenticación:', authResponse.status);
+        const authData = await authResponse.json();
+        log('Datos de autenticación:', authData);
+        
+        if (!authData.authenticated) {
+          alert('Error: Usuario no autenticado. Debes hacer login primero.');
+          return;
+        }
+        
+        // Ahora intentar cargar el código
+        log('2. Intentando cargar código de validación...');
         const response = await fetch(`${apiUrl}/api/checkin/validation-code`, {
           credentials: 'include',
           method: 'GET',
@@ -1210,11 +1235,11 @@ Click simulado: ${!confirmBtn.disabled ? 'Ejecutado' : 'No ejecutado (botón des
             alert(`Código cargado exitosamente: ${userValidationCode}`);
           } else {
             log('❌ Error en la respuesta:', json);
-            alert(`Error: ${json.message || 'Respuesta inválida'}`);
+            alert(`Error: ${json.error || json.message || 'Respuesta inválida'}\n\nRespuesta completa: ${text}`);
           }
         } catch (parseError) {
           log('❌ Error parseando JSON:', parseError);
-          alert(`Error parseando respuesta: ${parseError.message}`);
+          alert(`Error parseando respuesta: ${parseError.message}\n\nRespuesta del servidor: ${text}`);
         }
         
       } catch (error) {
