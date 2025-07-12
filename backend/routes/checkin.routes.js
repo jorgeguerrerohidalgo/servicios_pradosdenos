@@ -38,8 +38,27 @@ router.post('/', requireAuth, validateCheckin, async (req, res) => {
       return res.status(404).json({ error: 'Guardia no encontrado' });
     }
     
-    if (guardiaData[0].validation_code !== validation_code.trim()) {
-      return res.status(400).json({ error: 'Código de validación incorrecto' });
+    // Comparación robusta de códigos de validación
+    const dbCode = String(guardiaData[0].validation_code || '').trim().toUpperCase();
+    const inputCode = String(validation_code || '').trim().toUpperCase();
+    
+    console.log('=== DEBUG VALIDATION CODES ===');
+    console.log('Código de BD:', `"${guardiaData[0].validation_code}" (tipo: ${typeof guardiaData[0].validation_code})`);
+    console.log('Código ingresado:', `"${validation_code}" (tipo: ${typeof validation_code})`);
+    console.log('Código BD normalizado:', `"${dbCode}"`);
+    console.log('Código ingresado normalizado:', `"${inputCode}"`);
+    console.log('Son iguales:', dbCode === inputCode);
+    console.log('===============================');
+    
+    if (dbCode !== inputCode) {
+      return res.status(400).json({ 
+        error: 'Código de validación incorrecto',
+        debug: {
+          expected: dbCode,
+          received: inputCode,
+          match: dbCode === inputCode
+        }
+      });
     }
     
     // Verificar que el token QR existe y obtener la plaza

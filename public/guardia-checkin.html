@@ -923,7 +923,15 @@
       }
       
       try {
-        log('Iniciando proceso de check-in...');
+        log('🚀 Iniciando proceso de check-in...');
+        log('📤 Datos a enviar:', {
+          token: scannedToken,
+          validation_code: enteredCode,
+          types: {
+            token: typeof scannedToken,
+            validation_code: typeof enteredCode
+          }
+        });
         
         // Deshabilitar botón
         confirmBtn.disabled = true;
@@ -932,20 +940,41 @@
         updateSteps(3);
         showStatus('Procesando check-in...', 'info');
         
+        const requestBody = { 
+          token: scannedToken, 
+          validation_code: enteredCode 
+        };
+        
+        log('📤 Body de la petición:', JSON.stringify(requestBody));
+        
         const res = await fetch(`${getApiUrl()}/api/checkin`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ 
-            token: scannedToken, 
-            validation_code: enteredCode 
-          })
+          body: JSON.stringify(requestBody)
         });
         
-        const result = await res.json();
+        // Log de debugging detallado de la respuesta
+        log('🔍 Status de respuesta HTTP:', res.status);
+        log('🔍 Headers de respuesta:', [...res.headers.entries()]);
+        
+        const responseText = await res.text();
+        log('🔍 Respuesta del servidor (texto):', responseText);
+        
+        let result;
+        try {
+          result = JSON.parse(responseText);
+          log('🔍 Respuesta parseada:', result);
+        } catch (parseError) {
+          log('❌ Error parseando respuesta JSON:', parseError.message);
+          showStatus('Error: Respuesta del servidor inválida', 'error');
+          confirmBtn.disabled = false;
+          confirmBtn.innerHTML = '<i class="fas fa-check"></i> Confirmar Check-in';
+          return;
+        }
         
         if (result.success) {
-          log('Check-in exitoso');
+          log('✅ Check-in exitoso');
           showStatus(`¡Check-in exitoso en ${result.checkin.plaza}!`, 'success');
           await loadHistory();
           
@@ -967,8 +996,16 @@
           }, 4000);
           
         } else {
-          log('Error en check-in: ' + result.error, 'error');
-          showStatus(result.error || 'Error en el check-in', 'error');
+          log('❌ Error en check-in:', result.error, 'error');
+          log('🔍 Debug info del servidor:', result.debug);
+          
+          // Mostrar error más detallado
+          let errorMessage = result.error || 'Error en el check-in';
+          if (result.debug) {
+            errorMessage += `\n\nDetalles técnicos:\n- Esperado: "${result.debug.expected}"\n- Recibido: "${result.debug.received}"\n- Coinciden: ${result.debug.match}`;
+          }
+          
+          showStatus(errorMessage, 'error');
           
           // Restaurar botón
           confirmBtn.disabled = false;
