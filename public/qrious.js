@@ -85,7 +85,7 @@ function Polynomial(coefficients, degree) {
     var i;
     
     for (i = 0; i <= degree; i++) {
-        coefficient = coefficients[i];
+        var coefficient = coefficients[i];
         if (coefficient == null) {
             this.coefficients[i] = 0;
         } else {
@@ -107,7 +107,7 @@ Polynomial.prototype.multiply = function(poly) {
     var i, j;
     
     for (i = 0; i <= this.degree(); i++) {
-        coefficient = this.coefficient(i);
+        var coefficient = this.coefficient(i);
         for (j = 0; j <= poly.degree(); j++) {
             coefficients[i + j] = galoisAdd(coefficients[i + j], galoisMultiply(coefficient, poly.coefficient(j)));
         }
