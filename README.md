@@ -49,6 +49,31 @@ servicios_pradosdenos/
 4. Ejecutar scripts de base de datos (ver `scripts/database/`)
 5. Iniciar el servidor: `npm start`
 
+## 🆕 Últimas Actualizaciones
+
+### Reorganización del Proyecto (Diciembre 2024)
+- ✅ **Estructura mejorada**: Archivos organizados siguiendo estándares de la industria
+- ✅ **Documentación centralizada**: Nueva carpeta `docs/` con guías completas
+- ✅ **Scripts organizados**: Separación clara entre scripts de BD y utilidades
+- ✅ **Testing estructurado**: Archivos de prueba en carpeta dedicada
+
+### Corrección de Enlaces y Páginas (Diciembre 2024)
+- ✅ **Enlaces reparados**: Diagnóstico y Verificación funcionando correctamente
+- ✅ **Páginas robustas**: Manejo de errores mejorado en herramientas de diagnóstico
+- ✅ **Múltiples versiones**: Soporte para versiones simple y original de diagnósticos
+
+### Solución de Tokens QR (Diciembre 2024)
+- 🔧 **Problema identificado**: Tokens QR inconsistentes en producción
+- ✅ **Script de corrección**: Generado script automático para corregir tokens
+- ✅ **Páginas restauradas**: `setup-tokens.html` y `generar-tokens.html` disponibles
+- 🔧 **Pendiente**: Aplicar correcciones en base de datos de producción
+
+#### Problema de Tokens QR
+**Estado**: En solución
+**Descripción**: Plaza Avellino tenía token incorrecto (`qr-plaza-castellon-2025`)
+**Solución**: Script SQL y JS generados en `scripts/utilities/corregir-tokens-qr.js`
+**Documentación**: Ver `docs/troubleshooting/solucion-tokens-qr.md`
+
 ## 🌐 Uso
 
 ### Para Guardias
