@@ -4,22 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Códigos QR de Plazas - Los Prados de Nos</title>
-    <!-- Librería QR completa y robusta -->
-    <script src="qrcode-complete.js"></script>
+    <!-- Librería QR robusta y comprobada -->
+    <script src="qrious.js"></script>
     <script>
         // Verificar inmediatamente que la librería se cargó
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🔍 DOM cargado, verificando librería QR...');
             console.log('🔍 typeof QRCode:', typeof QRCode);
-            console.log('🔍 typeof QRCodeFixed:', typeof QRCodeFixed);
-            console.log('🔍 typeof SimpleQRGenerator:', typeof SimpleQRGenerator);
+            console.log('🔍 typeof QRious:', typeof QRious);
             
-            if (typeof QRCode === 'undefined') {
-                console.error('❌ ERROR: QRCode no está definido después de cargar el script');
-                console.error('❌ Esto indica que simple-qr-generator-fixed.js no se ejecutó correctamente');
+            if (typeof QRious === 'undefined') {
+                console.error('❌ ERROR: QRious no está definido después de cargar el script');
+                console.error('❌ Esto indica que qrious.js no se ejecutó correctamente');
             } else {
-                console.log('✅ QRCode disponible correctamente');
-                console.log('✅ Método toCanvas:', typeof QRCode.toCanvas);
+                console.log('✅ QRious disponible correctamente');
+                console.log('✅ Método toCanvas:', typeof QRious.toCanvas);
             }
         });
     </script>
@@ -278,14 +277,14 @@
             // Verificar que la librería QR esté disponible ANTES de cargar plazas
             console.log('🔍 Verificando librería QR al inicio de generateQRCodes...');
             console.log('🔍 typeof QRCode:', typeof QRCode);
-            console.log('🔍 typeof QRCodeFixed:', typeof QRCodeFixed);
+            console.log('🔍 typeof QRious:', typeof QRious);
             
-            if (typeof QRCode === 'undefined') {
-                console.error('❌ CRITICAL: QRCode no está disponible en generateQRCodes');
+            if (typeof QRious === 'undefined') {
+                console.error('❌ CRITICAL: QRious no está disponible en generateQRCodes');
                 qrGrid.innerHTML = `
                     <div class="error">
                         <h3><i class="fas fa-exclamation-triangle"></i> Error: Librería QR no disponible</h3>
-                        <p>La librería simple-qr-generator-fixed.js no se cargó correctamente.</p>
+                        <p>La librería qrious.js no se cargó correctamente.</p>
                         <p>Verifique la consola del navegador para más detalles.</p>
                         <button onclick="location.reload()" class="btn-primary">
                             <i class="fas fa-reload"></i> Recargar Página
@@ -369,19 +368,17 @@
                         throw new Error('Token vacío o nulo');
                     }
                     
-                    // Verificar que QRCode esté disponible
-                    if (typeof QRCode === 'undefined') {
-                        throw new Error('Librería QRCode no disponible - verificar qrcode-complete.js');
+                    // Verificar que QRious esté disponible
+                    if (typeof QRious === 'undefined') {
+                        throw new Error('Librería QRious no disponible - verificar qrious.js');
                     }
                     
-                    console.log('🔍 Usando QRCodeComplete (implementación robusta)');
+                    console.log('🔍 Usando QRious (implementación robusta y comprobada)');
                     
                     // Generar QR con el token de la plaza - versión robusta
-                    await QRCode.toCanvas(canvas, plaza.token, {
+                    await QRious.toCanvas(canvas, plaza.token, {
                         width: 200,
-                        margin: 4,
-                        version: 4,
-                        errorCorrectionLevel: 'M'
+                        margin: 4
                     });
                     
                     qrCard.innerHTML = `
