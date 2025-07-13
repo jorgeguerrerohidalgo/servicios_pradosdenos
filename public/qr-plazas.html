@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Códigos QR de Plazas - Los Prados de Nos</title>
-    <!-- Librería QR robusta y comprobada -->
-    <script src="qrious.js"></script>
+    <!-- Librería QR simple y confiable -->
+    <script src="qrcode-simple.js"></script>
     <script>
         // Verificar inmediatamente que la librería se cargó
         document.addEventListener('DOMContentLoaded', function() {
@@ -15,7 +15,7 @@
             
             if (typeof QRious === 'undefined') {
                 console.error('❌ ERROR: QRious no está definido después de cargar el script');
-                console.error('❌ Esto indica que qrious.js no se ejecutó correctamente');
+                console.error('❌ Esto indica que qrcode-simple.js no se ejecutó correctamente');
             } else {
                 console.log('✅ QRious disponible correctamente');
                 console.log('✅ Método toCanvas:', typeof QRious.toCanvas);
@@ -284,7 +284,7 @@
                 qrGrid.innerHTML = `
                     <div class="error">
                         <h3><i class="fas fa-exclamation-triangle"></i> Error: Librería QR no disponible</h3>
-                        <p>La librería qrious.js no se cargó correctamente.</p>
+                        <p>La librería qrcode-simple.js no se cargó correctamente.</p>
                         <p>Verifique la consola del navegador para más detalles.</p>
                         <button onclick="location.reload()" class="btn-primary">
                             <i class="fas fa-reload"></i> Recargar Página
@@ -370,12 +370,12 @@
                     
                     // Verificar que QRious esté disponible
                     if (typeof QRious === 'undefined') {
-                        throw new Error('Librería QRious no disponible - verificar qrious.js');
+                        throw new Error('Librería QRious no disponible - verificar qrcode-simple.js');
                     }
                     
-                    console.log('🔍 Usando QRious (implementación robusta y comprobada)');
+                    console.log('🔍 Usando QRCodeJS (implementación simple y confiable)');
                     
-                    // Generar QR con el token de la plaza - versión robusta
+                    // Generar QR con el token de la plaza - versión simple
                     await QRious.toCanvas(canvas, plaza.token, {
                         width: 200,
                         margin: 4

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba QR Simple</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .test-area {
+            text-align: center;
+            margin: 30px 0;
+        }
+        canvas {
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            margin: 10px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+    <script src="qrcode-simple.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Prueba QR Simple</h1>
+        
+        <div class="test-area">
+            <button onclick="testSimple()">Generar QR Simple</button>
+            <button onclick="testPlaza()">Generar QR Plaza</button>
+            <button onclick="testURL()">Generar QR URL</button>
+            <button onclick="clearAll()">Limpiar Todo</button>
+        </div>
+
+        <div class="test-area" id="canvasArea">
+            <!-- Los canvas se generarán aquí -->
+        </div>
+
+        <div class="log" id="log">
+            Esperando pruebas...
+        </div>
+    </div>
+
+    <script>
+        let logMessages = [];
+
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logMessages.push(`[${timestamp}] ${message}`);
+            document.getElementById('log').innerHTML = logMessages.slice(-15).join('\n');
+            console.log(message);
+        }
+
+        function createCanvas(id) {
+            const canvas = document.createElement('canvas');
+            canvas.id = id;
+            canvas.width = 200;
+            canvas.height = 200;
+            document.getElementById('canvasArea').appendChild(canvas);
+            return canvas;
+        }
+
+        async function testSimple() {
+            try {
+                log('🧪 Iniciando prueba simple...');
+                
+                if (typeof QRious === 'undefined') {
+                    throw new Error('QRious no está disponible');
+                }
+                
+                const canvas = createCanvas('test-simple');
+                await QRious.toCanvas(canvas, 'Hola Mundo', { width: 200 });
+                
+                log('✅ Prueba simple completada');
+                
+            } catch (error) {
+                log('❌ Error en prueba simple: ' + error.message);
+            }
+        }
+
+        async function testPlaza() {
+            try {
+                log('🧪 Iniciando prueba plaza...');
+                
+                const canvas = createCanvas('test-plaza');
+                await QRious.toCanvas(canvas, 'qr-plaza-test-2025', { width: 200 });
+                
+                log('✅ Prueba plaza completada');
+                
+            } catch (error) {
+                log('❌ Error en prueba plaza: ' + error.message);
+            }
+        }
+
+        async function testURL() {
+            try {
+                log('🧪 Iniciando prueba URL...');
+                
+                const canvas = createCanvas('test-url');
+                await QRious.toCanvas(canvas, 'https://pradosdenos.cl/checkin/qr-plaza-test-2025', { width: 200 });
+                
+                log('✅ Prueba URL completada');
+                
+            } catch (error) {
+                log('❌ Error en prueba URL: ' + error.message);
+            }
+        }
+
+        function clearAll() {
+            document.getElementById('canvasArea').innerHTML = '';
+            logMessages = [];
+            log('🗑️ Todo limpiado');
+        }
+
+        // Verificación inicial
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🔍 DOM cargado');
+            log('🔍 typeof QRCode: ' + typeof QRCode);
+            log('🔍 typeof QRious: ' + typeof QRious);
+            
+            if (typeof QRious !== 'undefined') {
+                log('✅ QRCodeJS cargado correctamente');
+                log('✅ Método toCanvas disponible: ' + typeof QRious.toCanvas);
+            } else {
+                log('❌ QRCodeJS no se cargó correctamente');
+            }
+        });
+    </script>
+</body>
+</html>
