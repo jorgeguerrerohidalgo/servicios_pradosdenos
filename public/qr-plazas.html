@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Códigos QR de Plazas - Los Prados de Nos</title>
-    <!-- Librería QR funcional y escaneable -->
-    <script src="qrcode-generator.js"></script>
+    <!-- Librería QR completa y robusta -->
+    <script src="qrcode-complete.js"></script>
     <script>
         // Verificar inmediatamente que la librería se cargó
         document.addEventListener('DOMContentLoaded', function() {
@@ -371,15 +371,16 @@
                     
                     // Verificar que QRCode esté disponible
                     if (typeof QRCode === 'undefined') {
-                        throw new Error('Librería QRCode no disponible - verificar qrcode-generator.js');
+                        throw new Error('Librería QRCode no disponible - verificar qrcode-complete.js');
                     }
                     
-                    console.log('🔍 Usando QRCodeGenerator (QR funcional y escaneable)');
+                    console.log('🔍 Usando QRCodeComplete (implementación robusta)');
                     
-                    // Generar QR con el token de la plaza - completamente funcional
+                    // Generar QR con el token de la plaza - versión robusta
                     await QRCode.toCanvas(canvas, plaza.token, {
                         width: 200,
                         margin: 4,
+                        version: 4,
                         errorCorrectionLevel: 'M'
                     });
                     
