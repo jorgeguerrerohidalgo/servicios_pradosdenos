@@ -365,3 +365,6 @@ window.QRCode = window.QRCodeFixed;
 
 console.log('✅ Librería QR mejorada cargada - versión reparada');
 console.log('📋 Métodos disponibles: toCanvas, toDataURL, generateWithQRServer, generateWithGoogleCharts, generateWithQRAPI, generateEmergencyQR');
+console.log('🔍 window.QRCode configurado:', typeof window.QRCode);
+console.log('🔍 window.QRCodeFixed configurado:', typeof window.QRCodeFixed);
+console.log('🔍 Método toCanvas disponible:', typeof window.QRCode.toCanvas);

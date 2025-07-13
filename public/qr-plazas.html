@@ -4,8 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Códigos QR de Plazas - Los Prados de Nos</title>
-    <!-- Librería QR mejorada que funciona sin conexión externa -->
-    <script src="simple-qr-generator-fixed.js"></script>
+    <!-- Librería QR debug para resolver problema de carga -->
+    <script src="qr-simple-debug.js"></script>
+    <script>
+        // Verificar inmediatamente que la librería se cargó
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔍 DOM cargado, verificando librería QR...');
+            console.log('🔍 typeof QRCode:', typeof QRCode);
+            console.log('🔍 typeof QRCodeFixed:', typeof QRCodeFixed);
+            console.log('🔍 typeof SimpleQRGenerator:', typeof SimpleQRGenerator);
+            
+            if (typeof QRCode === 'undefined') {
+                console.error('❌ ERROR: QRCode no está definido después de cargar el script');
+                console.error('❌ Esto indica que simple-qr-generator-fixed.js no se ejecutó correctamente');
+            } else {
+                console.log('✅ QRCode disponible correctamente');
+                console.log('✅ Método toCanvas:', typeof QRCode.toCanvas);
+            }
+        });
+    </script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         body {
@@ -258,6 +275,26 @@
             const qrGrid = document.getElementById('qrGrid');
             qrGrid.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Generando códigos QR...</div>';
             
+            // Verificar que la librería QR esté disponible ANTES de cargar plazas
+            console.log('🔍 Verificando librería QR al inicio de generateQRCodes...');
+            console.log('🔍 typeof QRCode:', typeof QRCode);
+            console.log('🔍 typeof QRCodeFixed:', typeof QRCodeFixed);
+            
+            if (typeof QRCode === 'undefined') {
+                console.error('❌ CRITICAL: QRCode no está disponible en generateQRCodes');
+                qrGrid.innerHTML = `
+                    <div class="error">
+                        <h3><i class="fas fa-exclamation-triangle"></i> Error: Librería QR no disponible</h3>
+                        <p>La librería simple-qr-generator-fixed.js no se cargó correctamente.</p>
+                        <p>Verifique la consola del navegador para más detalles.</p>
+                        <button onclick="location.reload()" class="btn-primary">
+                            <i class="fas fa-reload"></i> Recargar Página
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
             // Cargar plazas desde la API
             const plazas = await loadPlazasFromAPI();
             
@@ -334,10 +371,10 @@
                     
                     // Verificar que QRCode esté disponible
                     if (typeof QRCode === 'undefined') {
-                        throw new Error('Librería QRCode no disponible - verificar simple-qr-generator-fixed.js');
+                        throw new Error('Librería QRCode no disponible - verificar qr-simple-debug.js');
                     }
                     
-                    console.log('🔍 Usando QRCodeFixed (múltiples APIs + fallbacks robustos)');
+                    console.log('🔍 Usando QRCodeSimple (versión debug)');
                     
                     // Generar QR con el token de la plaza - configuración optimizada
                     await QRCode.toCanvas(canvas, plaza.token, {
