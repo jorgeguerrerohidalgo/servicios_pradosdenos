@@ -14,8 +14,9 @@ ls -la
 echo -e "\n=== CONTENIDO DE BACKEND ==="
 if [ -d "backend" ]; then
     ls -la backend/
-    echo -e "\n=== PACKAGE.JSON BACKEND ==="
-    cat backend/package.json
+    echo -e "\n=== VERIFICACIÓN DE SINTAXIS ==="
+    node -c backend/server.js && echo "✅ server.js: OK" || echo "❌ server.js: ERROR"
+    node -c backend/middleware/security.js && echo "✅ security.js: OK" || echo "❌ security.js: ERROR"
 else
     echo "❌ Directorio backend no encontrado"
 fi
@@ -33,4 +34,5 @@ echo "PORT: $PORT"
 echo "DATABASE_URL: ${DATABASE_URL:0:30}..." # Solo muestra primeros 30 caracteres
 
 echo -e "\n=== INICIANDO SERVIDOR ==="
-exec node backend/server.js
+cd backend
+exec node server.js

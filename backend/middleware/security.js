@@ -334,18 +334,6 @@ const loginLimiter = rateLimit({
   }
 });
 
-// Rate limiting general para API
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // Máximo 100 requests por IP cada 15 minutos
-  message: {
-    error: 'Demasiadas peticiones. Intenta nuevamente más tarde.',
-    retryAfter: '15 minutos'
-  },
-  standardHeaders: true,
-  legacyHeaders: false
-});
-
 // Middleware para logging de eventos de seguridad
 async function logSecurityEvent(ip, eventType, details = {}) {
   try {
