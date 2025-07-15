@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Documentos Comunitarios</title>
+</head>
+<body>
+  <h1>Documentos Disponibles</h1>
+  <ul id="docs"></ul>
+  <script>
+    fetch('/api/documentos')
+      .then(res => res.json())
+      .then(docs => {
+        const lista = document.getElementById('docs');
+        docs.forEach(doc => {
+          const item = document.createElement('li');
+          item.innerHTML = `<strong>${doc.nombre}</strong> - ${new Date(doc.fecha_publicacion).toLocaleDateString()}
+            <br><a href="${doc.link_drive}" target="_blank">📄 Ver documento</a>`;
+          lista.appendChild(item);
+        });
+      });
+  </script>
+</body>
+</html>

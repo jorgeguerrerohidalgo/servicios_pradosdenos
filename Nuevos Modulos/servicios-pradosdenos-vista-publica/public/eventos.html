@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Eventos Vecinales</title>
+</head>
+<body>
+  <h1>Eventos Vecinales</h1>
+  <div id="eventos"></div>
+  <script>
+    fetch('/api/eventos')
+      .then(res => res.json())
+      .then(eventos => {
+        const contenedor = document.getElementById('eventos');
+        eventos.forEach(ev => {
+          const card = document.createElement('div');
+          card.innerHTML = `
+            <h3>${ev.titulo}</h3>
+            <p><strong>Fecha:</strong> ${new Date(ev.fecha_inicio).toLocaleString()} a ${new Date(ev.fecha_fin).toLocaleString()}</p>
+            <p><strong>Ubicación:</strong> ${ev.ubicacion}</p>
+            <p>${ev.descripcion}</p>
+            <a href="${ev.link_google_cal}" target="_blank">🗓️ Agregar a Google Calendar</a>
+            <hr>
+          `;
+          contenedor.appendChild(card);
+        });
+      });
+  </script>
+</body>
+</html>

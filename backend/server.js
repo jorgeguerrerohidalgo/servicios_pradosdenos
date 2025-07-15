@@ -17,6 +17,16 @@ const {
   cleanExpiredSessions 
 } = require('./middleware/security');
 
+// Importar middleware de seguridad mejorado
+const { 
+  corsOptions: enhancedCorsOptions, 
+  helmetOptions, 
+  validateInput,
+  sanitizeInput,
+  securityLogger,
+  attackDetection
+} = require('./middleware/security_enhanced');
+
 // Importar setup de seguridad
 const { setupSecurityTable } = require('./setup-security');
 
@@ -25,6 +35,10 @@ const authRoutes = require('./routes/auth.routes');
 const checkinRoutes = require('./routes/checkin.routes');
 const publicRoutes = require('./routes/public.routes');
 const adminRoutes = require('./routes/admin.routes');
+
+// Importar nuevas rutas
+const eventosRoutes = require('./routes/eventos.routes');
+const documentosRoutes = require('./routes/documentos.routes');
 
 // Variables de entorno para producción
 const PORT = process.env.PORT || 3000;
@@ -105,7 +119,9 @@ const corsOptions = {
 
 // ========== MIDDLEWARES BÁSICOS ==========
 
-app.use(cors(corsOptions));
+// Usar CORS mejorado si está disponible, sino usar el existente
+const corsConfig = enhancedCorsOptions || corsOptions;
+app.use(cors(corsConfig));
 app.use(express.json({ 
   limit: '1mb', // Reducido para seguridad
   strict: true
@@ -189,6 +205,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/checkin', checkinRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', publicRoutes);
+app.use('/api/eventos', eventosRoutes);
+app.use('/api/documentos', documentosRoutes);
 
 // Servir archivos estáticos desde public (primero local, luego padre)
 const publicPaths = [

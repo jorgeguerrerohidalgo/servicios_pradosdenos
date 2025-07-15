@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><title>Registrar Evento</title></head>
+<body>
+  <h1>Registrar Evento Vecinal</h1>
+  <form id="eventoForm">
+    <input name="titulo" placeholder="Título" required><br>
+    <textarea name="descripcion" placeholder="Descripción"></textarea><br>
+    <input type="datetime-local" name="fecha_inicio" required><br>
+    <input type="datetime-local" name="fecha_fin" required><br>
+    <input name="ubicacion" placeholder="Ubicación"><br>
+    <select name="tipo_evento_id" required>
+      <option value="">-- Tipo de evento --</option>
+      <option value="1">Reunión</option>
+      <option value="2">Emergencia</option>
+      <option value="3">Actividad recreativa</option>
+    </select><br>
+    <label><input type="checkbox" name="visible" checked> Visible</label><br>
+    <input name="creado_por" placeholder="UUID admin" required><br>
+    <button type="submit">Guardar</button>
+  </form>
+  <script>
+    document.getElementById('eventoForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target));
+      data.visible = data.visible === 'on';
+      const res = await fetch('/api/eventos', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+      });
+      alert((await res.json()).message);
+    });
+  </script>
+</body>
+</html>
