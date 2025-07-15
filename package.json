@@ -1,0 +1,52 @@
+{
+  "name": "portal-servicios-pradosdenos",
+  "version": "2.0.0",
+  "description": "Portal completo de servicios digitales para Los Prados de Nos con sistema de seguridad y administración",
+  "main": "backend/server.js",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
+    "build": "npm install --prefix backend",
+    "test": "echo 'No tests specified' && exit 0",
+    "install-backend": "cd backend && npm install"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.5.1",
+    "express-session": "^1.17.3",
+    "helmet": "^7.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.11.0",
+    "uuid": "^9.0.0",
+    "validator": "^13.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": [
+    "portal",
+    "servicios",
+    "seguridad",
+    "checkin",
+    "qr",
+    "administracion",
+    "express",
+    "nodejs",
+    "postgresql",
+    "supabase",
+    "render"
+  ],
+  "author": "Portal Los Prados de Nos",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jorgeguerrerohidalgo/servicios_pradosdenos"
+  }
+}

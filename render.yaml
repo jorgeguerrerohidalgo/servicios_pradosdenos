@@ -3,18 +3,16 @@ services:
     name: checkin-plaza-backend
     env: node
     plan: free
-    buildCommand: |
-      cd backend && npm install
-      echo "Verificando estructura de archivos..."
-      ls -la ../public/
-    startCommand: cd backend && npm start
+    buildCommand: bash build.sh
+    startCommand: node backend/server.js
     envVars:
       - key: NODE_ENV
         value: production
       - key: SESSION_SECRET
-        generateValue: true  # Render genera automáticamente
-      # Variables para PostgreSQL (Supabase)
-      # DATABASE_URL se configura manualmente en el dashboard
+        generateValue: true
+      - key: TZ
+        value: America/Santiago
+      # DATABASE_URL debe configurarse manualmente en el dashboard de Render
       # Formato: postgresql://postgres:password@db.xxxxx.supabase.co:5432/postgres
     healthCheckPath: /health
     autoDeploy: true
