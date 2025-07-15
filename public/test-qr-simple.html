@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Test - Sin Base de Datos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin: 10px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .qr-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .qr-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            background: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Test QR - Datos de Prueba</h1>
+        
+        <div class="test-section">
+            <h3>Paso 1: Verificar Librería QRCode Real</h3>
+            <button onclick="testRealQRCode()">Probar QRCode Real</button>
+            <div id="realQRResult"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Paso 2: Generar QR con Datos de Prueba</h3>
+            <button onclick="generateTestQRs()">Generar QR de Plazas de Prueba</button>
+            <div id="testQRsResult"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Paso 3: Probar Diferentes Tokens</h3>
+            <button onclick="testDifferentTokens()">Probar Tokens Variados</button>
+            <div id="tokenTestResult"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Log de Actividad</h3>
+            <div id="activityLog" class="log"></div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="debug-qr.html" style="text-decoration: none;">
+                <button>🔧 Diagnóstico Original</button>
+            </a>
+            <a href="qr-plazas.html" style="text-decoration: none;">
+                <button>🏠 QR Plazas</button>
+            </a>
+        </div>
+    </div>
+
+    <!-- Cargar SOLO la librería QRCode real -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    
+    <script>
+        let logDiv = null;
+        
+        // Datos de prueba para plazas
+        const testPlazas = [
+            { id: 1, nombre: 'Plaza Norte', token: 'TOKEN_NORTE_123456' },
+            { id: 2, nombre: 'Plaza Sur', token: 'TOKEN_SUR_789012' },
+            { id: 3, nombre: 'Plaza Este', token: 'TOKEN_ESTE_345678' },
+            { id: 4, nombre: 'Plaza Oeste', token: 'TOKEN_OESTE_901234' },
+            { id: 5, nombre: 'Plaza Central', token: 'TOKEN_CENTRAL_567890' }
+        ];
+        
+        // Diferentes tipos de tokens para probar
+        const testTokens = [
+            { name: 'Token Simple', token: 'ABC123' },
+            { name: 'Token Largo', token: 'TOKEN_LARGO_CON_MUCHOS_CARACTERES_123456789012345678901234567890' },
+            { name: 'Token con Guiones', token: 'TOKEN-CON-GUIONES-123' },
+            { name: 'Token con Números', token: '1234567890123456' },
+            { name: 'Token Alfanumérico', token: 'AbC123DeF456GhI789' },
+            { name: 'Token UUID', token: 'f47ac10b-58cc-4372-a567-0e02b2c3d479' }
+        ];
+        
+        function log(message, type = 'info') {
+            if (!logDiv) logDiv = document.getElementById('activityLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = `[${timestamp}] ${type.toUpperCase()}: ${message}\n`;
+            logDiv.textContent += entry;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(entry);
+        }
+        
+        function testRealQRCode() {
+            const resultDiv = document.getElementById('realQRResult');
+            resultDiv.innerHTML = '';
+            
+            log('Probando si la librería QRCode REAL está disponible...', 'info');
+            
+            // Verificar que QRCode esté disponible
+            if (typeof QRCode === 'undefined') {
+                resultDiv.innerHTML = '<div class="error">❌ QRCode no está disponible</div>';
+                log('QRCode no está disponible', 'error');
+                return;
+            }
+            
+            // Verificar que no sea el fallback
+            if (QRCode.toString && QRCode.toString().includes('Google Charts')) {
+                resultDiv.innerHTML = '<div class="warning">⚠️ Usando fallback (Google Charts)</div>';
+                log('Usando fallback de Google Charts', 'warning');
+            } else {
+                resultDiv.innerHTML = '<div class="success">✅ QRCode real disponible</div>';
+                log('QRCode real disponible', 'success');
+            }
+            
+            // Probar generación de QR
+            const canvas = document.createElement('canvas');
+            const testText = 'PRUEBA_QRCODE_REAL';
+            
+            log(`Generando QR con texto: ${testText}`, 'info');
+            
+            QRCode.toCanvas(canvas, testText, { width: 150 })
+                .then(() => {
+                    resultDiv.innerHTML += '<div class="success">✅ QR generado exitosamente</div>';
+                    resultDiv.appendChild(canvas);
+                    log('QR generado exitosamente', 'success');
+                })
+                .catch(error => {
+                    resultDiv.innerHTML += `<div class="error">❌ Error: ${error.message}</div>`;
+                    log(`Error generando QR: ${error.message}`, 'error');
+                });
+        }
+        
+        function generateTestQRs() {
+            const resultDiv = document.getElementById('testQRsResult');
+            resultDiv.innerHTML = '<div class="warning">⏳ Generando QR de plazas de prueba...</div>';
+            
+            log('Generando QR para plazas de prueba...', 'info');
+            
+            if (typeof QRCode === 'undefined') {
+                resultDiv.innerHTML = '<div class="error">❌ QRCode no está disponible</div>';
+                log('QRCode no está disponible', 'error');
+                return;
+            }
+            
+            const qrContainer = document.createElement('div');
+            qrContainer.className = 'qr-container';
+            
+            let successCount = 0;
+            let errorCount = 0;
+            
+            testPlazas.forEach(async (plaza, index) => {
+                try {
+                    const qrCard = document.createElement('div');
+                    qrCard.className = 'qr-card';
+                    
+                    const canvas = document.createElement('canvas');
+                    
+                    await QRCode.toCanvas(canvas, plaza.token, { width: 150 });
+                    
+                    qrCard.innerHTML = `
+                        <h4>${plaza.nombre}</h4>
+                        <div>Token: <code>${plaza.token}</code></div>
+                    `;
+                    qrCard.appendChild(canvas);
+                    qrContainer.appendChild(qrCard);
+                    
+                    successCount++;
+                    log(`✅ QR generado para ${plaza.nombre}`, 'success');
+                    
+                } catch (error) {
+                    errorCount++;
+                    log(`❌ Error generando QR para ${plaza.nombre}: ${error.message}`, 'error');
+                    
+                    const errorCard = document.createElement('div');
+                    errorCard.className = 'qr-card';
+                    errorCard.innerHTML = `
+                        <h4>${plaza.nombre}</h4>
+                        <div class="error">Error: ${error.message}</div>
+                        <div>Token: <code>${plaza.token}</code></div>
+                    `;
+                    qrContainer.appendChild(errorCard);
+                }
+                
+                // Actualizar resultado al final
+                if (index === testPlazas.length - 1) {
+                    setTimeout(() => {
+                        resultDiv.innerHTML = `
+                            <div class="success">✅ Procesamiento completo</div>
+                            <div>Exitosos: ${successCount}, Errores: ${errorCount}</div>
+                        `;
+                        resultDiv.appendChild(qrContainer);
+                        log(`Procesamiento completo: ${successCount} exitosos, ${errorCount} errores`, 'info');
+                    }, 100);
+                }
+            });
+        }
+        
+        function testDifferentTokens() {
+            const resultDiv = document.getElementById('tokenTestResult');
+            resultDiv.innerHTML = '<div class="warning">⏳ Probando diferentes tipos de tokens...</div>';
+            
+            log('Probando diferentes tipos de tokens...', 'info');
+            
+            if (typeof QRCode === 'undefined') {
+                resultDiv.innerHTML = '<div class="error">❌ QRCode no está disponible</div>';
+                log('QRCode no está disponible', 'error');
+                return;
+            }
+            
+            const qrContainer = document.createElement('div');
+            qrContainer.className = 'qr-container';
+            
+            let successCount = 0;
+            let errorCount = 0;
+            
+            testTokens.forEach(async (tokenTest, index) => {
+                try {
+                    const qrCard = document.createElement('div');
+                    qrCard.className = 'qr-card';
+                    
+                    const canvas = document.createElement('canvas');
+                    
+                    await QRCode.toCanvas(canvas, tokenTest.token, { width: 120 });
+                    
+                    qrCard.innerHTML = `
+                        <h4>${tokenTest.name}</h4>
+                        <div><small>Token: <code>${tokenTest.token.length > 30 ? tokenTest.token.substring(0, 30) + '...' : tokenTest.token}</code></small></div>
+                        <div><small>Longitud: ${tokenTest.token.length}</small></div>
+                    `;
+                    qrCard.appendChild(canvas);
+                    qrContainer.appendChild(qrCard);
+                    
+                    successCount++;
+                    log(`✅ QR generado para ${tokenTest.name}`, 'success');
+                    
+                } catch (error) {
+                    errorCount++;
+                    log(`❌ Error generando QR para ${tokenTest.name}: ${error.message}`, 'error');
+                    
+                    const errorCard = document.createElement('div');
+                    errorCard.className = 'qr-card';
+                    errorCard.innerHTML = `
+                        <h4>${tokenTest.name}</h4>
+                        <div class="error">Error: ${error.message}</div>
+                        <div><small>Token: <code>${tokenTest.token.length > 30 ? tokenTest.token.substring(0, 30) + '...' : tokenTest.token}</code></small></div>
+                    `;
+                    qrContainer.appendChild(errorCard);
+                }
+                
+                // Actualizar resultado al final
+                if (index === testTokens.length - 1) {
+                    setTimeout(() => {
+                        resultDiv.innerHTML = `
+                            <div class="success">✅ Prueba de tokens completa</div>
+                            <div>Exitosos: ${successCount}, Errores: ${errorCount}</div>
+                        `;
+                        resultDiv.appendChild(qrContainer);
+                        log(`Prueba de tokens completa: ${successCount} exitosos, ${errorCount} errores`, 'info');
+                    }, 100);
+                }
+            });
+        }
+        
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Página de test QR cargada', 'info');
+            
+            // Verificar librería inmediatamente
+            if (typeof QRCode !== 'undefined') {
+                log('✅ QRCode disponible al cargar la página', 'success');
+            } else {
+                log('❌ QRCode no disponible al cargar la página', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

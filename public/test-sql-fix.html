@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificación de Corrección SQL</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Verificación de Corrección SQL</h1>
+        
+        <div class="info">
+            <h3>Problema Identificado</h3>
+            <p>El error era que el SQL usaba <code>creado_en</code> pero la columna se llama <code>created_at</code></p>
+        </div>
+
+        <div class="success">
+            <h3>✅ Corrección Aplicada</h3>
+            <p>Se corrigió el SQL en ambos endpoints:</p>
+            <ul>
+                <li><code>/api/generate-tokens-temp</code> (público)</li>
+                <li><code>/api/admin/generate-tokens</code> (administrador)</li>
+            </ul>
+        </div>
+
+        <h3>Probar Corrección</h3>
+        <button class="btn btn-primary" onclick="testTokenGeneration()">
+            Probar Generación de Tokens
+        </button>
+        
+        <div id="result"></div>
+        
+        <div style="margin-top: 30px;">
+            <h3>Enlaces Útiles</h3>
+            <a href="setup-tokens.html" class="btn btn-success">Configuración Inicial</a>
+            <a href="qr-plazas.html" class="btn btn-primary">Generar Códigos QR</a>
+        </div>
+    </div>
+
+    <script>
+        async function testTokenGeneration() {
+            const result = document.getElementById('result');
+            
+            result.innerHTML = '<div class="info">🔄 Probando generación de tokens...</div>';
+            
+            try {
+                const response = await fetch('/api/generate-tokens-temp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    result.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Éxito - SQL Corregido</h4>
+                            <p><strong>Tokens generados:</strong> ${data.tokensGenerados}</p>
+                            <p><strong>Plazas con token:</strong> ${data.estadoFinal.plazasConToken}</p>
+                            <p><strong>Plazas sin token:</strong> ${data.estadoFinal.plazasSinToken}</p>
+                            ${data.errores.length > 0 ? `
+                                <p><strong>Errores:</strong></p>
+                                <ul>
+                                    ${data.errores.map(error => `<li>${error}</li>`).join('')}
+                                </ul>
+                            ` : '<p>✅ Sin errores SQL</p>'}
+                        </div>
+                    `;
+                    
+                    if (data.tokensGenerados > 0) {
+                        setTimeout(() => {
+                            if (confirm('¡Tokens generados exitosamente! ¿Ir a generar códigos QR?')) {
+                                window.location.href = 'qr-plazas.html';
+                            }
+                        }, 1000);
+                    }
+                } else {
+                    result.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Error</h4>
+                            <p>${data.message}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Error de Conexión</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

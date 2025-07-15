@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba QRious - Generación Robusta de QR</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .test-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .test-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .test-card h3 {
+            color: #495057;
+            margin-bottom: 15px;
+        }
+
+        .qr-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            border: 2px dashed #dee2e6;
+        }
+
+        canvas {
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+        }
+
+        .test-text {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .console-log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+    <script src="qrious.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Prueba QRious - Generación Robusta</h1>
+        
+        <div class="controls">
+            <button class="btn" onclick="runAllTests()">🔄 Ejecutar Todas las Pruebas</button>
+            <button class="btn" onclick="clearTests()">🗑️ Limpiar Resultados</button>
+        </div>
+
+        <div class="console-log" id="console"></div>
+
+        <div class="test-grid" id="testGrid">
+            <!-- Las pruebas se generarán dinámicamente -->
+        </div>
+    </div>
+
+    <script>
+        let consoleOutput = [];
+
+        // Interceptar console.log para mostrar en pantalla
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            logToScreen('LOG', args.join(' '));
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            logToScreen('ERROR', args.join(' '));
+        };
+
+        function logToScreen(type, message) {
+            const timestamp = new Date().toLocaleTimeString();
+            consoleOutput.push(`[${timestamp}] ${type}: ${message}`);
+            updateConsoleDisplay();
+        }
+
+        function updateConsoleDisplay() {
+            const consoleEl = document.getElementById('console');
+            consoleEl.innerHTML = consoleOutput.slice(-20).join('\n');
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        // Datos de prueba
+        const testData = [
+            {
+                name: 'Token Plaza Corto',
+                text: 'qr-plaza-test-2025',
+                description: 'Prueba con token de plaza típico'
+            },
+            {
+                name: 'Token Plaza Largo',
+                text: 'qr-plaza-evaristo-herrera-molina-2025',
+                description: 'Prueba con token de plaza con nombre largo'
+            },
+            {
+                name: 'URL Completa',
+                text: 'https://pradosdenos.cl/checkin/qr-plaza-test-2025',
+                description: 'Prueba con URL completa de check-in'
+            },
+            {
+                name: 'Texto Simple',
+                text: 'Hola Mundo',
+                description: 'Prueba con texto simple'
+            },
+            {
+                name: 'Números',
+                text: '1234567890',
+                description: 'Prueba con secuencia numérica'
+            },
+            {
+                name: 'Datos Estructurados',
+                text: JSON.stringify({plaza: 'Barcelona', token: 'qr-plaza-barcelona-2025', año: 2025}),
+                description: 'Prueba con datos JSON estructurados'
+            }
+        ];
+
+        function createTestCard(test, index) {
+            return `
+                <div class="test-card" id="test-${index}">
+                    <h3>${test.name}</h3>
+                    <div class="test-text">${test.text}</div>
+                    <div class="qr-container">
+                        <canvas id="canvas-${index}" width="200" height="200"></canvas>
+                    </div>
+                    <div class="status" id="status-${index}">⏳ Esperando...</div>
+                    <small>${test.description}</small>
+                </div>
+            `;
+        }
+
+        function setupTests() {
+            const grid = document.getElementById('testGrid');
+            grid.innerHTML = testData.map((test, index) => createTestCard(test, index)).join('');
+        }
+
+        async function runSingleTest(test, index) {
+            const canvas = document.getElementById(`canvas-${index}`);
+            const status = document.getElementById(`status-${index}`);
+            
+            status.className = 'status';
+            status.textContent = '🔄 Generando...';
+            
+            try {
+                console.log(`🧪 Iniciando prueba ${index + 1}: ${test.name}`);
+                console.log(`📝 Texto: "${test.text}"`);
+                
+                // Verificar que QRious esté disponible
+                if (typeof QRious === 'undefined') {
+                    throw new Error('QRious no está disponible');
+                }
+                
+                // Generar QR
+                await QRious.toCanvas(canvas, test.text, {
+                    width: 200,
+                    margin: 4
+                });
+                
+                status.className = 'status success';
+                status.textContent = '✅ Generado exitosamente';
+                console.log(`✅ Prueba ${index + 1} completada`);
+                
+                return true;
+                
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = `❌ Error: ${error.message}`;
+                console.error(`❌ Error en prueba ${index + 1}:`, error);
+                
+                return false;
+            }
+        }
+
+        async function runAllTests() {
+            console.log('🚀 Iniciando suite de pruebas QRious');
+            console.log('🔍 Verificando disponibilidad de librería...');
+            console.log('🔍 typeof QRious:', typeof QRious);
+            console.log('🔍 typeof QRCode:', typeof QRCode);
+            
+            if (typeof QRious === 'undefined') {
+                console.error('❌ QRious no está disponible - verificar carga de qrious.js');
+                return;
+            }
+            
+            console.log('✅ QRious disponible, iniciando pruebas...');
+            
+            let successCount = 0;
+            let totalTests = testData.length;
+            
+            for (let i = 0; i < testData.length; i++) {
+                const success = await runSingleTest(testData[i], i);
+                if (success) successCount++;
+                
+                // Pequeña pausa entre pruebas para visualización
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+            
+            console.log(`🎯 Pruebas completadas: ${successCount}/${totalTests} exitosas`);
+            
+            if (successCount === totalTests) {
+                console.log('🎉 ¡Todas las pruebas pasaron! QRious funciona correctamente');
+            } else {
+                console.log(`⚠️ ${totalTests - successCount} pruebas fallaron`);
+            }
+        }
+
+        function clearTests() {
+            consoleOutput = [];
+            updateConsoleDisplay();
+            
+            const grid = document.getElementById('testGrid');
+            const statuses = grid.querySelectorAll('.status');
+            const canvases = grid.querySelectorAll('canvas');
+            
+            statuses.forEach(status => {
+                status.className = 'status';
+                status.textContent = '⏳ Esperando...';
+            });
+            
+            canvases.forEach(canvas => {
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            });
+            
+            console.log('🗑️ Pruebas limpiadas - listo para nueva ejecución');
+        }
+
+        // Inicializar al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔍 DOM cargado - configurando pruebas');
+            setupTests();
+            
+            // Verificación inicial
+            if (typeof QRious !== 'undefined') {
+                console.log('✅ QRious cargado correctamente');
+                console.log('✅ Método toCanvas disponible:', typeof QRious.toCanvas);
+            } else {
+                console.error('❌ QRious no se cargó correctamente');
+            }
+        });
+    </script>
+</body>
+</html>

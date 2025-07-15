@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Check-in Button</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .debug-panel {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .log-entry {
+            font-family: monospace;
+            font-size: 12px;
+            margin: 2px 0;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        .log-info { background: #d1ecf1; color: #0c5460; }
+        .log-success { background: #d4edda; color: #155724; }
+        .log-error { background: #f8d7da; color: #721c24; }
+        .log-warning { background: #fff3cd; color: #856404; }
+        
+        .test-section {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        .validation-section {
+            display: none;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .validation-section.show {
+            display: block;
+        }
+        
+        .code-display {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            color: #007bff;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1><i class="fas fa-bug"></i> Debug Check-in Button</h1>
+        
+        <!-- Simulación del flujo original -->
+        <div class="test-section">
+            <h3>Simulación del Flujo Original</h3>
+            
+            <div class="mb-3">
+                <button class="btn btn-primary" onclick="simulateQRScan()">
+                    <i class="fas fa-qrcode"></i> Simular Escaneo QR
+                </button>
+                <button class="btn btn-warning" onclick="showValidationSection()">
+                    <i class="fas fa-key"></i> Mostrar Validación
+                </button>
+                <button class="btn btn-success" onclick="testDirectValidation()">
+                    <i class="fas fa-check"></i> Test Directo
+                </button>
+            </div>
+            
+            <!-- Sección de validación -->
+            <div id="validationSection" class="validation-section">
+                <h4>Validación de Código</h4>
+                <div class="mb-3">
+                    <label>Tu código de validación:</label>
+                    <div id="userValidationCode" class="code-display">ABC123</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="validationCodeInput">Ingresa tu código de validación:</label>
+                    <input type="text" 
+                           id="validationCodeInput" 
+                           class="form-control" 
+                           placeholder="Ingresa tu código"
+                           maxlength="10"
+                           autocomplete="off">
+                    <div id="validationFeedback" class="mt-2"></div>
+                </div>
+                
+                <button id="confirmCheckinBtn" class="btn btn-success" onclick="confirmCheckin()" disabled>
+                    <i class="fas fa-check"></i> Confirmar Check-in
+                </button>
+            </div>
+        </div>
+        
+        <!-- Panel de debugging -->
+        <div class="test-section">
+            <h3>Panel de Debugging</h3>
+            <div class="btn-group mb-3" role="group">
+                <button class="btn btn-info" onclick="debugButton()">
+                    <i class="fas fa-search"></i> Debug Button
+                </button>
+                <button class="btn btn-danger" onclick="forceClick()">
+                    <i class="fas fa-bolt"></i> Force Click
+                </button>
+                <button class="btn btn-secondary" onclick="checkOverlays()">
+                    <i class="fas fa-layer-group"></i> Check Overlays
+                </button>
+                <button class="btn btn-warning" onclick="repairButton()">
+                    <i class="fas fa-tools"></i> Repair Button
+                </button>
+                <button class="btn btn-success" onclick="testClickEvent()">
+                    <i class="fas fa-mouse"></i> Test Click Event
+                </button>
+            </div>
+            
+            <div id="debugOutput" class="debug-panel" style="max-height: 400px; overflow-y: auto;"></div>
+        </div>
+        
+        <!-- Log de eventos -->
+        <div class="test-section">
+            <h3>Log de Eventos</h3>
+            <button class="btn btn-sm btn-outline-secondary" onclick="clearLog()">Limpiar Log</button>
+            <div id="eventLog" class="debug-panel" style="max-height: 300px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let userValidationCode = 'ABC123';
+        let scannedToken = 'test-token-123';
+        let logEntries = [];
+        
+        // Función de logging
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = `[${timestamp}] ${message}`;
+            logEntries.push({message: entry, type});
+            
+            console.log(entry);
+            updateLogDisplay();
+        }
+        
+        function updateLogDisplay() {
+            const logDiv = document.getElementById('eventLog');
+            logDiv.innerHTML = logEntries.map(entry => 
+                `<div class="log-entry log-${entry.type}">${entry.message}</div>`
+            ).join('');
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function clearLog() {
+            logEntries = [];
+            updateLogDisplay();
+        }
+        
+        // Simulación del flujo original
+        function simulateQRScan() {
+            log('Simulando escaneo de QR...', 'info');
+            scannedToken = 'simulated-token-' + Date.now();
+            log(`Token escaneado: ${scannedToken}`, 'success');
+            showValidationSection();
+        }
+        
+        function showValidationSection() {
+            log('Mostrando sección de validación', 'info');
+            const section = document.getElementById('validationSection');
+            section.classList.add('show');
+            
+            // Configurar event listeners para la validación
+            setupValidationListeners();
+        }
+        
+        function setupValidationListeners() {
+            log('Configurando event listeners para validación', 'info');
+            const input = document.getElementById('validationCodeInput');
+            const confirmBtn = document.getElementById('confirmCheckinBtn');
+            
+            // Limpiar listeners existentes
+            input.oninput = null;
+            input.onkeyup = null;
+            
+            // Configurar múltiples listeners
+            input.oninput = function() {
+                log(`Input oninput: ${this.value}`, 'info');
+                validateCode();
+            };
+            
+            input.onkeyup = function(e) {
+                log(`Input onkeyup: ${this.value} (key: ${e.key})`, 'info');
+                validateCode();
+                
+                if (e.key === 'Enter' && !confirmBtn.disabled) {
+                    log('Enter presionado, ejecutando confirmCheckin()', 'info');
+                    confirmCheckin();
+                }
+            };
+            
+            // También addEventListener como backup
+            input.addEventListener('input', function() {
+                log(`Input addEventListener: ${this.value}`, 'info');
+                validateCode();
+            });
+        }
+        
+        function validateCode() {
+            const enteredCode = document.getElementById('validationCodeInput').value.trim();
+            const confirmBtn = document.getElementById('confirmCheckinBtn');
+            const feedback = document.getElementById('validationFeedback');
+            
+            log(`Validando código: "${enteredCode}" vs "${userValidationCode}"`, 'info');
+            
+            if (enteredCode.length === 0) {
+                confirmBtn.disabled = true;
+                confirmBtn.classList.remove('btn-success');
+                confirmBtn.classList.add('btn-secondary');
+                feedback.textContent = '';
+                log('Código vacío, botón deshabilitado', 'warning');
+                return;
+            }
+            
+            if (enteredCode.toUpperCase() === userValidationCode.toUpperCase()) {
+                confirmBtn.disabled = false;
+                confirmBtn.classList.remove('btn-secondary');
+                confirmBtn.classList.add('btn-success');
+                feedback.innerHTML = '<span class="text-success">✓ Código correcto</span>';
+                log('✅ Código correcto, botón habilitado', 'success');
+            } else {
+                confirmBtn.disabled = true;
+                confirmBtn.classList.remove('btn-success');
+                confirmBtn.classList.add('btn-secondary');
+                feedback.innerHTML = '<span class="text-danger">✗ Código incorrecto</span>';
+                log('❌ Código incorrecto, botón deshabilitado', 'error');
+            }
+            
+            // Log del estado del botón
+            log(`Estado del botón: disabled=${confirmBtn.disabled}, classList=${confirmBtn.classList.toString()}`, 'info');
+        }
+        
+        function testDirectValidation() {
+            log('Ejecutando test directo de validación', 'info');
+            const input = document.getElementById('validationCodeInput');
+            const confirmBtn = document.getElementById('confirmCheckinBtn');
+            
+            // Mostrar sección si no está visible
+            if (!document.getElementById('validationSection').classList.contains('show')) {
+                showValidationSection();
+            }
+            
+            // Establecer el código correcto
+            input.value = userValidationCode;
+            
+            // Forzar validación
+            validateCode();
+            
+            log(`Test directo completado. Botón disabled: ${confirmBtn.disabled}`, 'success');
+        }
+        
+        // Función principal de check-in
+        async function confirmCheckin() {
+            log('🚀 === CONFIRM CHECKIN EJECUTADO ===', 'success');
+            
+            const enteredCode = document.getElementById('validationCodeInput').value.trim();
+            const confirmBtn = document.getElementById('confirmCheckinBtn');
+            
+            log(`Código ingresado: "${enteredCode}"`, 'info');
+            log(`Código esperado: "${userValidationCode}"`, 'info');
+            log(`Botón disabled: ${confirmBtn.disabled}`, 'info');
+            
+            if (!enteredCode) {
+                log('❌ Error: Código vacío', 'error');
+                return;
+            }
+            
+            if (enteredCode.toUpperCase() !== userValidationCode.toUpperCase()) {
+                log('❌ Error: Código incorrecto', 'error');
+                return;
+            }
+            
+            // Simular proceso de check-in
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+            log('Procesando check-in...', 'info');
+            
+            setTimeout(() => {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '<i class="fas fa-check"></i> Confirmar Check-in';
+                log('✅ Check-in completado exitosamente', 'success');
+                
+                // Mostrar mensaje de éxito
+                const successMsg = document.createElement('div');
+                successMsg.className = 'alert alert-success';
+                successMsg.innerHTML = '<strong>¡Éxito!</strong> Check-in realizado correctamente.';
+                document.querySelector('.container').insertBefore(successMsg, document.querySelector('.test-section'));
+                
+                setTimeout(() => successMsg.remove(), 3000);
+            }, 2000);
+        }
+        
+        // Funciones de debugging
+        function debugButton() {
+            log('=== DEBUG BUTTON ===', 'info');
+            const btn = document.getElementById('confirmCheckinBtn');
+            const output = document.getElementById('debugOutput');
+            
+            let debug = '<h5>Información del Botón:</h5>';
+            debug += `<strong>Elemento encontrado:</strong> ${btn ? 'Sí' : 'No'}<br>`;
+            debug += `<strong>ID:</strong> ${btn.id}<br>`;
+            debug += `<strong>Disabled:</strong> ${btn.disabled}<br>`;
+            debug += `<strong>onclick:</strong> ${btn.onclick ? 'Definido' : 'No definido'}<br>`;
+            debug += `<strong>classList:</strong> ${btn.classList.toString()}<br>`;
+            
+            const rect = btn.getBoundingClientRect();
+            debug += `<strong>Posición:</strong> ${rect.left.toFixed(2)}, ${rect.top.toFixed(2)}<br>`;
+            debug += `<strong>Tamaño:</strong> ${rect.width.toFixed(2)} x ${rect.height.toFixed(2)}<br>`;
+            
+            const style = window.getComputedStyle(btn);
+            debug += `<strong>display:</strong> ${style.display}<br>`;
+            debug += `<strong>visibility:</strong> ${style.visibility}<br>`;
+            debug += `<strong>pointer-events:</strong> ${style.pointerEvents}<br>`;
+            debug += `<strong>z-index:</strong> ${style.zIndex}<br>`;
+            debug += `<strong>position:</strong> ${style.position}<br>`;
+            debug += `<strong>opacity:</strong> ${style.opacity}<br>`;
+            
+            output.innerHTML = debug;
+            log('Debug del botón completado', 'info');
+        }
+        
+        function forceClick() {
+            log('Forzando click en el botón...', 'warning');
+            const btn = document.getElementById('confirmCheckinBtn');
+            
+            log(`Botón antes del click: disabled=${btn.disabled}`, 'info');
+            
+            try {
+                btn.click();
+                log('✅ Click forzado ejecutado', 'success');
+            } catch (error) {
+                log(`❌ Error al forzar click: ${error.message}`, 'error');
+            }
+        }
+        
+        function checkOverlays() {
+            log('Verificando overlays...', 'info');
+            const btn = document.getElementById('confirmCheckinBtn');
+            const rect = btn.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            const elements = document.elementsFromPoint(centerX, centerY);
+            const output = document.getElementById('debugOutput');
+            
+            let overlayInfo = '<h5>Elementos en la posición del botón:</h5>';
+            elements.forEach((el, index) => {
+                const isButton = el === btn;
+                overlayInfo += `<strong>${index}:</strong> ${el.tagName}`;
+                if (el.id) overlayInfo += ` #${el.id}`;
+                if (el.className) overlayInfo += ` .${el.className}`;
+                if (isButton) overlayInfo += ' <span class="text-success">(NUESTRO BOTÓN)</span>';
+                overlayInfo += '<br>';
+            });
+            
+            const buttonIndex = elements.indexOf(btn);
+            overlayInfo += `<br><strong>Índice del botón:</strong> ${buttonIndex}`;
+            
+            if (buttonIndex > 0) {
+                overlayInfo += '<br><span class="text-warning">⚠️ Hay elementos encima del botón</span>';
+            } else if (buttonIndex === 0) {
+                overlayInfo += '<br><span class="text-success">✅ El botón está en la superficie</span>';
+            } else {
+                overlayInfo += '<br><span class="text-danger">❌ El botón no está en la posición esperada</span>';
+            }
+            
+            output.innerHTML = overlayInfo;
+            log(`Overlay check completado. Botón en índice: ${buttonIndex}`, 'info');
+        }
+        
+        function repairButton() {
+            log('Reparando botón...', 'warning');
+            const btn = document.getElementById('confirmCheckinBtn');
+            
+            if (!btn) {
+                log('❌ Botón no encontrado', 'error');
+                return;
+            }
+            
+            // Guardar onclick original
+            const originalOnclick = btn.onclick;
+            log(`onclick original: ${originalOnclick}`, 'info');
+            
+            // Eliminar y reasignar onclick
+            btn.onclick = null;
+            btn.onclick = function() {
+                log('onclick reparado ejecutado', 'success');
+                confirmCheckin();
+            };
+            
+            // Añadir event listener como backup
+            btn.addEventListener('click', function(e) {
+                log('Event listener backup ejecutado', 'success');
+                if (!btn.disabled) {
+                    confirmCheckin();
+                }
+            });
+            
+            // Corregir estilos que puedan interferir
+            btn.style.pointerEvents = 'auto';
+            btn.style.position = 'relative';
+            btn.style.zIndex = '1000';
+            
+            log('✅ Botón reparado', 'success');
+        }
+        
+        function testClickEvent() {
+            log('=== TEST CLICK EVENT ===', 'info');
+            const btn = document.getElementById('confirmCheckinBtn');
+            
+            // Test 1: Verificar onclick
+            log('Test 1: Verificando onclick...', 'info');
+            if (btn.onclick) {
+                try {
+                    btn.onclick();
+                    log('✅ onclick ejecutado correctamente', 'success');
+                } catch (error) {
+                    log(`❌ Error en onclick: ${error.message}`, 'error');
+                }
+            } else {
+                log('❌ No hay onclick definido', 'error');
+            }
+            
+            // Test 2: Verificar click() programático
+            log('Test 2: Verificando click() programático...', 'info');
+            try {
+                btn.click();
+                log('✅ click() ejecutado correctamente', 'success');
+            } catch (error) {
+                log(`❌ Error en click(): ${error.message}`, 'error');
+            }
+            
+            // Test 3: Verificar dispatchEvent
+            log('Test 3: Verificando dispatchEvent...', 'info');
+            try {
+                const clickEvent = new MouseEvent('click', {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window
+                });
+                btn.dispatchEvent(clickEvent);
+                log('✅ dispatchEvent ejecutado correctamente', 'success');
+            } catch (error) {
+                log(`❌ Error en dispatchEvent: ${error.message}`, 'error');
+            }
+        }
+        
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Página cargada, iniciando debug...', 'info');
+            log(`userValidationCode: ${userValidationCode}`, 'info');
+            log(`scannedToken: ${scannedToken}`, 'info');
+        });
+    </script>
+</body>
+</html>

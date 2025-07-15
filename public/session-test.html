@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Testing - Los Prados de Nos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .info {
+            background: #cce7ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Session Testing - Debugging de Autenticación</h1>
+        
+        <div class="info">
+            <h3>Información del Cliente</h3>
+            <p><strong>URL:</strong> <span id="currentUrl"></span></p>
+            <p><strong>User Agent:</strong> <span id="userAgent"></span></p>
+            <p><strong>Cookies:</strong> <span id="cookies"></span></p>
+        </div>
+        
+        <h2>Tests de Autenticación</h2>
+        <button onclick="testAuthCheck()">Test /api/auth/check</button>
+        <button onclick="testLogin()">Test Login Admin</button>
+        <button onclick="testLogout()">Test Logout</button>
+        <button onclick="clearResults()">Limpiar Resultados</button>
+        
+        <h2>Resultados</h2>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // Mostrar información del cliente
+        document.getElementById('currentUrl').textContent = window.location.href;
+        document.getElementById('userAgent').textContent = navigator.userAgent;
+        document.getElementById('cookies').textContent = document.cookie || 'Sin cookies';
+        
+        function showResult(title, data, isError = false) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result ${isError ? 'error' : 'success'}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            resultDiv.innerHTML = `<strong>[${timestamp}] ${title}</strong>\n${JSON.stringify(data, null, 2)}`;
+            
+            resultsDiv.insertBefore(resultDiv, resultsDiv.firstChild);
+        }
+        
+        async function testAuthCheck() {
+            try {
+                console.log('🔍 Testing auth check...');
+                const response = await fetch('/api/auth/check', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                showResult(`Auth Check (${response.status})`, {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    data: data,
+                    cookies_after: document.cookie
+                }, !response.ok);
+                
+            } catch (error) {
+                showResult('Auth Check - ERROR', { error: error.message }, true);
+            }
+        }
+        
+        async function testLogin() {
+            const email = prompt('Email del administrador:');
+            const password = prompt('Contraseña:');
+            
+            if (!email || !password) {
+                showResult('Login - Cancelado', { message: 'Credenciales no proporcionadas' }, true);
+                return;
+            }
+            
+            try {
+                console.log('🔍 Testing login...');
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                showResult(`Login (${response.status})`, {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    data: data,
+                    cookies_after: document.cookie
+                }, !response.ok);
+                
+                // Actualizar cookies mostradas
+                document.getElementById('cookies').textContent = document.cookie || 'Sin cookies';
+                
+            } catch (error) {
+                showResult('Login - ERROR', { error: error.message }, true);
+            }
+        }
+        
+        async function testLogout() {
+            try {
+                const response = await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                showResult(`Logout (${response.status})`, {
+                    status: response.status,
+                    data: data,
+                    cookies_after: document.cookie
+                }, !response.ok);
+                
+                // Actualizar cookies mostradas
+                document.getElementById('cookies').textContent = document.cookie || 'Sin cookies';
+                
+            } catch (error) {
+                showResult('Logout - ERROR', { error: error.message }, true);
+            }
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // Auto-test inicial
+        window.addEventListener('load', () => {
+            console.log('Página de testing de sesiones cargada');
+            setTimeout(() => {
+                testAuthCheck();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

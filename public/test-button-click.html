@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Botón Click</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Test Botón Click</h1>
+        
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <h3>Botón Test 1 - onclick</h3>
+                <button id="testBtn1" class="btn btn-success" onclick="testFunction1()">
+                    <i class="fas fa-check"></i> Test onclick
+                </button>
+                <p id="result1" class="mt-2"></p>
+            </div>
+            
+            <div class="col-md-6">
+                <h3>Botón Test 2 - addEventListener</h3>
+                <button id="testBtn2" class="btn btn-primary">
+                    <i class="fas fa-check"></i> Test addEventListener
+                </button>
+                <p id="result2" class="mt-2"></p>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <h3>Botón Test 3 - Disabled/Enabled</h3>
+                <button id="testBtn3" class="btn btn-warning" onclick="testFunction3()" disabled>
+                    <i class="fas fa-check"></i> Test Disabled
+                </button>
+                <button class="btn btn-sm btn-secondary" onclick="toggleBtn3()">Toggle Enable</button>
+                <p id="result3" class="mt-2"></p>
+            </div>
+            
+            <div class="col-md-6">
+                <h3>Botón Test 4 - Copia del original</h3>
+                <button id="confirmCheckinBtn" class="btn btn-success" onclick="confirmCheckin()" disabled>
+                    <i class="fas fa-check"></i> Confirmar Check-in
+                </button>
+                <button class="btn btn-sm btn-secondary" onclick="enableBtn4()">Enable</button>
+                <p id="result4" class="mt-2"></p>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <h3>Test de Debugging</h3>
+                <button class="btn btn-info" onclick="debugButton()">Debug Button</button>
+                <button class="btn btn-danger" onclick="forceClick()">Force Click</button>
+                <button class="btn btn-secondary" onclick="checkOverlays()">Check Overlays</button>
+                <div id="debugOutput" class="mt-3" style="background: #f8f9fa; padding: 10px; border-radius: 5px; max-height: 300px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function testFunction1() {
+            document.getElementById('result1').innerHTML = `<span class="text-success">✓ onclick funcionó - ${new Date().toLocaleTimeString()}</span>`;
+            console.log('testFunction1 ejecutada');
+        }
+        
+        function testFunction3() {
+            document.getElementById('result3').innerHTML = `<span class="text-success">✓ Botón disabled funcionó - ${new Date().toLocaleTimeString()}</span>`;
+            console.log('testFunction3 ejecutada');
+        }
+        
+        function toggleBtn3() {
+            const btn = document.getElementById('testBtn3');
+            btn.disabled = !btn.disabled;
+            document.getElementById('result3').innerHTML = `<span class="text-info">Botón ${btn.disabled ? 'deshabilitado' : 'habilitado'}</span>`;
+        }
+        
+        function enableBtn4() {
+            const btn = document.getElementById('confirmCheckinBtn');
+            btn.disabled = false;
+            btn.classList.remove('btn-secondary');
+            btn.classList.add('btn-success');
+            document.getElementById('result4').innerHTML = `<span class="text-info">Botón habilitado</span>`;
+        }
+        
+        async function confirmCheckin() {
+            console.log('🚀 confirmCheckin ejecutado');
+            const result = document.getElementById('result4');
+            result.innerHTML = `<span class="text-success">✓ confirmCheckin() ejecutado - ${new Date().toLocaleTimeString()}</span>`;
+            
+            // Simular el comportamiento del original
+            const btn = document.getElementById('confirmCheckinBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+            
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check"></i> Confirmar Check-in';
+                result.innerHTML += `<br><span class="text-info">Proceso completado</span>`;
+            }, 2000);
+        }
+        
+        function debugButton() {
+            const output = document.getElementById('debugOutput');
+            const btn = document.getElementById('confirmCheckinBtn');
+            
+            let debug = '<h5>Debug Information:</h5>';
+            debug += `<strong>Botón encontrado:</strong> ${btn ? 'Sí' : 'No'}<br>`;
+            debug += `<strong>Disabled:</strong> ${btn.disabled}<br>`;
+            debug += `<strong>onclick:</strong> ${btn.onclick ? 'Definido' : 'No definido'}<br>`;
+            debug += `<strong>classList:</strong> ${btn.classList.toString()}<br>`;
+            
+            const rect = btn.getBoundingClientRect();
+            debug += `<strong>Posición:</strong> ${rect.left}, ${rect.top}<br>`;
+            debug += `<strong>Tamaño:</strong> ${rect.width}x${rect.height}<br>`;
+            
+            const style = window.getComputedStyle(btn);
+            debug += `<strong>display:</strong> ${style.display}<br>`;
+            debug += `<strong>visibility:</strong> ${style.visibility}<br>`;
+            debug += `<strong>pointer-events:</strong> ${style.pointerEvents}<br>`;
+            debug += `<strong>z-index:</strong> ${style.zIndex}<br>`;
+            
+            output.innerHTML = debug;
+        }
+        
+        function forceClick() {
+            const btn = document.getElementById('confirmCheckinBtn');
+            console.log('Forzando click...');
+            btn.click();
+        }
+        
+        function checkOverlays() {
+            const btn = document.getElementById('confirmCheckinBtn');
+            const rect = btn.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            const elements = document.elementsFromPoint(centerX, centerY);
+            const output = document.getElementById('debugOutput');
+            
+            let overlayInfo = '<h5>Elementos en la posición del botón:</h5>';
+            elements.forEach((el, index) => {
+                overlayInfo += `<strong>${index}:</strong> ${el.tagName} (${el.className})<br>`;
+            });
+            
+            const buttonIndex = elements.indexOf(btn);
+            overlayInfo += `<br><strong>Índice del botón:</strong> ${buttonIndex}`;
+            
+            output.innerHTML = overlayInfo;
+        }
+        
+        // Configurar event listener para el botón 2
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('testBtn2').addEventListener('click', function() {
+                document.getElementById('result2').innerHTML = `<span class="text-success">✓ addEventListener funcionó - ${new Date().toLocaleTimeString()}</span>`;
+                console.log('addEventListener ejecutado');
+            });
+        });
+    </script>
+</body>
+</html>
