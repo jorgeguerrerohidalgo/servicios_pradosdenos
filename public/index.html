@@ -39,7 +39,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 30px;
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
         
@@ -48,8 +48,8 @@
             border-radius: 15px;
             padding: 40px 30px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
             cursor: pointer;
             position: relative;
             overflow: hidden;
@@ -57,18 +57,62 @@
         
         .service-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
         }
         
         .service-card::before {
             content: '';
             position: absolute;
             top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            transition: height 0.3s ease;
+        }
+        
+        .service-card:hover::before {
+            height: 6px;
+        }
+        
+        .service-icon {
+            font-size: 3rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+        }
+        
+        .service-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .service-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        
+        .service-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+        
+        .service-btn:hover {
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         
         .service-card:hover::before {
@@ -204,6 +248,35 @@
                     </p>
                     <a href="consulta-rondas.html" class="service-btn">
                         <i class="fas fa-search"></i> Consultar Rondas
+                    </a>
+                </div>
+                
+                <!-- Eventos Vecinales -->
+                <div class="service-card" onclick="window.location.href='eventos.html'">
+                    <div class="service-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <h3 class="service-title">Eventos Vecinales</h3>
+                    <p class="service-description">
+                        Consulta los próximos eventos, reuniones y actividades de la comunidad. 
+                        ¡Mantente informado y participa!
+                    </p>
+                    <a href="eventos.html" class="service-btn">
+                        <i class="fas fa-calendar-plus"></i> Ver Eventos
+                    </a>
+                </div>
+                
+                <!-- Documentos Comunitarios -->
+                <div class="service-card" onclick="window.location.href='documentos.html'">
+                    <div class="service-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <h3 class="service-title">Documentos Comunitarios</h3>
+                    <p class="service-description">
+                        Accede a actas, reglamentos, circulares y otros documentos oficiales de la comunidad.
+                    </p>
+                    <a href="documentos.html" class="service-btn">
+                        <i class="fas fa-folder-open"></i> Ver Documentos
                     </a>
                 </div>
                 
