@@ -3,17 +3,25 @@ services:
     name: checkin-plaza-backend
     env: node
     plan: free
-    buildCommand: bash build.sh
-    startCommand: bash start-debug.sh
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node server-production.js
     envVars:
       - key: NODE_ENV
         value: production
+      - key: DATABASE_URL
+        value: postgresql://postgres.ixttdxkelassioemefbo:MacBookPro710@aws-0-us-east-2.pooler.supabase.com:6543/postgres
       - key: SESSION_SECRET
         generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://servicios-prados-de-nos.onrender.com
+      - key: RENDER_EXTERNAL_URL
+        value: https://servicios-prados-de-nos.onrender.com
       - key: TZ
         value: America/Santiago
-      # DATABASE_URL debe configurarse manualmente en el dashboard de Render
-      # Formato: postgresql://postgres:password@db.xxxxx.supabase.co:5432/postgres
+      - key: LOG_LEVEL
+        value: info
     healthCheckPath: /health
     autoDeploy: true
     branch: main
