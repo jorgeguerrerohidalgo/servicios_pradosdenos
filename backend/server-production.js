@@ -62,13 +62,25 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: { 
-    secure: isProduction, // Solo HTTPS en producción
+    secure: false, // Temporal: deshabilitado para debugging
     httpOnly: true,
     maxAge: 8 * 60 * 60 * 1000, // 8 horas
-    sameSite: isProduction ? 'none' : 'lax' // 'none' para producción cross-origin
+    sameSite: 'lax' // Más compatible
   },
   name: 'checkin.sid'
 }));
+
+// Middleware de logging detallado
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  const ip = req.ip || req.connection.remoteAddress;
+  console.log(`[${timestamp}] ${req.method} ${req.path} - IP: ${ip}`);
+  console.log(`  Headers: ${JSON.stringify(req.headers, null, 2)}`);
+  if (req.method === 'POST' && req.body) {
+    console.log(`  Body: ${JSON.stringify(req.body, null, 2)}`);
+  }
+  next();
+});
 
 // ========== CONFIGURACIÓN DE BASE DE DATOS ==========
 
@@ -120,6 +132,14 @@ try {
   app.use('/api/admin', adminRoutes);
   app.use('/api/eventos', eventosRoutes);
   app.use('/api/documentos', documentosRoutes);
+
+  console.log('✅ Rutas configuradas:');
+  console.log('  - /api/auth (auth-debug.routes.js)');
+  console.log('  - /api/checkin (checkin.routes.js)');
+  console.log('  - /api/public (public.routes.js)');
+  console.log('  - /api/admin (admin.routes.js)');
+  console.log('  - /api/eventos (eventos.routes.js)');
+  console.log('  - /api/documentos (documentos_new.routes.js)');
 
   console.log('✅ Rutas configuradas correctamente');
 } catch (error) {

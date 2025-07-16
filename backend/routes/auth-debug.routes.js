@@ -7,20 +7,31 @@ router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
         
-        console.log('🔍 LOGIN ATTEMPT:', { email, hasPassword: !!password });
+        console.log('🔍 LOGIN ATTEMPT:', { 
+            email, 
+            hasPassword: !!password,
+            passwordLength: password ? password.length : 0,
+            body: req.body
+        });
         
         if (!email || !password) {
+            console.log('❌ MISSING CREDENTIALS:', { email: !!email, password: !!password });
             return res.status(400).json({ error: 'Email y contraseña son requeridos' });
         }
+        
+        console.log('🔍 SEARCHING FOR USER:', email);
         
         // Buscar en guardias
         let user = await db.query('SELECT * FROM guardias WHERE email = $1 AND activo = true', [email]);
         let userType = 'guardia';
         
+        console.log('🔍 GUARDIAS SEARCH RESULT:', { found: user.length > 0, count: user.length });
+        
         // Si no se encuentra, buscar en admin_users
         if (user.length === 0) {
             user = await db.query('SELECT *, password_hash as password FROM admin_users WHERE email = $1', [email]);
             userType = 'admin';
+            console.log('🔍 ADMIN_USERS SEARCH RESULT:', { found: user.length > 0, count: user.length });
         }
         
         if (user.length === 0) {
@@ -29,7 +40,13 @@ router.post('/login', async (req, res) => {
         }
         
         const foundUser = user[0];
-        console.log('✅ USER FOUND:', { id: foundUser.id, email: foundUser.email, type: userType });
+        console.log('✅ USER FOUND:', { 
+            id: foundUser.id, 
+            email: foundUser.email, 
+            type: userType,
+            hasPassword: !!foundUser.password,
+            passwordLength: foundUser.password ? foundUser.password.length : 0
+        });
         
         // Verificación simple de contraseña (sin bcrypt por ahora)
         if (foundUser.password === password) {
@@ -60,14 +77,18 @@ router.post('/login', async (req, res) => {
             });
         } else {
             console.log('❌ PASSWORD MISMATCH for user:', foundUser.id);
+            console.log('🔍 EXPECTED:', foundUser.password);
+            console.log('🔍 RECEIVED:', password);
             return res.status(401).json({ error: 'Credenciales inválidas' });
         }
         
     } catch (error) {
         console.error('❌ LOGIN ERROR:', error);
+        console.error('❌ ERROR STACK:', error.stack);
         res.status(500).json({ 
             error: 'Error interno del servidor',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            details: error.message
         });
     }
 });

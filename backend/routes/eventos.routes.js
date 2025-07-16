@@ -13,10 +13,12 @@ router.get('/', async (req, res) => {
         const result = {
             success: true,
             data: [],
-            total: 0,
-            page: page,
-            limit: limit,
-            totalPages: 0
+            pagination: {
+                total: 0,
+                page: page,
+                limit: limit,
+                totalPages: 0
+            }
         };
         
         res.json(result);
