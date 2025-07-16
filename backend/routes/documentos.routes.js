@@ -33,7 +33,7 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-module.exports = router;onst express = require('express');
+module.exports = router;
 const router = express.Router();
 const db = require('../utils/db');
 

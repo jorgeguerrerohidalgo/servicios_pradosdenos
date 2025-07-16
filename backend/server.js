@@ -31,13 +31,13 @@ const {
 const { setupSecurityTable } = require('./setup-security');
 
 // Importar rutas
-const authRoutes = require('./routes/auth.routes');
+const authRoutes = require('./routes/auth-debug.routes');
 const checkinRoutes = require('./routes/checkin.routes');
 const publicRoutes = require('./routes/public.routes');
 const adminRoutes = require('./routes/admin.routes');
 
-// Importar nuevas rutas - COMENTADO TEMPORALMENTE HASTA ARREGLAR
-// const eventosRoutes = require('./routes/eventos.routes');
+// Importar nuevas rutas - EVENTOS CORREGIDO, DOCUMENTOS TEMPORAL
+const eventosRoutes = require('./routes/eventos.routes');
 // const documentosRoutes = require('./routes/documentos.routes');
 
 // Variables de entorno para producción
@@ -205,7 +205,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/checkin', checkinRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', publicRoutes);
-// app.use('/api/eventos', eventosRoutes);
+app.use('/api/eventos', eventosRoutes);
 // app.use('/api/documentos', documentosRoutes);
 
 // Servir archivos estáticos desde public (primero local, luego padre)

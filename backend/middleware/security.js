@@ -300,7 +300,7 @@ const attackDetection = (req, res, next) => {
 };
 
 // Mantener funciones existentes para compatibilidad
-const { query } = require('../utils/db');
+const db = require('../utils/db');
 
 // Rate limiting para intentos de login
 const loginLimiter = rateLimit({
@@ -338,7 +338,7 @@ const loginLimiter = rateLimit({
 async function logSecurityEvent(ip, eventType, details = {}) {
   try {
     // Verificar si la tabla existe antes de insertar
-    const tableExists = await query(`
+    const tableExists = await db.query(`
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
         WHERE table_schema = 'public' 
@@ -347,7 +347,7 @@ async function logSecurityEvent(ip, eventType, details = {}) {
     `);
     
     if (tableExists[0].exists) {
-      await query(
+      await db.query(
         'INSERT INTO security_logs (ip_address, event_type, details, created_at) VALUES ($1, $2, $3, CURRENT_TIMESTAMP)',
         [ip, eventType, JSON.stringify(details)]
       );
@@ -474,7 +474,7 @@ async function cleanExpiredSessions(req, res, next) {
   try {
     // Limpiar logs de seguridad antiguos (más de 30 días)
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    await query('DELETE FROM security_logs WHERE created_at < $1', [thirtyDaysAgo]);
+    await db.query('DELETE FROM security_logs WHERE created_at < $1', [thirtyDaysAgo]);
   } catch (error) {
     console.error('Error cleaning expired data:', error);
   }
