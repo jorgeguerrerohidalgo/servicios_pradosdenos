@@ -71,15 +71,16 @@ app.use(session({
   name: 'checkin.sid'
 }));
 
-// Middleware de logging detallado
+// Middleware de logging simplificado
 app.use((req, res, next) => {
   const timestamp = new Date().toISOString();
-  const ip = req.ip || req.connection.remoteAddress;
-  console.log(`[${timestamp}] ${req.method} ${req.path} - IP: ${ip}`);
-  console.log(`  Headers: ${JSON.stringify(req.headers, null, 2)}`);
-  if (req.method === 'POST' && req.body) {
-    console.log(`  Body: ${JSON.stringify(req.body, null, 2)}`);
+  console.log(`[${timestamp}] ${req.method} ${req.path}`);
+  
+  // Solo loggear cuerpo del request para rutas específicas
+  if (req.method === 'POST' && req.path.includes('/auth/login')) {
+    console.log(`  Login attempt for: ${req.body.username || req.body.email}`);
   }
+  
   next();
 });
 

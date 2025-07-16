@@ -6,10 +6,13 @@ const bcrypt = require('bcrypt');
 // Ruta de login que maneja tanto bcrypt como texto plano
 router.post('/login', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, username, password } = req.body;
+        const loginField = email || username;
         
         console.log('🔍 LOGIN ATTEMPT:', { 
             email, 
+            username,
+            loginField,
             hasPassword: !!password,
             passwordLength: password ? password.length : 0,
             timestamp: new Date().toISOString(),
@@ -17,41 +20,41 @@ router.post('/login', async (req, res) => {
             userAgent: req.get('User-Agent')
         });
         
-        if (!email || !password) {
-            console.log('❌ MISSING CREDENTIALS:', { email: !!email, password: !!password });
-            return res.status(400).json({ error: 'Email y contraseña son requeridos' });
+        if (!loginField || !password) {
+            console.log('❌ MISSING CREDENTIALS:', { email: !!email, username: !!username, password: !!password });
+            return res.status(400).json({ error: 'Email/Username y contraseña son requeridos' });
         }
         
-        console.log('🔍 SEARCHING FOR USER:', email);
+        console.log('🔍 SEARCHING FOR USER:', loginField);
         console.log('🔍 DATABASE URL configured:', !!process.env.DATABASE_URL);
         
         // Buscar en guardias
         console.log('🔍 Step 1: Searching in guardias table...');
-        let user = await db.query('SELECT * FROM guardias WHERE email = $1 AND activo = true', [email]);
+        let user = await db.query('SELECT * FROM guardias WHERE email = $1 AND activo = true', [loginField]);
         let userType = 'guardia';
         
         console.log('🔍 GUARDIAS SEARCH RESULT:', { 
             found: user.length > 0, 
             count: user.length,
             query: 'SELECT * FROM guardias WHERE email = $1 AND activo = true',
-            params: [email]
+            params: [loginField]
         });
         
         // Si no se encuentra, buscar en admin_users
         if (user.length === 0) {
             console.log('🔍 Step 2: Searching in admin_users table...');
-            user = await db.query('SELECT *, password_hash as password FROM admin_users WHERE email = $1 AND activo = true', [email]);
+            user = await db.query('SELECT *, password_hash as password FROM admin_users WHERE email = $1 AND activo = true', [loginField]);
             userType = 'admin';
             console.log('🔍 ADMIN_USERS SEARCH RESULT:', { 
                 found: user.length > 0, 
                 count: user.length,
                 query: 'SELECT *, password_hash as password FROM admin_users WHERE email = $1 AND activo = true',
-                params: [email]
+                params: [loginField]
             });
         }
         
         if (user.length === 0) {
-            console.log('❌ USER NOT FOUND:', email);
+            console.log('❌ USER NOT FOUND:', loginField);
             console.log('🔍 Attempted tables: guardias, admin_users');
             return res.status(401).json({ error: 'Credenciales inválidas' });
         }
