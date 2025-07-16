@@ -49,7 +49,7 @@
           credentials: 'include'
         });
         const result = await res.json();
-        if (!result.authenticated) {
+        if (!result.isAuthenticated) {
           window.location.href = '/login.html';
           return false;
         }

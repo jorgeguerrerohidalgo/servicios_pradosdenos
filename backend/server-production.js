@@ -61,10 +61,11 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'checkin-secret-key-change-in-production',
   resave: false,
   saveUninitialized: false,
+  rolling: true, // Renovar sesión en cada request
   cookie: { 
     secure: false, // Temporal: deshabilitado para debugging
     httpOnly: true,
-    maxAge: 8 * 60 * 60 * 1000, // 8 horas
+    maxAge: 24 * 60 * 60 * 1000, // 24 horas
     sameSite: 'lax' // Más compatible
   },
   name: 'checkin.sid'
@@ -128,7 +129,8 @@ try {
   // Configurar rutas
   app.use('/api/auth', authRoutes);
   app.use('/api/checkin', checkinRoutes);
-  app.use('/api/public', publicRoutes);
+  app.use('/api/checkins', publicRoutes); // Para /api/checkins/public
+  app.use('/api', publicRoutes); // Para /api/plazas
   app.use('/api/admin', adminRoutes);
   app.use('/api/eventos', eventosRoutes);
   app.use('/api/documentos', documentosRoutes);
@@ -136,7 +138,8 @@ try {
   console.log('✅ Rutas configuradas:');
   console.log('  - /api/auth (auth-debug-fixed.routes.js)');
   console.log('  - /api/checkin (checkin.routes.js)');
-  console.log('  - /api/public (public.routes.js)');
+  console.log('  - /api/checkins (public.routes.js)');
+  console.log('  - /api (public.routes.js)');
   console.log('  - /api/admin (admin.routes.js)');
   console.log('  - /api/eventos (eventos.routes.js)');
   console.log('  - /api/documentos (documentos_new.routes.js)');

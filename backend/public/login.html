@@ -145,7 +145,7 @@
         });
         const result = await response.json();
         
-        if (result.authenticated) {
+        if (result.isAuthenticated) {
           window.location.href = '/checkin.html';
         }
       } catch (error) {

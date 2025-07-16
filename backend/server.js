@@ -203,6 +203,7 @@ app.get('/health', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/checkin', checkinRoutes);
+app.use('/api/checkins', publicRoutes); // Para /api/checkins/public
 app.use('/api/admin', adminRoutes);
 app.use('/api', publicRoutes);
 app.use('/api/eventos', eventosRoutes);
