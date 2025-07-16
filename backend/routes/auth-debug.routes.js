@@ -1,13 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcrypt');
 const db = require('../utils/db');
 
-// Ruta de login simplificada para debugging
+// Ruta de login ultra-simplificada
 router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-    
     try {
+        const { email, password } = req.body;
+        
         console.log('🔍 LOGIN ATTEMPT:', { email, hasPassword: !!password });
         
         if (!email || !password) {
@@ -32,62 +31,115 @@ router.post('/login', async (req, res) => {
         const foundUser = user[0];
         console.log('✅ USER FOUND:', { id: foundUser.id, email: foundUser.email, type: userType });
         
-        if (!foundUser.password) {
-            console.log('❌ NO PASSWORD SET for user:', foundUser.id);
-            return res.status(401).json({ error: 'Credenciales inválidas' });
-        }
-        
-        // Verificar contraseña
-        let isValidPassword = false;
-        
-        if (foundUser.password.startsWith('$2b$')) {
-            isValidPassword = await bcrypt.compare(password, foundUser.password);
-        } else {
-            isValidPassword = password === foundUser.password;
+        // Verificación simple de contraseña (sin bcrypt por ahora)
+        if (foundUser.password === password) {
+            console.log('✅ PASSWORD MATCH (plain text)');
             
-            // Hash automático si es texto plano
-            if (isValidPassword) {
-                const hashedPassword = await bcrypt.hash(password, 12);
-                if (userType === 'guardia') {
-                    await db.query('UPDATE guardias SET password = $1 WHERE id = $2', [hashedPassword, foundUser.id]);
-                } else {
-                    await db.query('UPDATE admin_users SET password_hash = $1 WHERE id = $2', [hashedPassword, foundUser.id]);
-                }
-                console.log('🔒 Password migrated for user:', foundUser.id);
-            }
-        }
-        
-        if (!isValidPassword) {
-            console.log('❌ INVALID PASSWORD for user:', foundUser.id);
-            return res.status(401).json({ error: 'Credenciales inválidas' });
-        }
-        
-        // Crear sesión
-        const userName = userType === 'guardia' ? foundUser.nombre : `${foundUser.nombre} ${foundUser.apellido_paterno}`;
-        
-        req.session.guardia = {
-            id: foundUser.id,
-            nombre: userName,
-            email: foundUser.email,
-            tipo: userType,
-            loginTime: new Date().toISOString(),
-            ip: req.ip
-        };
-        
-        console.log('✅ LOGIN SUCCESS:', { userId: foundUser.id, type: userType });
-        
-        res.json({ 
-            message: 'Login exitoso',
-            guardia: {
+            // Crear sesión
+            const userName = userType === 'guardia' ? foundUser.nombre : `${foundUser.nombre} ${foundUser.apellido_paterno}`;
+            
+            req.session.guardia = {
                 id: foundUser.id,
                 nombre: userName,
                 email: foundUser.email,
-                tipo: userType
-            }
-        });
+                tipo: userType,
+                loginTime: new Date().toISOString(),
+                ip: req.ip
+            };
+            
+            console.log('✅ LOGIN SUCCESS:', { userId: foundUser.id, type: userType });
+            
+            return res.json({ 
+                message: 'Login exitoso',
+                guardia: {
+                    id: foundUser.id,
+                    nombre: userName,
+                    email: foundUser.email,
+                    tipo: userType
+                }
+            });
+        } else {
+            console.log('❌ PASSWORD MISMATCH for user:', foundUser.id);
+            return res.status(401).json({ error: 'Credenciales inválidas' });
+        }
         
     } catch (error) {
         console.error('❌ LOGIN ERROR:', error);
+        res.status(500).json({ 
+            error: 'Error interno del servidor',
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+// Ruta para verificar sesión
+router.get('/check', (req, res) => {
+    try {
+        if (req.session && req.session.guardia) {
+            res.json({
+                isAuthenticated: true,
+                guardia: req.session.guardia
+            });
+        } else {
+            res.json({
+                isAuthenticated: false
+            });
+        }
+    } catch (error) {
+        console.error('❌ CHECK ERROR:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+// Ruta para logout
+router.post('/logout', (req, res) => {
+    try {
+        req.session.destroy((err) => {
+            if (err) {
+                console.error('❌ LOGOUT ERROR:', err);
+                return res.status(500).json({ error: 'Error al cerrar sesión' });
+            }
+            res.json({ message: 'Sesión cerrada exitosamente' });
+        });
+    } catch (error) {
+        console.error('❌ LOGOUT ERROR:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+module.exports = router;
+
+// Ruta para verificar sesión
+router.get('/check', (req, res) => {
+    try {
+        if (req.session && req.session.guardia) {
+            res.json({
+                isAuthenticated: true,
+                guardia: req.session.guardia
+            });
+        } else {
+            res.json({
+                isAuthenticated: false
+            });
+        }
+    } catch (error) {
+        console.error('❌ CHECK ERROR:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+// Ruta para logout
+router.post('/logout', (req, res) => {
+    try {
+        req.session.destroy((err) => {
+            if (err) {
+                console.error('❌ LOGOUT ERROR:', err);
+                return res.status(500).json({ error: 'Error al cerrar sesión' });
+            }
+            res.json({ message: 'Sesión cerrada exitosamente' });
+        });
+    } catch (error) {
+        console.error('❌ LOGOUT ERROR:', error);
         res.status(500).json({ error: 'Error interno del servidor' });
     }
 });
