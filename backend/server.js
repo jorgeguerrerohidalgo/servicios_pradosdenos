@@ -36,9 +36,9 @@ const checkinRoutes = require('./routes/checkin.routes');
 const publicRoutes = require('./routes/public.routes');
 const adminRoutes = require('./routes/admin.routes');
 
-// Importar nuevas rutas
-const eventosRoutes = require('./routes/eventos.routes');
-const documentosRoutes = require('./routes/documentos.routes');
+// Importar nuevas rutas - COMENTADO TEMPORALMENTE HASTA ARREGLAR
+// const eventosRoutes = require('./routes/eventos.routes');
+// const documentosRoutes = require('./routes/documentos.routes');
 
 // Variables de entorno para producción
 const PORT = process.env.PORT || 3000;
@@ -205,8 +205,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/checkin', checkinRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', publicRoutes);
-app.use('/api/eventos', eventosRoutes);
-app.use('/api/documentos', documentosRoutes);
+// app.use('/api/eventos', eventosRoutes);
+// app.use('/api/documentos', documentosRoutes);
 
 // Servir archivos estáticos desde public (primero local, luego padre)
 const publicPaths = [
