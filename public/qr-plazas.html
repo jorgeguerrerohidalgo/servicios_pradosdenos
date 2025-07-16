@@ -350,125 +350,202 @@
             return window.location.origin;
         }
         
+        // Función de debugging
+        function debug(message, data = null) {
+            console.log(`[QR Debug] ${message}`, data);
+        }
+        
         // Cargar plazas al iniciar
         document.addEventListener('DOMContentLoaded', function() {
+            debug('Documento cargado, iniciando...');
+            
+            // Verificar si QRCode está disponible
+            if (typeof QRCode === 'undefined') {
+                debug('ERROR: QRCode library no está disponible');
+                showAlert('danger', 'Error: Librería QRCode no disponible. Verifique su conexión a internet.');
+                return;
+            }
+            
+            debug('QRCode library disponible');
             loadPlazas();
         });
         
         // Cargar plazas desde la API
         async function loadPlazas() {
+            debug('Cargando plazas desde API...');
+            
             try {
-                const response = await fetch(`${getApiUrl()}/api/plazas`);
+                const apiUrl = `${getApiUrl()}/api/plazas`;
+                debug('URL API:', apiUrl);
+                
+                const response = await fetch(apiUrl);
+                debug('Response status:', response.status);
+                
                 if (!response.ok) {
-                    throw new Error('Error al cargar plazas');
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
                 const data = await response.json();
-                plazasData = data.plazas || [];
+                debug('Datos recibidos:', data);
                 
-                const select = document.getElementById('plazaSelect');
-                select.innerHTML = '<option value="">Seleccione una plaza...</option>';
+                if (!data.plazas || !Array.isArray(data.plazas)) {
+                    throw new Error('Formato de datos inválido: plazas no es un array');
+                }
                 
-                plazasData.forEach(plaza => {
-                    const option = document.createElement('option');
-                    option.value = plaza.id;
-                    option.textContent = `${plaza.nombre} - ${plaza.direccion}`;
-                    select.appendChild(option);
-                });
+                plazasData = data.plazas;
+                debug('Plazas cargadas:', plazasData.length);
                 
-                showAlert('success', `${plazasData.length} plazas cargadas correctamente`);
+                populateSelectOptions();
+                
+                if (plazasData.length > 0) {
+                    showAlert('success', `${plazasData.length} plazas cargadas correctamente`);
+                } else {
+                    showAlert('warning', 'No se encontraron plazas disponibles');
+                }
                 
             } catch (error) {
-                console.error('Error cargando plazas:', error);
+                debug('Error cargando plazas:', error);
                 showAlert('danger', 'Error al cargar las plazas: ' + error.message);
             }
+        }
+        
+        // Poblar opciones del select
+        function populateSelectOptions() {
+            const select = document.getElementById('plazaSelect');
+            select.innerHTML = '<option value="">Seleccione una plaza...</option>';
+            
+            plazasData.forEach(plaza => {
+                const option = document.createElement('option');
+                option.value = plaza.id;
+                option.textContent = `${plaza.nombre} - ${plaza.direccion}`;
+                select.appendChild(option);
+            });
+            
+            debug('Select poblado con opciones:', select.options.length);
         }
         
         // Manejar envío del formulario
         document.getElementById('qrForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            debug('Formulario enviado');
             generateSingleQR();
         });
         
         // Generar QR individual
         function generateSingleQR() {
+            debug('Generando QR individual...');
+            
             const plazaId = document.getElementById('plazaSelect').value;
             const customText = document.getElementById('customText').value;
             const qrSize = parseInt(document.getElementById('qrSize').value);
             const qrColor = document.getElementById('qrColor').value;
             
+            debug('Parámetros:', { plazaId, customText, qrSize, qrColor });
+            
             if (!plazaId) {
+                debug('Error: No se seleccionó plaza');
                 showAlert('danger', 'Por favor seleccione una plaza');
                 return;
             }
             
             const plaza = plazasData.find(p => p.id == plazaId);
             if (!plaza) {
+                debug('Error: Plaza no encontrada en datos');
                 showAlert('danger', 'Plaza no encontrada');
                 return;
             }
             
+            debug('Plaza encontrada:', plaza);
             generateQRCode(plaza, customText, qrSize, qrColor);
         }
         
         // Generar código QR
         function generateQRCode(plaza, customText = '', size = 300, color = '#000000') {
-            // Crear URL para el QR
-            const qrUrl = `${getApiUrl()}/checkin.html?plaza=${plaza.token || plaza.id}`;
+            debug('Generando QR para plaza:', plaza);
             
-            // Limpiar contenedor anterior
-            const qrContainer = document.getElementById('qrcode');
-            qrContainer.innerHTML = '';
-            
-            // Generar QR
-            QRCode.toCanvas(qrContainer, qrUrl, {
-                width: size,
-                margin: 2,
-                color: {
-                    dark: color,
-                    light: '#FFFFFF'
-                }
-            }, function(error) {
-                if (error) {
-                    console.error('Error generando QR:', error);
-                    showAlert('danger', 'Error al generar el código QR');
-                    return;
+            try {
+                // Crear URL para el QR
+                const qrUrl = `${getApiUrl()}/checkin.html?plaza=${plaza.token || plaza.id}`;
+                debug('URL generada:', qrUrl);
+                
+                // Limpiar contenedor anterior
+                const qrContainer = document.getElementById('qrcode');
+                qrContainer.innerHTML = '';
+                
+                // Verificar que QRCode esté disponible
+                if (typeof QRCode === 'undefined') {
+                    throw new Error('QRCode library no está disponible');
                 }
                 
-                // Mostrar resultado
-                document.getElementById('qrResult').style.display = 'block';
+                debug('Parámetros QR:', { size, color, url: qrUrl });
                 
-                // Actualizar información
-                document.getElementById('qrPlazaName').textContent = customText || plaza.nombre;
-                document.getElementById('qrPlazaAddress').textContent = plaza.direccion;
-                document.getElementById('qrPlazaToken').textContent = plaza.token || plaza.id;
-                document.getElementById('qrPlazaUrl').textContent = qrUrl;
+                // Generar QR usando canvas
+                const canvas = document.createElement('canvas');
+                qrContainer.appendChild(canvas);
                 
-                // Guardar datos actuales
-                currentQRData = {
-                    plaza: plaza,
-                    customText: customText,
-                    url: qrUrl,
-                    size: size,
-                    color: color
-                };
+                QRCode.toCanvas(canvas, qrUrl, {
+                    width: size,
+                    height: size,
+                    margin: 2,
+                    color: {
+                        dark: color,
+                        light: '#FFFFFF'
+                    },
+                    errorCorrectionLevel: 'M'
+                }, function(error) {
+                    if (error) {
+                        debug('Error generando QR:', error);
+                        showAlert('danger', 'Error al generar el código QR: ' + error.message);
+                        return;
+                    }
+                    
+                    debug('QR generado exitosamente');
+                    
+                    // Mostrar resultado
+                    document.getElementById('qrResult').style.display = 'block';
+                    
+                    // Actualizar información
+                    document.getElementById('qrPlazaName').textContent = customText || plaza.nombre;
+                    document.getElementById('qrPlazaAddress').textContent = plaza.direccion || 'N/A';
+                    document.getElementById('qrPlazaToken').textContent = plaza.token || plaza.id;
+                    document.getElementById('qrPlazaUrl').textContent = qrUrl;
+                    
+                    // Guardar datos actuales
+                    currentQRData = {
+                        plaza: plaza,
+                        customText: customText,
+                        url: qrUrl,
+                        size: size,
+                        color: color
+                    };
+                    
+                    showAlert('success', 'Código QR generado exitosamente');
+                    
+                    // Scroll hacia el resultado
+                    setTimeout(() => {
+                        document.getElementById('qrResult').scrollIntoView({ behavior: 'smooth' });
+                    }, 100);
+                });
                 
-                showAlert('success', 'Código QR generado exitosamente');
-                
-                // Scroll hacia el resultado
-                document.getElementById('qrResult').scrollIntoView({ behavior: 'smooth' });
-            });
+            } catch (error) {
+                debug('Error en generateQRCode:', error);
+                showAlert('danger', 'Error al generar QR: ' + error.message);
+            }
         }
         
         // Generar todos los QR
         document.getElementById('generateAllBtn').addEventListener('click', function() {
+            debug('Botón "Generar Todos" clickeado');
             generateAllQRs();
         });
         
         // Generar QR para todas las plazas
         async function generateAllQRs() {
+            debug('Generando QRs para todas las plazas...');
+            
             if (plazasData.length === 0) {
-                showAlert('danger', 'No hay plazas disponibles');
+                debug('No hay plazas disponibles');
+                showAlert('danger', 'No hay plazas disponibles. Intente recargar la página.');
                 return;
             }
             
@@ -479,16 +556,26 @@
             loading.style.display = 'block';
             container.innerHTML = '';
             
+            debug(`Generando ${plazasData.length} QRs...`);
+            
             try {
+                let generatedCount = 0;
+                
                 for (const plaza of plazasData) {
+                    debug(`Generando QR para: ${plaza.nombre}`);
                     await generateQRForPlaza(plaza, container);
+                    generatedCount++;
+                    
+                    // Pequeña pausa para no sobrecargar
+                    await new Promise(resolve => setTimeout(resolve, 100));
                 }
                 
-                showAlert('success', `${plazasData.length} códigos QR generados exitosamente`);
+                debug(`${generatedCount} QRs generados exitosamente`);
+                showAlert('success', `${generatedCount} códigos QR generados exitosamente`);
                 
             } catch (error) {
-                console.error('Error generando QRs:', error);
-                showAlert('danger', 'Error al generar los códigos QR');
+                debug('Error generando QRs:', error);
+                showAlert('danger', 'Error al generar los códigos QR: ' + error.message);
             } finally {
                 loading.style.display = 'none';
             }
@@ -497,46 +584,59 @@
         // Generar QR para una plaza específica
         function generateQRForPlaza(plaza, container) {
             return new Promise((resolve, reject) => {
-                const qrUrl = `${getApiUrl()}/checkin.html?plaza=${plaza.token || plaza.id}`;
-                
-                // Crear elemento del QR
-                const plazaCard = document.createElement('div');
-                plazaCard.className = 'plaza-card';
-                
-                plazaCard.innerHTML = `
-                    <h6>${plaza.nombre}</h6>
-                    <p class="text-muted">${plaza.direccion}</p>
-                    <div class="qr-code-container"></div>
-                    <div class="mt-3">
-                        <button class="btn btn-sm btn-primary" onclick="downloadPlazaQR('${plaza.id}')">
-                            <i class="fas fa-download"></i> Descargar
-                        </button>
-                    </div>
-                `;
-                
-                const qrContainer = plazaCard.querySelector('.qr-code-container');
-                
-                // Generar QR
-                QRCode.toCanvas(qrContainer, qrUrl, {
-                    width: 200,
-                    margin: 2,
-                    color: {
-                        dark: '#000000',
-                        light: '#FFFFFF'
-                    }
-                }, function(error) {
-                    if (error) {
-                        reject(error);
-                        return;
-                    }
+                try {
+                    const qrUrl = `${getApiUrl()}/checkin.html?plaza=${plaza.token || plaza.id}`;
+                    debug(`Generando QR para plaza ${plaza.nombre}, URL: ${qrUrl}`);
                     
-                    container.appendChild(plazaCard);
+                    // Crear elemento del QR
+                    const plazaCard = document.createElement('div');
+                    plazaCard.className = 'plaza-card';
+                    plazaCard.id = `plaza-card-${plaza.id}`;
                     
-                    // Pequeña pausa para no sobrecargar
-                    setTimeout(() => {
+                    plazaCard.innerHTML = `
+                        <h6>${plaza.nombre}</h6>
+                        <p class="text-muted">${plaza.direccion || 'Dirección no disponible'}</p>
+                        <div class="qr-code-container"></div>
+                        <div class="mt-3">
+                            <button class="btn btn-sm btn-primary" onclick="downloadPlazaQR('${plaza.id}')">
+                                <i class="fas fa-download"></i> Descargar
+                            </button>
+                        </div>
+                    `;
+                    
+                    const qrContainer = plazaCard.querySelector('.qr-code-container');
+                    
+                    // Crear canvas para el QR
+                    const canvas = document.createElement('canvas');
+                    qrContainer.appendChild(canvas);
+                    
+                    // Generar QR
+                    QRCode.toCanvas(canvas, qrUrl, {
+                        width: 200,
+                        height: 200,
+                        margin: 2,
+                        color: {
+                            dark: '#000000',
+                            light: '#FFFFFF'
+                        },
+                        errorCorrectionLevel: 'M'
+                    }, function(error) {
+                        if (error) {
+                            debug(`Error generando QR para ${plaza.nombre}:`, error);
+                            qrContainer.innerHTML = `<p class="text-danger">Error generando QR</p>`;
+                            reject(error);
+                            return;
+                        }
+                        
+                        debug(`QR generado exitosamente para ${plaza.nombre}`);
+                        container.appendChild(plazaCard);
                         resolve();
-                    }, 100);
-                });
+                    });
+                    
+                } catch (error) {
+                    debug(`Error en generateQRForPlaza para ${plaza.nombre}:`, error);
+                    reject(error);
+                }
             });
         }
         
