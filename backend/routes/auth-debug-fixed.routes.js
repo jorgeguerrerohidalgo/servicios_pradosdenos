@@ -1,10 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../utils/db');
-
-const express = require('express');
-const router = express.Router();
-const db = require('../utils/db');
 const bcrypt = require('bcrypt');
 
 // Ruta de login que maneja tanto bcrypt como texto plano

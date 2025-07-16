@@ -118,7 +118,7 @@ async function checkDatabaseConnection() {
 
 // Importar rutas con manejo de errores
 try {
-  const authRoutes = require('./routes/auth-debug.routes');
+  const authRoutes = require('./routes/auth-debug-fixed.routes');
   const checkinRoutes = require('./routes/checkin.routes');
   const publicRoutes = require('./routes/public.routes');
   const adminRoutes = require('./routes/admin.routes');
