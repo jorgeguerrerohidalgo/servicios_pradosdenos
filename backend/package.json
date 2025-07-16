@@ -2,13 +2,13 @@
   "name": "portal-servicios-pradosdenos",
   "version": "2.0.0",
   "description": "Portal completo de servicios digitales para Los Prados de Nos con sistema de seguridad y administración",
-  "main": "server.js",
+  "main": "server-production.js",
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
   },
   "scripts": {
-    "start": "node server.js",
+    "start": "node server-production.js",
     "dev": "nodemon server.js",
     "build": "echo 'No build step required'",
     "test": "echo 'No tests specified' && exit 0"

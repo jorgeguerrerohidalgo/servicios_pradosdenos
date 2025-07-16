@@ -134,7 +134,7 @@ try {
   app.use('/api/documentos', documentosRoutes);
 
   console.log('✅ Rutas configuradas:');
-  console.log('  - /api/auth (auth-debug.routes.js)');
+  console.log('  - /api/auth (auth-debug-fixed.routes.js)');
   console.log('  - /api/checkin (checkin.routes.js)');
   console.log('  - /api/public (public.routes.js)');
   console.log('  - /api/admin (admin.routes.js)');
