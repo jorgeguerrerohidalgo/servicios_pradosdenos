@@ -149,7 +149,7 @@
         });
         const result = await response.json();
         
-        if (result.authenticated) {
+        if (result.isAuthenticated) {
           // Redirigir según el tipo de usuario
           if (result.guardia && result.guardia.tipo === 'admin') {
             window.location.href = '/admin-panel.html';

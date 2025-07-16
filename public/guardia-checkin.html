@@ -427,7 +427,7 @@
         const result = await res.json();
         log('🔐 Datos de autenticación:', result);
         
-        if (!result.authenticated) {
+        if (!result.isAuthenticated) {
           log('❌ No autenticado - Razón:', result.reason || 'desconocida', 'warning');
           window.location.href = '/guardia-login.html';
           return false;
@@ -1315,7 +1315,7 @@ Click simulado: ${!confirmBtn.disabled ? 'Ejecutado' : 'No ejecutado (botón des
         const authData = await authResponse.json();
         log('Datos de autenticación:', authData);
         
-        if (!authData.authenticated) {
+        if (!authData.isAuthenticated) {
           alert('Error: Usuario no autenticado. Debes hacer login primero.');
           return;
         }

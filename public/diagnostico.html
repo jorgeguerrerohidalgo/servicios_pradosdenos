@@ -262,7 +262,7 @@
                 const data = await response.json();
                 
                 if (response.ok) {
-                    if (data.authenticated) {
+                    if (data.isAuthenticated) {
                         setStatus('auth', 'success', '✅ Usuario autenticado', 
                             `<p>Usuario: ${data.user.nombre} (${data.user.tipo})</p>`);
                         addLog('Usuario autenticado correctamente', 'success');

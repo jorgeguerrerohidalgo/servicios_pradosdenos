@@ -291,7 +291,7 @@
         });
         const result = await res.json();
         
-        if (!result.authenticated || result.guardia.tipo !== 'guardia') {
+        if (!result.isAuthenticated || result.guardia.tipo !== 'guardia') {
           window.location.href = '/guardia-login.html';
           return false;
         }

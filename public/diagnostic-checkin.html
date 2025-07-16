@@ -214,7 +214,7 @@
                 
                 const result = await response.json();
                 
-                if (result.authenticated && result.guardia && result.guardia.tipo === 'guardia') {
+                if (result.isAuthenticated && result.guardia && result.guardia.tipo === 'guardia') {
                     diagnosticData.auth = result.guardia;
                     updateStatus('auth', 'success', `✅ ${result.guardia.nombre} (${result.guardia.email})`);
                     log(`Autenticación exitosa: ${result.guardia.nombre}`, 'success');

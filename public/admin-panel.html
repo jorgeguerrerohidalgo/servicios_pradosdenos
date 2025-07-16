@@ -541,7 +541,7 @@
                 const data = await response.json();
                 console.log('Auth data:', data);
                 
-                if (data.authenticated && data.guardia && data.guardia.tipo === 'admin') {
+                if (data.isAuthenticated && data.guardia && data.guardia.tipo === 'admin') {
                     currentUser = data.guardia;
                     document.getElementById('adminName').textContent = currentUser.nombre;
                     loadDashboard();

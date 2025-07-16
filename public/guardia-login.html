@@ -295,7 +295,7 @@
         });
         const result = await response.json();
         
-        if (result.authenticated && result.guardia.tipo === 'guardia') {
+        if (result.isAuthenticated && result.guardia.tipo === 'guardia') {
           window.location.href = '/guardia-checkin.html';
         }
       } catch (error) {
