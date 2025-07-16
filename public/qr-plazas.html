@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de QR para Plazas - Los Prados de Nos</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .container-main {
+            padding: 30px 0;
+        }
+        
+        .header-section {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header-section h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 50px;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .card {
+            background: rgba(255,255,255,0.95);
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+            margin-bottom: 30px;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px 20px 0 0 !important;
+            padding: 20px;
+            border: none;
+        }
+        
+        .card-body {
+            padding: 30px;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            padding: 12px 15px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        
+        .qr-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-top: 30px;
+        }
+        
+        .qr-code {
+            margin: 20px 0;
+            display: inline-block;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .qr-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .qr-info h5 {
+            color: #495057;
+            margin-bottom: 15px;
+        }
+        
+        .qr-info p {
+            margin: 5px 0;
+            color: #6c757d;
+        }
+        
+        .alert-success {
+            background: rgba(40, 167, 69, 0.1);
+            border: 1px solid rgba(40, 167, 69, 0.3);
+            color: #155724;
+            border-radius: 10px;
+        }
+        
+        .alert-danger {
+            background: rgba(220, 53, 69, 0.1);
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            color: #721c24;
+            border-radius: 10px;
+        }
+        
+        .plaza-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .plaza-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .plaza-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .plaza-card h6 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .plaza-card .qr-code {
+            margin: 10px 0;
+            padding: 15px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #6c757d;
+        }
+        
+        .loading .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            color: #667eea;
+        }
+        
+        @media (max-width: 768px) {
+            .header-section h1 {
+                font-size: 2rem;
+            }
+            
+            .card-body {
+                padding: 20px;
+            }
+            
+            .qr-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/admin-panel.html" class="back-btn">
+        <i class="fas fa-arrow-left"></i> Volver al Panel
+    </a>
+    
+    <div class="container container-main">
+        <div class="header-section">
+            <h1><i class="fas fa-qrcode"></i> Generador de QR para Plazas</h1>
+            <p class="lead">Genera códigos QR para identificar las plazas del condominio</p>
+        </div>
+        
+        <!-- Generador Individual -->
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-plus-circle"></i> Generar QR Individual</h4>
+            </div>
+            <div class="card-body">
+                <form id="qrForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="plazaSelect" class="form-label">
+                                    <i class="fas fa-home"></i> Seleccionar Plaza
+                                </label>
+                                <select class="form-select" id="plazaSelect" required>
+                                    <option value="">Seleccione una plaza...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="customText" class="form-label">
+                                    <i class="fas fa-tag"></i> Texto Personalizado (Opcional)
+                                </label>
+                                <input type="text" class="form-control" id="customText" 
+                                       placeholder="Ej: Plaza A1 - Entrada Principal">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="qrSize" class="form-label">
+                                    <i class="fas fa-expand-arrows-alt"></i> Tamaño del QR
+                                </label>
+                                <select class="form-select" id="qrSize">
+                                    <option value="200">Pequeño (200x200)</option>
+                                    <option value="300" selected>Mediano (300x300)</option>
+                                    <option value="400">Grande (400x400)</option>
+                                    <option value="500">Muy Grande (500x500)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="qrColor" class="form-label">
+                                    <i class="fas fa-palette"></i> Color del QR
+                                </label>
+                                <select class="form-select" id="qrColor">
+                                    <option value="#000000">Negro</option>
+                                    <option value="#667eea">Azul</option>
+                                    <option value="#28a745">Verde</option>
+                                    <option value="#dc3545">Rojo</option>
+                                    <option value="#6f42c1">Morado</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-qrcode"></i> Generar QR
+                        </button>
+                        <button type="button" class="btn btn-secondary ms-2" id="generateAllBtn">
+                            <i class="fas fa-layer-group"></i> Generar Todos los QR
+                        </button>
+                    </div>
+                </form>
+                
+                <div id="alertContainer"></div>
+                
+                <div id="qrResult" class="qr-container" style="display: none;">
+                    <h5><i class="fas fa-qrcode"></i> Código QR Generado</h5>
+                    <div id="qrcode"></div>
+                    <div class="qr-info">
+                        <h5>Información del QR</h5>
+                        <p><strong>Plaza:</strong> <span id="qrPlazaName"></span></p>
+                        <p><strong>Dirección:</strong> <span id="qrPlazaAddress"></span></p>
+                        <p><strong>Token:</strong> <span id="qrPlazaToken"></span></p>
+                        <p><strong>URL:</strong> <span id="qrPlazaUrl"></span></p>
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-primary" onclick="downloadQR()">
+                            <i class="fas fa-download"></i> Descargar QR
+                        </button>
+                        <button class="btn btn-secondary" onclick="printQR()">
+                            <i class="fas fa-print"></i> Imprimir QR
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Generador Masivo -->
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-layer-group"></i> Códigos QR de Todas las Plazas</h4>
+            </div>
+            <div class="card-body">
+                <div id="loadingAll" class="loading" style="display: none;">
+                    <div class="spinner-border" role="status"></div>
+                    <p class="mt-3">Generando códigos QR para todas las plazas...</p>
+                </div>
+                <div id="allQRContainer" class="plaza-grid"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let plazasData = [];
+        let currentQRData = null;
+        
+        // Función para obtener la URL base de la API
+        function getApiUrl() {
+            return window.location.origin;
+        }
+        
+        // Cargar plazas al iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPlazas();
+        });
+        
+        // Cargar plazas desde la API
+        async function loadPlazas() {
+            try {
+                const response = await fetch(`${getApiUrl()}/api/plazas`);
+                if (!response.ok) {
+                    throw new Error('Error al cargar plazas');
+                }
+                
+                const data = await response.json();
+                plazasData = data.plazas || [];
+                
+                const select = document.getElementById('plazaSelect');
+                select.innerHTML = '<option value="">Seleccione una plaza...</option>';
+                
+                plazasData.forEach(plaza => {
+                    const option = document.createElement('option');
+                    option.value = plaza.id;
+                    option.textContent = `${plaza.nombre} - ${plaza.direccion}`;
+                    select.appendChild(option);
+                });
+                
+                showAlert('success', `${plazasData.length} plazas cargadas correctamente`);
+                
+            } catch (error) {
+                console.error('Error cargando plazas:', error);
+                showAlert('danger', 'Error al cargar las plazas: ' + error.message);
+            }
+        }
+        
+        // Manejar envío del formulario
+        document.getElementById('qrForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            generateSingleQR();
+        });
+        
+        // Generar QR individual
+        function generateSingleQR() {
+            const plazaId = document.getElementById('plazaSelect').value;
+            const customText = document.getElementById('customText').value;
+            const qrSize = parseInt(document.getElementById('qrSize').value);
+            const qrColor = document.getElementById('qrColor').value;
+            
+            if (!plazaId) {
+                showAlert('danger', 'Por favor seleccione una plaza');
+                return;
+            }
+            
+            const plaza = plazasData.find(p => p.id == plazaId);
+            if (!plaza) {
+                showAlert('danger', 'Plaza no encontrada');
+                return;
+            }
+            
+            generateQRCode(plaza, customText, qrSize, qrColor);
+        }
+        
+        // Generar código QR
+        function generateQRCode(plaza, customText = '', size = 300, color = '#000000') {
+            // Crear URL para el QR
+            const qrUrl = `${getApiUrl()}/checkin.html?plaza=${plaza.token || plaza.id}`;
+            
+            // Limpiar contenedor anterior
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+            
+            // Generar QR
+            QRCode.toCanvas(qrContainer, qrUrl, {
+                width: size,
+                margin: 2,
+                color: {
+                    dark: color,
+                    light: '#FFFFFF'
+                }
+            }, function(error) {
+                if (error) {
+                    console.error('Error generando QR:', error);
+                    showAlert('danger', 'Error al generar el código QR');
+                    return;
+                }
+                
+                // Mostrar resultado
+                document.getElementById('qrResult').style.display = 'block';
+                
+                // Actualizar información
+                document.getElementById('qrPlazaName').textContent = customText || plaza.nombre;
+                document.getElementById('qrPlazaAddress').textContent = plaza.direccion;
+                document.getElementById('qrPlazaToken').textContent = plaza.token || plaza.id;
+                document.getElementById('qrPlazaUrl').textContent = qrUrl;
+                
+                // Guardar datos actuales
+                currentQRData = {
+                    plaza: plaza,
+                    customText: customText,
+                    url: qrUrl,
+                    size: size,
+                    color: color
+                };
+                
+                showAlert('success', 'Código QR generado exitosamente');
+                
+                // Scroll hacia el resultado
+                document.getElementById('qrResult').scrollIntoView({ behavior: 'smooth' });
+            });
+        }
+        
+        // Generar todos los QR
+        document.getElementById('generateAllBtn').addEventListener('click', function() {
+            generateAllQRs();
+        });
+        
+        // Generar QR para todas las plazas
+        async function generateAllQRs() {
+            if (plazasData.length === 0) {
+                showAlert('danger', 'No hay plazas disponibles');
+                return;
+            }
+            
+            const container = document.getElementById('allQRContainer');
+            const loading = document.getElementById('loadingAll');
+            
+            // Mostrar loading
+            loading.style.display = 'block';
+            container.innerHTML = '';
+            
+            try {
+                for (const plaza of plazasData) {
+                    await generateQRForPlaza(plaza, container);
+                }
+                
+                showAlert('success', `${plazasData.length} códigos QR generados exitosamente`);
+                
+            } catch (error) {
+                console.error('Error generando QRs:', error);
+                showAlert('danger', 'Error al generar los códigos QR');
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+        
+        // Generar QR para una plaza específica
+        function generateQRForPlaza(plaza, container) {
+            return new Promise((resolve, reject) => {
+                const qrUrl = `${getApiUrl()}/checkin.html?plaza=${plaza.token || plaza.id}`;
+                
+                // Crear elemento del QR
+                const plazaCard = document.createElement('div');
+                plazaCard.className = 'plaza-card';
+                
+                plazaCard.innerHTML = `
+                    <h6>${plaza.nombre}</h6>
+                    <p class="text-muted">${plaza.direccion}</p>
+                    <div class="qr-code-container"></div>
+                    <div class="mt-3">
+                        <button class="btn btn-sm btn-primary" onclick="downloadPlazaQR('${plaza.id}')">
+                            <i class="fas fa-download"></i> Descargar
+                        </button>
+                    </div>
+                `;
+                
+                const qrContainer = plazaCard.querySelector('.qr-code-container');
+                
+                // Generar QR
+                QRCode.toCanvas(qrContainer, qrUrl, {
+                    width: 200,
+                    margin: 2,
+                    color: {
+                        dark: '#000000',
+                        light: '#FFFFFF'
+                    }
+                }, function(error) {
+                    if (error) {
+                        reject(error);
+                        return;
+                    }
+                    
+                    container.appendChild(plazaCard);
+                    
+                    // Pequeña pausa para no sobrecargar
+                    setTimeout(() => {
+                        resolve();
+                    }, 100);
+                });
+            });
+        }
+        
+        // Descargar QR individual
+        function downloadQR() {
+            if (!currentQRData) {
+                showAlert('danger', 'No hay QR para descargar');
+                return;
+            }
+            
+            const canvas = document.querySelector('#qrcode canvas');
+            if (!canvas) {
+                showAlert('danger', 'Error: No se encontró el código QR');
+                return;
+            }
+            
+            // Crear enlace de descarga
+            const link = document.createElement('a');
+            link.download = `QR_${currentQRData.plaza.nombre.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        // Descargar QR de plaza específica
+        function downloadPlazaQR(plazaId) {
+            const plaza = plazasData.find(p => p.id == plazaId);
+            if (!plaza) return;
+            
+            const plazaCard = document.querySelector(`[onclick="downloadPlazaQR('${plazaId}')"]`).closest('.plaza-card');
+            const canvas = plazaCard.querySelector('canvas');
+            
+            if (!canvas) {
+                showAlert('danger', 'Error: No se encontró el código QR');
+                return;
+            }
+            
+            const link = document.createElement('a');
+            link.download = `QR_${plaza.nombre.replace(/[^a-zA-Z0-9]/g, '_')}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        // Imprimir QR
+        function printQR() {
+            if (!currentQRData) {
+                showAlert('danger', 'No hay QR para imprimir');
+                return;
+            }
+            
+            const canvas = document.querySelector('#qrcode canvas');
+            if (!canvas) {
+                showAlert('danger', 'Error: No se encontró el código QR');
+                return;
+            }
+            
+            const printWindow = window.open('', '', 'width=600,height=600');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>QR ${currentQRData.plaza.nombre}</title>
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            text-align: center; 
+                            padding: 20px;
+                        }
+                        .qr-info {
+                            margin: 20px 0;
+                        }
+                        .qr-info h2 {
+                            color: #333;
+                            margin-bottom: 10px;
+                        }
+                        .qr-info p {
+                            color: #666;
+                            margin: 5px 0;
+                        }
+                        img {
+                            border: 2px solid #ddd;
+                            padding: 10px;
+                            background: white;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="qr-info">
+                        <h2>${currentQRData.customText || currentQRData.plaza.nombre}</h2>
+                        <p><strong>Dirección:</strong> ${currentQRData.plaza.direccion}</p>
+                        <p><strong>Token:</strong> ${currentQRData.plaza.token || currentQRData.plaza.id}</p>
+                    </div>
+                    <img src="${canvas.toDataURL()}" alt="QR Code">
+                    <div class="qr-info">
+                        <p><strong>URL:</strong> ${currentQRData.url}</p>
+                        <p><em>Escanea este código QR para acceder al check-in</em></p>
+                    </div>
+                </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+            printWindow.print();
+        }
+        
+        // Mostrar alertas
+        function showAlert(type, message) {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show mt-3`;
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            container.innerHTML = '';
+            container.appendChild(alert);
+            
+            // Auto-dismiss después de 5 segundos
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+    </script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
