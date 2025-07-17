@@ -209,14 +209,7 @@
                     <p>Gestiona el sistema de seguridad de Los Prados de Nos</p>
                 </div>
 
-                <!-- Sección de Inicialización de Base de Datos -->
-                <div class="init-db-section" id="initDbSection" style="display: none;">
-                    <h5><i class="fas fa-database"></i> Inicialización de Base de Datos</h5>
-                    <p>Clic en el botón para crear las tablas de eventos y documentos si no existen.</p>
-                    <button class="btn btn-warning" onclick="initEventosDocumentos()">
-                        <i class="fas fa-plus-circle"></i> Inicializar Tablas de Eventos y Documentos
-                    </button>
-                </div>
+                <!-- Sección de inicialización eliminada (tablas ya existen) -->
 
                 <!-- Estadísticas -->
                 <div class="row">
@@ -2767,74 +2760,12 @@
             });
         }
         
-        // Función para inicializar tablas de eventos y documentos
-        async function initEventosDocumentos() {
-            try {
-                Swal.fire({
-                    title: 'Inicializando...',
-                    text: 'Creando tablas de eventos y documentos',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-                
-                const response = await fetch('/api/init/init-eventos-documentos', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    Swal.fire({
-                        title: 'Éxito',
-                        text: 'Tablas inicializadas correctamente',
-                        icon: 'success'
-                    });
-                    
-                    // Ocultar la sección de inicialización
-                    document.getElementById('initDbSection').style.display = 'none';
-                } else {
-                    Swal.fire({
-                        title: 'Error',
-                        text: data.error || 'Error al inicializar tablas',
-                        icon: 'error'
-                    });
-                }
-            } catch (error) {
-                console.error('Error en inicialización:', error);
-                Swal.fire({
-                    title: 'Error',
-                    text: 'Error de conexión al inicializar tablas',
-                    icon: 'error'
-                });
-            }
-        }
+        // Función de inicialización eliminada - las tablas ya existen
         
-        // Función para verificar si necesita inicialización
-        async function checkInitialization() {
-            try {
-                const response = await fetch('/api/eventos/tipos/all');
-                const data = await response.json();
-                
-                // Si no hay datos o hay error, mostrar sección de inicialización
-                if (!data.success || data.data.length === 0) {
-                    document.getElementById('initDbSection').style.display = 'block';
-                }
-            } catch (error) {
-                console.error('Error verificando inicialización:', error);
-                document.getElementById('initDbSection').style.display = 'block';
-            }
-        }
+        // Función para verificar si necesita inicialización - ELIMINADA (tablas ya existen)
         
         // Iniciar auto-refresh después de cargar la página
         document.addEventListener('DOMContentLoaded', function() {
-            // Verificar si necesita inicialización
-            checkInitialization();
-            
             // Inicializar ordenamiento de tablas
             initTableSorting();
             

@@ -140,25 +140,25 @@ try {
     });
   }
 
-  // Configurar rutas
+  // Configurar rutas EN EL ORDEN CORRECTO
   app.use('/api/auth', authRoutes);
   app.use('/api/checkin', checkinRoutes);
   app.use('/api/checkins', publicRoutes); // Para /api/checkins/public
-  app.use('/api', publicRoutes); // Para /api/plazas
   app.use('/api/admin', adminRoutes);
   app.use('/api/init', initRoutes);
   app.use('/api/eventos', eventosRoutes);
   app.use('/api/documentos_comunitarios', documentosRoutes);
+  app.use('/api', publicRoutes); // Para /api/plazas - DEBE IR AL FINAL
 
   console.log('✅ Rutas configuradas:');
   console.log('  - /api/auth (auth-debug-fixed.routes.js)');
   console.log('  - /api/checkin (checkin.routes.js)');
   console.log('  - /api/checkins (public.routes.js)');
-  console.log('  - /api (public.routes.js)');
   console.log('  - /api/admin (admin.routes.js)');
   console.log('  - /api/init (init.routes.js)');
   console.log('  - /api/eventos (eventos.routes.js)');
   console.log('  - /api/documentos_comunitarios (documentos_comunitarios.routes.js)');
+  console.log('  - /api (public.routes.js) - CATCH-ALL al final');
 
   console.log('✅ Rutas configuradas correctamente');
 } catch (error) {
@@ -174,8 +174,8 @@ try {
     app.use('/api/auth', authRoutes);
     app.use('/api/checkin', checkinRoutes);
     app.use('/api/checkins', publicRoutes);
-    app.use('/api', publicRoutes);
     app.use('/api/admin', adminRoutes);
+    app.use('/api', publicRoutes); // DEBE IR AL FINAL para no interceptar otras rutas
     
     console.log('✅ Rutas básicas configuradas como fallback');
   } catch (fallbackError) {
