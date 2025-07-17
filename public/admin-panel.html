@@ -134,6 +134,51 @@
         .section-hidden {
             display: none !important;
         }
+        
+        /* Estilos para tablas ordenables */
+        .sortable-header {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            transition: background-color 0.3s ease;
+        }
+        
+        .sortable-header:hover {
+            background-color: rgba(102, 126, 234, 0.1);
+        }
+        
+        .sortable-header::after {
+            content: '\f0dc';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            float: right;
+            margin-left: 10px;
+            color: #ccc;
+            transition: color 0.3s ease;
+        }
+        
+        .sortable-header.sort-asc::after {
+            content: '\f0de';
+            color: #667eea;
+        }
+        
+        .sortable-header.sort-desc::after {
+            content: '\f0dd';
+            color: #667eea;
+        }
+        
+        .sortable-header.active {
+            background-color: rgba(102, 126, 234, 0.15);
+        }
+        
+        /* Animación para las filas al ordenar */
+        .table tbody tr {
+            transition: all 0.3s ease;
+        }
+        
+        .table tbody tr:hover {
+            background-color: rgba(102, 126, 234, 0.05);
+        }
     </style>
 </head>
 <body>
@@ -465,11 +510,11 @@
                         <table class="table table-striped">
                             <thead>
                                 <tr>
-                                    <th>Plaza</th>
-                                    <th>Guardia</th>
-                                    <th>Total Checkins</th>
-                                    <th>Primer Checkin</th>
-                                    <th>Último Checkin</th>
+                                    <th class="sortable-header" data-column="plaza">Plaza</th>
+                                    <th class="sortable-header" data-column="guardia">Guardia</th>
+                                    <th class="sortable-header" data-column="total_checkins">Total Checkins</th>
+                                    <th class="sortable-header" data-column="primer_checkin">Primer Checkin</th>
+                                    <th class="sortable-header" data-column="ultimo_checkin">Último Checkin</th>
                                 </tr>
                             </thead>
                             <tbody id="reportTableBody">
@@ -1901,21 +1946,22 @@
             }
         }
         
-        function renderReportTable() {
+        function renderReportTable(data = null) {
             const tbody = document.getElementById('reportTableBody');
+            const dataToRender = data || reportData;
             
-            if (reportData.length === 0) {
+            if (dataToRender.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" class="text-center">No hay datos para el período seleccionado</td></tr>';
                 return;
             }
             
-            tbody.innerHTML = reportData.map(item => `
+            tbody.innerHTML = dataToRender.map(item => `
                 <tr>
-                    <td>${item.plaza_nombre}</td>
-                    <td>${item.guardia_nombre}</td>
-                    <td>${item.total_checkins}</td>
-                    <td>${formatearFecha(new Date(item.primer_checkin))}</td>
-                    <td>${formatearFecha(new Date(item.ultimo_checkin))}</td>
+                    <td>${item.plaza_nombre || item.plaza}</td>
+                    <td>${item.guardia_nombre || item.guardia}</td>
+                    <td><span class="badge bg-primary">${item.total_checkins}</span></td>
+                    <td>${item.primer_checkin ? formatearFecha(new Date(item.primer_checkin)) : 'N/A'}</td>
+                    <td>${item.ultimo_checkin ? formatearFecha(new Date(item.ultimo_checkin)) : 'N/A'}</td>
                 </tr>
             `).join('');
         }
@@ -2013,8 +2059,94 @@
             }, 300000); // 5 minutos
         }
         
+        // Funcionalidad de ordenamiento de tablas
+        let currentSort = { column: null, direction: 'asc' };
+        
+        function initTableSorting() {
+            const headers = document.querySelectorAll('.sortable-header');
+            headers.forEach(header => {
+                header.addEventListener('click', function() {
+                    const column = this.getAttribute('data-column');
+                    sortTable(column);
+                });
+            });
+        }
+        
+        function sortTable(column) {
+            // Determinar la dirección del ordenamiento
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.direction = 'asc';
+            }
+            currentSort.column = column;
+            
+            // Actualizar clases visuales
+            updateSortHeaders();
+            
+            // Ordenar los datos
+            const sortedData = [...reportData].sort((a, b) => {
+                let aVal, bVal;
+                
+                // Mapear columnas a las propiedades correctas
+                switch(column) {
+                    case 'plaza':
+                        aVal = a.plaza_nombre || a.plaza;
+                        bVal = b.plaza_nombre || b.plaza;
+                        break;
+                    case 'guardia':
+                        aVal = a.guardia_nombre || a.guardia;
+                        bVal = b.guardia_nombre || b.guardia;
+                        break;
+                    case 'total_checkins':
+                        aVal = parseInt(a.total_checkins) || 0;
+                        bVal = parseInt(b.total_checkins) || 0;
+                        break;
+                    case 'primer_checkin':
+                        aVal = a.primer_checkin ? new Date(a.primer_checkin) : new Date(0);
+                        bVal = b.primer_checkin ? new Date(b.primer_checkin) : new Date(0);
+                        break;
+                    case 'ultimo_checkin':
+                        aVal = a.ultimo_checkin ? new Date(a.ultimo_checkin) : new Date(0);
+                        bVal = b.ultimo_checkin ? new Date(b.ultimo_checkin) : new Date(0);
+                        break;
+                    default:
+                        aVal = a[column];
+                        bVal = b[column];
+                }
+                
+                // Convertir a string para comparación de texto si no es número o fecha
+                if (typeof aVal === 'string') {
+                    aVal = aVal.toLowerCase();
+                    bVal = String(bVal).toLowerCase();
+                }
+                
+                // Comparar valores
+                if (aVal < bVal) return currentSort.direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return currentSort.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            // Actualizar la tabla
+            renderReportTable(sortedData);
+        }
+        
+        function updateSortHeaders() {
+            const headers = document.querySelectorAll('.sortable-header');
+            headers.forEach(header => {
+                header.classList.remove('sort-asc', 'sort-desc', 'active');
+                if (header.getAttribute('data-column') === currentSort.column) {
+                    header.classList.add('active');
+                    header.classList.add(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+                }
+            });
+        }
+        
         // Iniciar auto-refresh después de cargar la página
         document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar ordenamiento de tablas
+            initTableSorting();
+            
             // Esperar un poco antes de iniciar auto-refresh para evitar conflictos
             setTimeout(function() {
                 startAutoRefresh();
