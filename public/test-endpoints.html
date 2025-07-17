@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Endpoints API</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Test de Endpoints API</h1>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <h3>Pruebas de Endpoints</h3>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary" onclick="testEndpoint('/api/eventos/tipos/all', 'GET')">
+                        GET /api/eventos/tipos/all
+                    </button>
+                    <button class="btn btn-primary" onclick="testEndpoint('/api/eventos', 'GET')">
+                        GET /api/eventos
+                    </button>
+                    <button class="btn btn-primary" onclick="testEndpoint('/api/documentos_comunitarios/tipos', 'GET')">
+                        GET /api/documentos_comunitarios/tipos
+                    </button>
+                    <button class="btn btn-primary" onclick="testEndpoint('/api/documentos_comunitarios', 'GET')">
+                        GET /api/documentos_comunitarios
+                    </button>
+                    <button class="btn btn-warning" onclick="testEndpoint('/api/init/init-eventos-documentos', 'POST')">
+                        POST /api/init/init-eventos-documentos
+                    </button>
+                    <button class="btn btn-success" onclick="testEndpoint('/api/auth/check-auth', 'GET')">
+                        GET /api/auth/check-auth
+                    </button>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <h3>Resultados</h3>
+                <div id="results" class="border p-3" style="height: 600px; overflow-y: auto; background-color: #f8f9fa;">
+                    <em>Haz clic en un endpoint para probarlo...</em>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const resultsDiv = document.getElementById('results');
+        
+        function addResult(endpoint, method, status, data, error = null) {
+            const timestamp = new Date().toLocaleTimeString();
+            const statusClass = status >= 200 && status < 300 ? 'success' : 'danger';
+            
+            const resultHtml = `
+                <div class="alert alert-${statusClass} mb-2">
+                    <strong>[${timestamp}] ${method} ${endpoint}</strong><br>
+                    <strong>Status:</strong> ${status}<br>
+                    ${error ? `<strong>Error:</strong> ${error}<br>` : ''}
+                    <strong>Response:</strong><br>
+                    <pre class="mb-0" style="font-size: 0.8em; white-space: pre-wrap;">${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            `;
+            
+            resultsDiv.innerHTML = resultHtml + resultsDiv.innerHTML;
+        }
+        
+        async function testEndpoint(endpoint, method = 'GET') {
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include'
+                };
+                
+                if (method === 'POST') {
+                    options.body = JSON.stringify({});
+                }
+                
+                console.log(`Testing ${method} ${endpoint}...`);
+                
+                const response = await fetch(endpoint, options);
+                const data = await response.json();
+                
+                addResult(endpoint, method, response.status, data);
+                
+            } catch (error) {
+                console.error(`Error testing ${endpoint}:`, error);
+                addResult(endpoint, method, 'ERROR', {}, error.message);
+            }
+        }
+        
+        // Test automático al cargar la página
+        window.addEventListener('load', () => {
+            console.log('Página cargada, ejecutando test automático...');
+            setTimeout(() => {
+                testEndpoint('/api/auth/check-auth', 'GET');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -206,10 +206,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/checkin', checkinRoutes);
 app.use('/api/checkins', publicRoutes); // Para /api/checkins/public
 app.use('/api/admin', adminRoutes);
-app.use('/api', publicRoutes);
 app.use('/api/eventos', eventosRoutes);
 app.use('/api/documentos_comunitarios', documentosRoutes);
 app.use('/api/init', initRoutes);
+app.use('/api', publicRoutes); // Esta debe ir al final para no interceptar otras rutas
 
 // Servir archivos estáticos desde public (primero local, luego padre)
 const publicPaths = [

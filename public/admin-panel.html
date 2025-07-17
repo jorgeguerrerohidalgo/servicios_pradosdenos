@@ -3153,7 +3153,7 @@
         async function showDocumentoModal(documentoId = null) {
             try {
                 // Cargar tipos de documento
-                const tiposResponse = await fetch('/api/documentos_comunitarios/tipos/all');
+                const tiposResponse = await fetch('/api/documentos_comunitarios/tipos');
                 const tiposData = await tiposResponse.json();
                 
                 // Cargar eventos disponibles
