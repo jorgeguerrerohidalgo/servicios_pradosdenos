@@ -112,35 +112,41 @@ async function checkDatabaseConnection() {
 
 // Importar rutas con manejo de errores
 try {
-  // Verificar que los archivos existen antes de importar
-  const authRoutes = require('./routes/auth-debug-fixed.routes');
-  const checkinRoutes = require('./routes/checkin.routes');
-  const publicRoutes = require('./routes/public.routes');
-  const adminRoutes = require('./routes/admin.routes');
-  const initRoutes = require('./routes/init.routes');
+  console.log('📦 Importando rutas...');
   
-  // Importar rutas adicionales con manejo de errores
-  let eventosRoutes, documentosRoutes;
-  try {
-    eventosRoutes = require('./routes/eventos.routes');
-    documentosRoutes = require('./routes/documentos_comunitarios.routes');
-    console.log('✅ Rutas de eventos y documentos cargadas correctamente');
-  } catch (error) {
-    console.warn('⚠️ Error cargando rutas de eventos/documentos:', error.message);
-    // Crear rutas fallback
-    eventosRoutes = require('express').Router();
-    documentosRoutes = require('express').Router();
-    
-    eventosRoutes.get('/', (req, res) => {
-      res.json({ success: true, data: [], message: 'Eventos no disponibles' });
-    });
-    
-    documentosRoutes.get('/', (req, res) => {
-      res.json({ success: true, data: [], message: 'Documentos no disponibles' });
-    });
-  }
+  // Verificar que los archivos existen antes de importar
+  console.log('📦 Importando auth-debug-fixed.routes...');
+  const authRoutes = require('./routes/auth-debug-fixed.routes');
+  console.log('✅ auth-debug-fixed.routes importado');
+  
+  console.log('📦 Importando checkin.routes...');
+  const checkinRoutes = require('./routes/checkin.routes');
+  console.log('✅ checkin.routes importado');
+  
+  console.log('📦 Importando public.routes...');
+  const publicRoutes = require('./routes/public.routes');
+  console.log('✅ public.routes importado');
+  
+  console.log('📦 Importando admin.routes...');
+  const adminRoutes = require('./routes/admin.routes');
+  console.log('✅ admin.routes importado');
+  
+  console.log('📦 Importando init.routes...');
+  const initRoutes = require('./routes/init.routes');
+  console.log('✅ init.routes importado');
+  
+  console.log('📦 Importando eventos.routes...');
+  const eventosRoutes = require('./routes/eventos.routes');
+  console.log('✅ eventos.routes importado');
+  
+  console.log('📦 Importando documentos_comunitarios.routes...');
+  const documentosRoutes = require('./routes/documentos_comunitarios.routes');
+  console.log('✅ documentos_comunitarios.routes importado');
+  
+  console.log('✅ Todas las rutas importadas correctamente');
 
   // Configurar rutas EN EL ORDEN CORRECTO
+  console.log('🔧 Configurando rutas...');
   app.use('/api/auth', authRoutes);
   app.use('/api/checkin', checkinRoutes);
   app.use('/api/checkins', publicRoutes); // Para /api/checkins/public
@@ -163,9 +169,18 @@ try {
   console.log('✅ Rutas configuradas correctamente');
 } catch (error) {
   console.error('❌ Error cargando rutas:', error.message);
+  console.error('❌ Stack trace:', error.stack);
+  
+  // Intentar identificar el archivo específico que causa el problema
+  const stack = error.stack;
+  const fileMatch = stack.match(/at.*\\routes\\([^)]+)/);
+  if (fileMatch) {
+    console.error('❌ Archivo problemático:', fileMatch[1]);
+  }
   
   // Cargar rutas básicas como fallback
   try {
+    console.log('🔄 Cargando rutas básicas como fallback...');
     const authRoutes = require('./routes/auth.routes');
     const checkinRoutes = require('./routes/checkin.routes');
     const publicRoutes = require('./routes/public.routes');
@@ -178,6 +193,8 @@ try {
     app.use('/api', publicRoutes); // DEBE IR AL FINAL para no interceptar otras rutas
     
     console.log('✅ Rutas básicas configuradas como fallback');
+    console.log('⚠️  RUTAS DE EVENTOS Y DOCUMENTOS NO DISPONIBLES');
+    console.log('⚠️  Para habilitar eventos/documentos, corregir el error arriba');
   } catch (fallbackError) {
     console.error('❌ Error crítico cargando rutas básicas:', fallbackError.message);
     console.error('❌ El servidor no puede continuar sin rutas básicas');
