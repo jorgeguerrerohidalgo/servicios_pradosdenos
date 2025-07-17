@@ -140,8 +140,8 @@ try {
   console.log('✅ eventos.routes importado');
   
   console.log('📦 Importando documentos_comunitarios.routes...');
-  const documentosRoutes = require('./routes/documentos_comunitarios.routes');
-  console.log('✅ documentos_comunitarios.routes importado');
+  const documentosRoutes = require('./routes/documentos-simple.routes');
+  console.log('✅ documentos_comunitarios.routes importado (usando versión simple temporal)');
   
   console.log('✅ Todas las rutas importadas correctamente');
 
