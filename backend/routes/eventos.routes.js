@@ -2,8 +2,20 @@ const express = require('express');
 const router = express.Router();
 const db = require('../utils/db');
 
+// Middleware para verificar autenticación
+const verificarAuth = (req, res, next) => {
+    if (!req.session || !req.session.userId) {
+        return res.status(401).json({
+            success: false,
+            error: 'No autorizado',
+            data: []
+        });
+    }
+    next();
+};
+
 // Ruta para obtener eventos con paginación
-router.get('/', async (req, res) => {
+router.get('/', verificarAuth, async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
@@ -58,13 +70,14 @@ router.get('/', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Error interno del servidor',
+            data: [],
             details: error.message
         });
     }
 });
 
 // Ruta para obtener un evento específico
-router.get('/:id', async (req, res) => {
+router.get('/:id', verificarAuth, async (req, res) => {
     try {
         const { id } = req.params;
         
@@ -290,7 +303,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Ruta para obtener tipos de evento
-router.get('/tipos/all', async (req, res) => {
+router.get('/tipos/all', verificarAuth, async (req, res) => {
     try {
         const query = 'SELECT * FROM tipo_evento WHERE activo = true ORDER BY orden, nombre';
         const result = await db.query(query);
