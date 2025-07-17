@@ -117,8 +117,28 @@ try {
   const checkinRoutes = require('./routes/checkin.routes');
   const publicRoutes = require('./routes/public.routes');
   const adminRoutes = require('./routes/admin.routes');
-  const eventosRoutes = require('./routes/eventos.routes');
-  const documentosRoutes = require('./routes/documentos_comunitarios.routes');
+  const initRoutes = require('./routes/init.routes');
+  
+  // Importar rutas adicionales con manejo de errores
+  let eventosRoutes, documentosRoutes;
+  try {
+    eventosRoutes = require('./routes/eventos.routes');
+    documentosRoutes = require('./routes/documentos_comunitarios.routes');
+    console.log('✅ Rutas de eventos y documentos cargadas correctamente');
+  } catch (error) {
+    console.warn('⚠️ Error cargando rutas de eventos/documentos:', error.message);
+    // Crear rutas fallback
+    eventosRoutes = require('express').Router();
+    documentosRoutes = require('express').Router();
+    
+    eventosRoutes.get('/', (req, res) => {
+      res.json({ success: true, data: [], message: 'Eventos no disponibles' });
+    });
+    
+    documentosRoutes.get('/', (req, res) => {
+      res.json({ success: true, data: [], message: 'Documentos no disponibles' });
+    });
+  }
 
   // Configurar rutas
   app.use('/api/auth', authRoutes);
@@ -126,6 +146,7 @@ try {
   app.use('/api/checkins', publicRoutes); // Para /api/checkins/public
   app.use('/api', publicRoutes); // Para /api/plazas
   app.use('/api/admin', adminRoutes);
+  app.use('/api/init', initRoutes);
   app.use('/api/eventos', eventosRoutes);
   app.use('/api/documentos', documentosRoutes);
 
@@ -135,6 +156,7 @@ try {
   console.log('  - /api/checkins (public.routes.js)');
   console.log('  - /api (public.routes.js)');
   console.log('  - /api/admin (admin.routes.js)');
+  console.log('  - /api/init (init.routes.js)');
   console.log('  - /api/eventos (eventos.routes.js)');
   console.log('  - /api/documentos (documentos_comunitarios.routes.js)');
 
@@ -266,12 +288,23 @@ async function startServer() {
 process.on('uncaughtException', (error) => {
   console.error('❌ Excepción no capturada:', error.message);
   console.error('Stack:', error.stack);
-  process.exit(1);
+  // En producción, no terminar el proceso abruptamente
+  if (process.env.NODE_ENV === 'production') {
+    console.error('⚠️ Continuando ejecución en producción...');
+  } else {
+    process.exit(1);
+  }
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ Promesa rechazada no manejada:', reason);
-  process.exit(1);
+  console.error('En:', promise);
+  // En producción, no terminar el proceso abruptamente
+  if (process.env.NODE_ENV === 'production') {
+    console.error('⚠️ Continuando ejecución en producción...');
+  } else {
+    process.exit(1);
+  }
 });
 
 // Manejo de señales del sistema

@@ -209,6 +209,15 @@
                     <p>Gestiona el sistema de seguridad de Los Prados de Nos</p>
                 </div>
 
+                <!-- Sección de Inicialización de Base de Datos -->
+                <div class="init-db-section" id="initDbSection" style="display: none;">
+                    <h5><i class="fas fa-database"></i> Inicialización de Base de Datos</h5>
+                    <p>Clic en el botón para crear las tablas de eventos y documentos si no existen.</p>
+                    <button class="btn btn-warning" onclick="initEventosDocumentos()">
+                        <i class="fas fa-plus-circle"></i> Inicializar Tablas de Eventos y Documentos
+                    </button>
+                </div>
+
                 <!-- Estadísticas -->
                 <div class="row">
                     <div class="col-md-3 col-sm-6">
@@ -2758,8 +2767,74 @@
             });
         }
         
+        // Función para inicializar tablas de eventos y documentos
+        async function initEventosDocumentos() {
+            try {
+                Swal.fire({
+                    title: 'Inicializando...',
+                    text: 'Creando tablas de eventos y documentos',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                
+                const response = await fetch('/api/init/init-eventos-documentos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: 'Tablas inicializadas correctamente',
+                        icon: 'success'
+                    });
+                    
+                    // Ocultar la sección de inicialización
+                    document.getElementById('initDbSection').style.display = 'none';
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.error || 'Error al inicializar tablas',
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error en inicialización:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error de conexión al inicializar tablas',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        // Función para verificar si necesita inicialización
+        async function checkInitialization() {
+            try {
+                const response = await fetch('/api/eventos/tipos/all');
+                const data = await response.json();
+                
+                // Si no hay datos o hay error, mostrar sección de inicialización
+                if (!data.success || data.data.length === 0) {
+                    document.getElementById('initDbSection').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error verificando inicialización:', error);
+                document.getElementById('initDbSection').style.display = 'block';
+            }
+        }
+        
         // Iniciar auto-refresh después de cargar la página
         document.addEventListener('DOMContentLoaded', function() {
+            // Verificar si necesita inicialización
+            checkInitialization();
+            
             // Inicializar ordenamiento de tablas
             initTableSorting();
             
@@ -2768,6 +2843,504 @@
                 startAutoRefresh();
             }, 2000);
         });
+        
+        // Función para ver eventos
+        async function viewEventos() {
+            try {
+                const response = await fetch('/api/eventos');
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayEventos(data.data);
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.error || 'Error al cargar eventos',
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error cargando eventos:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error de conexión al cargar eventos',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        // Función para mostrar eventos en tabla
+        function displayEventos(eventos) {
+            const eventosTableBody = document.getElementById('eventosTableBody');
+            eventosTableBody.innerHTML = '';
+            
+            eventos.forEach(evento => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="text-center">${evento.id}</td>
+                    <td>${evento.titulo}</td>
+                    <td>${evento.descripcion || '-'}</td>
+                    <td>${evento.fecha_evento ? new Date(evento.fecha_evento).toLocaleDateString() : '-'}</td>
+                    <td>${evento.lugar || '-'}</td>
+                    <td>${evento.tipo_evento || '-'}</td>
+                    <td class="text-center">
+                        <span class="badge ${evento.activo ? 'bg-success' : 'bg-danger'}">${evento.activo ? 'Activo' : 'Inactivo'}</span>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-info me-1" onclick="editEvento(${evento.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteEvento(${evento.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                eventosTableBody.appendChild(row);
+            });
+        }
+        
+        // Función para crear/editar evento
+        async function showEventoModal(eventoId = null) {
+            try {
+                // Cargar tipos de evento
+                const tiposResponse = await fetch('/api/eventos/tipos/all');
+                const tiposData = await tiposResponse.json();
+                
+                if (!tiposData.success) {
+                    throw new Error('Error al cargar tipos de evento');
+                }
+                
+                let evento = null;
+                if (eventoId) {
+                    const eventoResponse = await fetch(`/api/eventos/${eventoId}`);
+                    const eventoData = await eventoResponse.json();
+                    if (eventoData.success) {
+                        evento = eventoData.data;
+                    }
+                }
+                
+                const tiposOptions = tiposData.data.map(tipo => 
+                    `<option value="${tipo.id}" ${evento && evento.tipo_evento_id === tipo.id ? 'selected' : ''}>${tipo.nombre}</option>`
+                ).join('');
+                
+                Swal.fire({
+                    title: eventoId ? 'Editar Evento' : 'Nuevo Evento',
+                    html: `
+                        <form id="eventoForm">
+                            <div class="mb-3">
+                                <label for="titulo" class="form-label">Título*</label>
+                                <input type="text" class="form-control" id="titulo" name="titulo" value="${evento?.titulo || ''}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="descripcion" class="form-label">Descripción</label>
+                                <textarea class="form-control" id="descripcion" name="descripcion" rows="3">${evento?.descripcion || ''}</textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="fecha_evento" class="form-label">Fecha</label>
+                                        <input type="date" class="form-control" id="fecha_evento" name="fecha_evento" value="${evento?.fecha_evento ? evento.fecha_evento.split('T')[0] : ''}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="hora_evento" class="form-label">Hora</label>
+                                        <input type="time" class="form-control" id="hora_evento" name="hora_evento" value="${evento?.hora_evento || ''}">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="lugar" class="form-label">Lugar</label>
+                                <input type="text" class="form-control" id="lugar" name="lugar" value="${evento?.lugar || ''}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="tipo_evento_id" class="form-label">Tipo de Evento</label>
+                                <select class="form-control" id="tipo_evento_id" name="tipo_evento_id">
+                                    <option value="">Seleccionar tipo</option>
+                                    ${tiposOptions}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="activo" name="activo" ${evento?.activo !== false ? 'checked' : ''}>
+                                    <label class="form-check-label" for="activo">Activo</label>
+                                </div>
+                            </div>
+                        </form>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'Guardar',
+                    cancelButtonText: 'Cancelar',
+                    preConfirm: () => {
+                        const form = document.getElementById('eventoForm');
+                        const formData = new FormData(form);
+                        
+                        return {
+                            titulo: formData.get('titulo'),
+                            descripcion: formData.get('descripcion'),
+                            fecha_evento: formData.get('fecha_evento'),
+                            hora_evento: formData.get('hora_evento'),
+                            lugar: formData.get('lugar'),
+                            tipo_evento_id: formData.get('tipo_evento_id'),
+                            activo: formData.get('activo') === 'on'
+                        };
+                    }
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        await saveEvento(eventoId, result.value);
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Error en modal evento:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al cargar el formulario',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        // Función para guardar evento
+        async function saveEvento(eventoId, eventoData) {
+            try {
+                const url = eventoId ? `/api/eventos/${eventoId}` : '/api/eventos';
+                const method = eventoId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(eventoData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: eventoId ? 'Evento actualizado correctamente' : 'Evento creado correctamente',
+                        icon: 'success'
+                    });
+                    viewEventos(); // Recargar tabla
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.error || 'Error al guardar evento',
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error guardando evento:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error de conexión al guardar evento',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        // Función para editar evento
+        function editEvento(eventoId) {
+            showEventoModal(eventoId);
+        }
+        
+        // Función para eliminar evento
+        function deleteEvento(eventoId) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: 'Esta acción no se puede deshacer',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`/api/eventos/${eventoId}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Eliminado',
+                                text: 'Evento eliminado correctamente',
+                                icon: 'success'
+                            });
+                            viewEventos(); // Recargar tabla
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.error || 'Error al eliminar evento',
+                                icon: 'error'
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error eliminando evento:', error);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Error de conexión al eliminar evento',
+                            icon: 'error'
+                        });
+                    }
+                }
+            });
+        }
+        
+        // Función para ver documentos comunitarios
+        async function viewDocumentos() {
+            try {
+                const response = await fetch('/api/documentos_comunitarios');
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayDocumentos(data.data);
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.error || 'Error al cargar documentos',
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error cargando documentos:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error de conexión al cargar documentos',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        // Función para mostrar documentos en tabla
+        function displayDocumentos(documentos) {
+            const documentosTableBody = document.getElementById('documentosTableBody');
+            documentosTableBody.innerHTML = '';
+            
+            documentos.forEach(documento => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="text-center">${documento.id}</td>
+                    <td>${documento.titulo}</td>
+                    <td>${documento.descripcion || '-'}</td>
+                    <td>${documento.tipo_documento || '-'}</td>
+                    <td>${documento.evento_titulo || '-'}</td>
+                    <td class="text-center">
+                        ${documento.url_documento ? `<a href="${documento.url_documento}" target="_blank" class="btn btn-sm btn-primary"><i class="fas fa-external-link-alt"></i></a>` : '-'}
+                    </td>
+                    <td class="text-center">
+                        <span class="badge ${documento.activo ? 'bg-success' : 'bg-danger'}">${documento.activo ? 'Activo' : 'Inactivo'}</span>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-info me-1" onclick="editDocumento(${documento.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteDocumento(${documento.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                documentosTableBody.appendChild(row);
+            });
+        }
+        
+        // Función para crear/editar documento
+        async function showDocumentoModal(documentoId = null) {
+            try {
+                // Cargar tipos de documento
+                const tiposResponse = await fetch('/api/documentos_comunitarios/tipos/all');
+                const tiposData = await tiposResponse.json();
+                
+                // Cargar eventos disponibles
+                const eventosResponse = await fetch('/api/eventos');
+                const eventosData = await eventosResponse.json();
+                
+                if (!tiposData.success || !eventosData.success) {
+                    throw new Error('Error al cargar datos del formulario');
+                }
+                
+                let documento = null;
+                if (documentoId) {
+                    const documentoResponse = await fetch(`/api/documentos_comunitarios/${documentoId}`);
+                    const documentoData = await documentoResponse.json();
+                    if (documentoData.success) {
+                        documento = documentoData.data;
+                    }
+                }
+                
+                const tiposOptions = tiposData.data.map(tipo => 
+                    `<option value="${tipo.id}" ${documento && documento.tipo_documento_id === tipo.id ? 'selected' : ''}>${tipo.nombre}</option>`
+                ).join('');
+                
+                const eventosOptions = eventosData.data.map(evento => 
+                    `<option value="${evento.id}" ${documento && documento.evento_id === evento.id ? 'selected' : ''}>${evento.titulo}</option>`
+                ).join('');
+                
+                Swal.fire({
+                    title: documentoId ? 'Editar Documento' : 'Nuevo Documento',
+                    html: `
+                        <form id="documentoForm">
+                            <div class="mb-3">
+                                <label for="titulo" class="form-label">Título*</label>
+                                <input type="text" class="form-control" id="titulo" name="titulo" value="${documento?.titulo || ''}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="descripcion" class="form-label">Descripción</label>
+                                <textarea class="form-control" id="descripcion" name="descripcion" rows="3">${documento?.descripcion || ''}</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="tipo_documento_id" class="form-label">Tipo de Documento</label>
+                                <select class="form-control" id="tipo_documento_id" name="tipo_documento_id">
+                                    <option value="">Seleccionar tipo</option>
+                                    ${tiposOptions}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="evento_id" class="form-label">Evento Asociado</label>
+                                <select class="form-control" id="evento_id" name="evento_id">
+                                    <option value="">Seleccionar evento</option>
+                                    ${eventosOptions}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="url_documento" class="form-label">URL del Documento</label>
+                                <input type="url" class="form-control" id="url_documento" name="url_documento" value="${documento?.url_documento || ''}" placeholder="https://drive.google.com/...">
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="activo" name="activo" ${documento?.activo !== false ? 'checked' : ''}>
+                                    <label class="form-check-label" for="activo">Activo</label>
+                                </div>
+                            </div>
+                        </form>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'Guardar',
+                    cancelButtonText: 'Cancelar',
+                    preConfirm: () => {
+                        const form = document.getElementById('documentoForm');
+                        const formData = new FormData(form);
+                        
+                        return {
+                            titulo: formData.get('titulo'),
+                            descripcion: formData.get('descripcion'),
+                            tipo_documento_id: formData.get('tipo_documento_id'),
+                            evento_id: formData.get('evento_id'),
+                            url_documento: formData.get('url_documento'),
+                            activo: formData.get('activo') === 'on'
+                        };
+                    }
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        await saveDocumento(documentoId, result.value);
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Error en modal documento:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al cargar el formulario',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        // Función para guardar documento
+        async function saveDocumento(documentoId, documentoData) {
+            try {
+                const url = documentoId ? `/api/documentos_comunitarios/${documentoId}` : '/api/documentos_comunitarios';
+                const method = documentoId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(documentoData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: documentoId ? 'Documento actualizado correctamente' : 'Documento creado correctamente',
+                        icon: 'success'
+                    });
+                    viewDocumentos(); // Recargar tabla
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.error || 'Error al guardar documento',
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error guardando documento:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error de conexión al guardar documento',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        // Función para editar documento
+        function editDocumento(documentoId) {
+            showDocumentoModal(documentoId);
+        }
+        
+        // Función para eliminar documento
+        function deleteDocumento(documentoId) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: 'Esta acción no se puede deshacer',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`/api/documentos_comunitarios/${documentoId}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Eliminado',
+                                text: 'Documento eliminado correctamente',
+                                icon: 'success'
+                            });
+                            viewDocumentos(); // Recargar tabla
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.error || 'Error al eliminar documento',
+                                icon: 'error'
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error eliminando documento:', error);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Error de conexión al eliminar documento',
+                            icon: 'error'
+                        });
+                    }
+                }
+            });
+        }
     </script>
 </body>
 </html>

@@ -5,6 +5,24 @@ const db = require('../utils/db');
 // Ruta para obtener tipos de documento
 router.get('/tipos', async (req, res) => {
     try {
+        // Verificar si las tablas existen
+        const tableCheckQuery = `
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                AND table_name = 'tipo_documento'
+            );
+        `;
+        const tableCheck = await db.query(tableCheckQuery);
+        
+        if (!tableCheck.rows[0].exists) {
+            return res.json({
+                success: true,
+                data: [],
+                message: 'Tabla tipo_documento no encontrada'
+            });
+        }
+        
         const query = 'SELECT * FROM tipo_documento ORDER BY nombre';
         const result = await db.query(query);
         
@@ -16,7 +34,8 @@ router.get('/tipos', async (req, res) => {
         console.error('Error en tipos de documento:', error);
         res.status(500).json({
             success: false,
-            error: 'Error interno del servidor'
+            error: 'Error interno del servidor',
+            details: error.message
         });
     }
 });
@@ -27,6 +46,30 @@ router.get('/', async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
+        
+        // Verificar si las tablas existen
+        const tableCheckQuery = `
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                AND table_name = 'documentos_comunitarios'
+            );
+        `;
+        const tableCheck = await db.query(tableCheckQuery);
+        
+        if (!tableCheck.rows[0].exists) {
+            return res.json({
+                success: true,
+                data: [],
+                pagination: {
+                    total: 0,
+                    page: page,
+                    limit: limit,
+                    totalPages: 0
+                },
+                message: 'Tabla documentos_comunitarios no encontrada'
+            });
+        }
         
         // Obtener documentos desde PostgreSQL con join a tipo_documento
         const countQuery = 'SELECT COUNT(*) FROM documentos_comunitarios';
@@ -58,7 +101,8 @@ router.get('/', async (req, res) => {
         console.error('Error en documentos:', error);
         res.status(500).json({
             success: false,
-            error: 'Error interno del servidor'
+            error: 'Error interno del servidor',
+            details: error.message
         });
     }
 });
