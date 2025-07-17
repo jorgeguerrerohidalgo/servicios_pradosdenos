@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { supabase } = require('../utils/supabase');
+const db = require('../utils/db');
 
 // Ruta para obtener eventos con paginación
 router.get('/', async (req, res) => {
@@ -9,29 +9,28 @@ router.get('/', async (req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
         
-        // Obtener eventos desde Supabase
-        const { data: eventos, error, count } = await supabase
-            .from('eventos_vecinales')
-            .select('*', { count: 'exact' })
-            .order('fecha_inicio', { ascending: false })
-            .range(offset, offset + limit - 1);
+        // Obtener eventos desde PostgreSQL
+        const countQuery = 'SELECT COUNT(*) FROM eventos_vecinales';
+        const countResult = await db.query(countQuery);
+        const total = parseInt(countResult.rows[0].count);
         
-        if (error) {
-            console.error('Error obteniendo eventos:', error);
-            return res.status(500).json({
-                success: false,
-                error: 'Error al obtener eventos'
-            });
-        }
+        const eventsQuery = `
+            SELECT e.*, te.nombre as tipo_evento_nombre 
+            FROM eventos_vecinales e
+            LEFT JOIN tipo_evento te ON e.tipo_evento_id = te.id
+            ORDER BY e.fecha_inicio DESC
+            LIMIT $1 OFFSET $2
+        `;
+        const eventsResult = await db.query(eventsQuery, [limit, offset]);
         
         const result = {
             success: true,
-            data: eventos || [],
+            data: eventsResult.rows,
             pagination: {
-                total: count || 0,
+                total: total,
                 page: page,
                 limit: limit,
-                totalPages: Math.ceil((count || 0) / limit)
+                totalPages: Math.ceil(total / limit)
             }
         };
         
@@ -50,14 +49,15 @@ router.get('/:id', async (req, res) => {
     try {
         const { id } = req.params;
         
-        const { data: evento, error } = await supabase
-            .from('eventos_vecinales')
-            .select('*')
-            .eq('id', id)
-            .single();
+        const query = `
+            SELECT e.*, te.nombre as tipo_evento_nombre 
+            FROM eventos_vecinales e
+            LEFT JOIN tipo_evento te ON e.tipo_evento_id = te.id
+            WHERE e.id = $1
+        `;
+        const result = await db.query(query, [id]);
         
-        if (error) {
-            console.error('Error obteniendo evento:', error);
+        if (result.rows.length === 0) {
             return res.status(404).json({
                 success: false,
                 error: 'Evento no encontrado'
@@ -66,7 +66,7 @@ router.get('/:id', async (req, res) => {
         
         res.json({
             success: true,
-            data: evento
+            data: result.rows[0]
         });
     } catch (error) {
         console.error('Error en evento específico:', error);
@@ -102,33 +102,18 @@ router.post('/', async (req, res) => {
         // Generar link de Google Calendar
         const link_google_cal = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(titulo)}&dates=${fecha_inicio.replace(/[-:]/g, '').split('.')[0]}/${(fecha_fin || fecha_inicio).replace(/[-:]/g, '').split('.')[0]}&details=${encodeURIComponent(descripcion)}&location=${encodeURIComponent(ubicacion || '')}`;
         
-        const { data: evento, error } = await supabase
-            .from('eventos_vecinales')
-            .insert({
-                titulo,
-                descripcion,
-                fecha_inicio,
-                fecha_fin,
-                tipo_evento_id,
-                ubicacion,
-                visible,
-                creado_por,
-                link_google_cal
-            })
-            .select()
-            .single();
-        
-        if (error) {
-            console.error('Error creando evento:', error);
-            return res.status(500).json({
-                success: false,
-                error: 'Error al crear evento'
-            });
-        }
+        const query = `
+            INSERT INTO eventos_vecinales (titulo, descripcion, fecha_inicio, fecha_fin, tipo_evento_id, ubicacion, visible, creado_por, link_google_cal)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            RETURNING *
+        `;
+        const result = await db.query(query, [
+            titulo, descripcion, fecha_inicio, fecha_fin, tipo_evento_id, ubicacion, visible, creado_por, link_google_cal
+        ]);
         
         res.status(201).json({
             success: true,
-            data: evento,
+            data: result.rows[0],
             message: 'Evento creado exitosamente'
         });
     } catch (error) {
@@ -165,33 +150,27 @@ router.put('/:id', async (req, res) => {
         // Generar link de Google Calendar actualizado
         const link_google_cal = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(titulo)}&dates=${fecha_inicio.replace(/[-:]/g, '').split('.')[0]}/${(fecha_fin || fecha_inicio).replace(/[-:]/g, '').split('.')[0]}&details=${encodeURIComponent(descripcion)}&location=${encodeURIComponent(ubicacion || '')}`;
         
-        const { data: evento, error } = await supabase
-            .from('eventos_vecinales')
-            .update({
-                titulo,
-                descripcion,
-                fecha_inicio,
-                fecha_fin,
-                tipo_evento_id,
-                ubicacion,
-                visible,
-                link_google_cal
-            })
-            .eq('id', id)
-            .select()
-            .single();
+        const query = `
+            UPDATE eventos_vecinales 
+            SET titulo = $1, descripcion = $2, fecha_inicio = $3, fecha_fin = $4, 
+                tipo_evento_id = $5, ubicacion = $6, visible = $7, link_google_cal = $8
+            WHERE id = $9
+            RETURNING *
+        `;
+        const result = await db.query(query, [
+            titulo, descripcion, fecha_inicio, fecha_fin, tipo_evento_id, ubicacion, visible, link_google_cal, id
+        ]);
         
-        if (error) {
-            console.error('Error actualizando evento:', error);
-            return res.status(500).json({
+        if (result.rows.length === 0) {
+            return res.status(404).json({
                 success: false,
-                error: 'Error al actualizar evento'
+                error: 'Evento no encontrado'
             });
         }
         
         res.json({
             success: true,
-            data: evento,
+            data: result.rows[0],
             message: 'Evento actualizado exitosamente'
         });
     } catch (error) {
@@ -208,16 +187,13 @@ router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
         
-        const { error } = await supabase
-            .from('eventos_vecinales')
-            .delete()
-            .eq('id', id);
+        const query = 'DELETE FROM eventos_vecinales WHERE id = $1 RETURNING *';
+        const result = await db.query(query, [id]);
         
-        if (error) {
-            console.error('Error eliminando evento:', error);
-            return res.status(500).json({
+        if (result.rows.length === 0) {
+            return res.status(404).json({
                 success: false,
-                error: 'Error al eliminar evento'
+                error: 'Evento no encontrado'
             });
         }
         
@@ -237,22 +213,12 @@ router.delete('/:id', async (req, res) => {
 // Ruta para obtener tipos de evento
 router.get('/tipos/all', async (req, res) => {
     try {
-        const { data: tipos, error } = await supabase
-            .from('tipo_evento')
-            .select('*')
-            .order('nombre');
-        
-        if (error) {
-            console.error('Error obteniendo tipos de evento:', error);
-            return res.status(500).json({
-                success: false,
-                error: 'Error al obtener tipos de evento'
-            });
-        }
+        const query = 'SELECT * FROM tipo_evento ORDER BY nombre';
+        const result = await db.query(query);
         
         res.json({
             success: true,
-            data: tipos || []
+            data: result.rows
         });
     } catch (error) {
         console.error('Error en tipos de evento:', error);

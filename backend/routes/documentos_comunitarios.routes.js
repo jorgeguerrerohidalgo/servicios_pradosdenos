@@ -1,26 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const { supabase } = require('../utils/supabase');
+const db = require('../utils/db');
 
 // Ruta para obtener tipos de documento
 router.get('/tipos', async (req, res) => {
     try {
-        const { data: tipos, error } = await supabase
-            .from('tipo_documento')
-            .select('*')
-            .order('nombre');
-        
-        if (error) {
-            console.error('Error obteniendo tipos de documento:', error);
-            return res.status(500).json({
-                success: false,
-                error: 'Error al obtener tipos de documento'
-            });
-        }
+        const query = 'SELECT * FROM tipo_documento ORDER BY nombre';
+        const result = await db.query(query);
         
         res.json({
             success: true,
-            data: tipos || []
+            data: result.rows
         });
     } catch (error) {
         console.error('Error en tipos de documento:', error);
@@ -38,36 +28,30 @@ router.get('/', async (req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
         
-        // Obtener documentos desde Supabase con join a tipo_documento
-        const { data: documentos, error, count } = await supabase
-            .from('documentos_comunitarios')
-            .select(`
-                *,
-                tipo_documento:tipo_documento_id (
-                    id,
-                    nombre,
-                    descripcion
-                )
-            `, { count: 'exact' })
-            .order('fecha_publicacion', { ascending: false })
-            .range(offset, offset + limit - 1);
+        // Obtener documentos desde PostgreSQL con join a tipo_documento
+        const countQuery = 'SELECT COUNT(*) FROM documentos_comunitarios';
+        const countResult = await db.query(countQuery);
+        const total = parseInt(countResult.rows[0].count);
         
-        if (error) {
-            console.error('Error obteniendo documentos:', error);
-            return res.status(500).json({
-                success: false,
-                error: 'Error al obtener documentos'
-            });
-        }
+        const docsQuery = `
+            SELECT d.*, td.nombre as tipo_documento_nombre, td.descripcion as tipo_documento_desc,
+                   e.titulo as evento_titulo
+            FROM documentos_comunitarios d
+            LEFT JOIN tipo_documento td ON d.tipo_documento_id = td.id
+            LEFT JOIN eventos_vecinales e ON d.evento_id = e.id
+            ORDER BY d.fecha_publicacion DESC
+            LIMIT $1 OFFSET $2
+        `;
+        const docsResult = await db.query(docsQuery, [limit, offset]);
         
         res.json({
             success: true,
-            data: documentos || [],
+            data: docsResult.rows,
             pagination: {
-                total: count || 0,
+                total: total,
                 page: page,
                 limit: limit,
-                totalPages: Math.ceil((count || 0) / limit)
+                totalPages: Math.ceil(total / limit)
             }
         });
     } catch (error) {
@@ -84,21 +68,17 @@ router.get('/:id', async (req, res) => {
     try {
         const { id } = req.params;
         
-        const { data: documento, error } = await supabase
-            .from('documentos_comunitarios')
-            .select(`
-                *,
-                tipo_documento:tipo_documento_id (
-                    id,
-                    nombre,
-                    descripcion
-                )
-            `)
-            .eq('id', id)
-            .single();
+        const query = `
+            SELECT d.*, td.nombre as tipo_documento_nombre, td.descripcion as tipo_documento_desc,
+                   e.titulo as evento_titulo
+            FROM documentos_comunitarios d
+            LEFT JOIN tipo_documento td ON d.tipo_documento_id = td.id
+            LEFT JOIN eventos_vecinales e ON d.evento_id = e.id
+            WHERE d.id = $1
+        `;
+        const result = await db.query(query, [id]);
         
-        if (error) {
-            console.error('Error obteniendo documento:', error);
+        if (result.rows.length === 0) {
             return res.status(404).json({
                 success: false,
                 error: 'Documento no encontrado'
@@ -107,7 +87,7 @@ router.get('/:id', async (req, res) => {
         
         res.json({
             success: true,
-            data: documento
+            data: result.rows[0]
         });
     } catch (error) {
         console.error('Error en documento específico:', error);
@@ -140,32 +120,19 @@ router.post('/', async (req, res) => {
             });
         }
         
-        const { data: documento, error } = await supabase
-            .from('documentos_comunitarios')
-            .insert({
-                nombre,
-                descripcion,
-                tipo_documento_id,
-                link_drive,
-                fecha_publicacion: fecha_publicacion || new Date().toISOString(),
-                evento_id,
-                visible,
-                subido_por
-            })
-            .select()
-            .single();
-        
-        if (error) {
-            console.error('Error creando documento:', error);
-            return res.status(500).json({
-                success: false,
-                error: 'Error al crear documento'
-            });
-        }
+        const query = `
+            INSERT INTO documentos_comunitarios (nombre, descripcion, tipo_documento_id, link_drive, fecha_publicacion, evento_id, visible, subido_por)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING *
+        `;
+        const result = await db.query(query, [
+            nombre, descripcion, tipo_documento_id, link_drive, 
+            fecha_publicacion || new Date().toISOString(), evento_id, visible, subido_por
+        ]);
         
         res.status(201).json({
             success: true,
-            data: documento,
+            data: result.rows[0],
             message: 'Documento creado exitosamente'
         });
     } catch (error) {
@@ -199,32 +166,27 @@ router.put('/:id', async (req, res) => {
             });
         }
         
-        const { data: documento, error } = await supabase
-            .from('documentos_comunitarios')
-            .update({
-                nombre,
-                descripcion,
-                tipo_documento_id,
-                link_drive,
-                fecha_publicacion,
-                evento_id,
-                visible
-            })
-            .eq('id', id)
-            .select()
-            .single();
+        const query = `
+            UPDATE documentos_comunitarios 
+            SET nombre = $1, descripcion = $2, tipo_documento_id = $3, link_drive = $4, 
+                fecha_publicacion = $5, evento_id = $6, visible = $7
+            WHERE id = $8
+            RETURNING *
+        `;
+        const result = await db.query(query, [
+            nombre, descripcion, tipo_documento_id, link_drive, fecha_publicacion, evento_id, visible, id
+        ]);
         
-        if (error) {
-            console.error('Error actualizando documento:', error);
-            return res.status(500).json({
+        if (result.rows.length === 0) {
+            return res.status(404).json({
                 success: false,
-                error: 'Error al actualizar documento'
+                error: 'Documento no encontrado'
             });
         }
         
         res.json({
             success: true,
-            data: documento,
+            data: result.rows[0],
             message: 'Documento actualizado exitosamente'
         });
     } catch (error) {
@@ -241,16 +203,13 @@ router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
         
-        const { error } = await supabase
-            .from('documentos_comunitarios')
-            .delete()
-            .eq('id', id);
+        const query = 'DELETE FROM documentos_comunitarios WHERE id = $1 RETURNING *';
+        const result = await db.query(query, [id]);
         
-        if (error) {
-            console.error('Error eliminando documento:', error);
-            return res.status(500).json({
+        if (result.rows.length === 0) {
+            return res.status(404).json({
                 success: false,
-                error: 'Error al eliminar documento'
+                error: 'Documento no encontrado'
             });
         }
         
@@ -272,30 +231,18 @@ router.get('/evento/:evento_id', async (req, res) => {
     try {
         const { evento_id } = req.params;
         
-        const { data: documentos, error } = await supabase
-            .from('documentos_comunitarios')
-            .select(`
-                *,
-                tipo_documento:tipo_documento_id (
-                    id,
-                    nombre,
-                    descripcion
-                )
-            `)
-            .eq('evento_id', evento_id)
-            .order('fecha_publicacion', { ascending: false });
-        
-        if (error) {
-            console.error('Error obteniendo documentos por evento:', error);
-            return res.status(500).json({
-                success: false,
-                error: 'Error al obtener documentos del evento'
-            });
-        }
+        const query = `
+            SELECT d.*, td.nombre as tipo_documento_nombre, td.descripcion as tipo_documento_desc
+            FROM documentos_comunitarios d
+            LEFT JOIN tipo_documento td ON d.tipo_documento_id = td.id
+            WHERE d.evento_id = $1
+            ORDER BY d.fecha_publicacion DESC
+        `;
+        const result = await db.query(query, [evento_id]);
         
         res.json({
             success: true,
-            data: documentos || []
+            data: result.rows
         });
     } catch (error) {
         console.error('Error en documentos por evento:', error);
