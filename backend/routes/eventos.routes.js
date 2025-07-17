@@ -39,17 +39,35 @@ router.get('/', async (req, res) => {
         const total = parseInt(countResult.rows[0].count);
         
         const eventsQuery = `
-            SELECT e.*, te.nombre as tipo_evento_nombre 
+            SELECT e.*, te.nombre as tipo_evento 
             FROM eventos_vecinales e
             LEFT JOIN tipo_evento te ON e.tipo_evento_id = te.id
+            WHERE e.visible = true
             ORDER BY e.fecha_inicio DESC
             LIMIT $1 OFFSET $2
         `;
         const eventsResult = await db.query(eventsQuery, [limit, offset]);
         
+        // Formatear los datos para coincidir con lo que espera el frontend
+        const formattedEvents = eventsResult.rows.map(event => ({
+            id: event.id,
+            titulo: event.titulo,
+            descripcion: event.descripcion,
+            fecha_evento: event.fecha_inicio,
+            fecha_fin: event.fecha_fin,
+            hora_evento: event.fecha_inicio ? new Date(event.fecha_inicio).toTimeString().slice(0, 5) : null,
+            lugar: event.ubicacion,
+            tipo_evento: event.tipo_evento,
+            tipo_evento_id: event.tipo_evento_id,
+            activo: event.visible,
+            link_google_cal: event.link_google_cal,
+            created_at: event.created_at,
+            updated_at: event.updated_at
+        }));
+        
         const result = {
             success: true,
-            data: eventsResult.rows,
+            data: formattedEvents,
             pagination: {
                 total: total,
                 page: page,
@@ -75,7 +93,7 @@ router.get('/:id', async (req, res) => {
         const { id } = req.params;
         
         const query = `
-            SELECT e.*, te.nombre as tipo_evento_nombre 
+            SELECT e.*, te.nombre as tipo_evento 
             FROM eventos_vecinales e
             LEFT JOIN tipo_evento te ON e.tipo_evento_id = te.id
             WHERE e.id = $1
@@ -89,15 +107,34 @@ router.get('/:id', async (req, res) => {
             });
         }
         
+        // Formatear el evento para coincidir con el frontend
+        const evento = result.rows[0];
+        const formattedEvent = {
+            id: evento.id,
+            titulo: evento.titulo,
+            descripcion: evento.descripcion,
+            fecha_evento: evento.fecha_inicio,
+            fecha_fin: evento.fecha_fin,
+            hora_evento: evento.fecha_inicio ? new Date(evento.fecha_inicio).toTimeString().slice(0, 5) : null,
+            lugar: evento.ubicacion,
+            tipo_evento: evento.tipo_evento,
+            tipo_evento_id: evento.tipo_evento_id,
+            activo: evento.visible,
+            link_google_cal: evento.link_google_cal,
+            created_at: evento.created_at,
+            updated_at: evento.updated_at
+        };
+        
         res.json({
             success: true,
-            data: result.rows[0]
+            data: formattedEvent
         });
     } catch (error) {
         console.error('Error en evento específico:', error);
         res.status(500).json({
             success: false,
-            error: 'Error interno del servidor'
+            error: 'Error interno del servidor',
+            details: error.message
         });
     }
 });
@@ -108,32 +145,51 @@ router.post('/', async (req, res) => {
         const { 
             titulo, 
             descripcion, 
-            fecha_inicio, 
-            fecha_fin, 
+            fecha_evento, 
+            hora_evento, 
             tipo_evento_id, 
-            ubicacion, 
-            visible = true,
-            creado_por 
+            lugar, 
+            activo = true
         } = req.body;
         
         // Validaciones básicas
-        if (!titulo || !descripcion || !fecha_inicio) {
+        if (!titulo) {
             return res.status(400).json({
                 success: false,
-                error: 'Título, descripción y fecha de inicio son requeridos'
+                error: 'Título es requerido'
             });
         }
         
+        // Combinar fecha y hora para crear fecha_inicio
+        let fecha_inicio = null;
+        let fecha_fin = null;
+        
+        if (fecha_evento) {
+            if (hora_evento) {
+                fecha_inicio = new Date(`${fecha_evento}T${hora_evento}:00`);
+            } else {
+                fecha_inicio = new Date(`${fecha_evento}T00:00:00`);
+            }
+            
+            // fecha_fin es obligatoria, por defecto será 2 horas después
+            fecha_fin = new Date(fecha_inicio.getTime() + 2*60*60*1000);
+        }
+        
         // Generar link de Google Calendar
-        const link_google_cal = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(titulo)}&dates=${fecha_inicio.replace(/[-:]/g, '').split('.')[0]}/${(fecha_fin || fecha_inicio).replace(/[-:]/g, '').split('.')[0]}&details=${encodeURIComponent(descripcion)}&location=${encodeURIComponent(ubicacion || '')}`;
+        let link_google_cal = null;
+        if (fecha_inicio && fecha_fin) {
+            const startDate = fecha_inicio.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            const endDate = fecha_fin.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            link_google_cal = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(titulo)}&dates=${startDate}/${endDate}&details=${encodeURIComponent(descripcion || '')}&location=${encodeURIComponent(lugar || '')}`;
+        }
         
         const query = `
-            INSERT INTO eventos_vecinales (titulo, descripcion, fecha_inicio, fecha_fin, tipo_evento_id, ubicacion, visible, creado_por, link_google_cal)
+            INSERT INTO eventos_vecinales (titulo, descripcion, fecha_inicio, fecha_fin, tipo_evento_id, ubicacion, visible, link_google_cal, creado_por)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             RETURNING *
         `;
         const result = await db.query(query, [
-            titulo, descripcion, fecha_inicio, fecha_fin, tipo_evento_id, ubicacion, visible, creado_por, link_google_cal
+            titulo, descripcion, fecha_inicio, fecha_fin, tipo_evento_id, lugar, activo, link_google_cal, 1
         ]);
         
         res.status(201).json({
@@ -145,7 +201,8 @@ router.post('/', async (req, res) => {
         console.error('Error en crear evento:', error);
         res.status(500).json({
             success: false,
-            error: 'Error interno del servidor'
+            error: 'Error interno del servidor',
+            details: error.message
         });
     }
 });
@@ -157,33 +214,54 @@ router.put('/:id', async (req, res) => {
         const { 
             titulo, 
             descripcion, 
-            fecha_inicio, 
-            fecha_fin, 
+            fecha_evento, 
+            hora_evento, 
             tipo_evento_id, 
-            ubicacion, 
-            visible 
+            lugar, 
+            activo = true
         } = req.body;
         
         // Validaciones básicas
-        if (!titulo || !descripcion || !fecha_inicio) {
+        if (!titulo) {
             return res.status(400).json({
                 success: false,
-                error: 'Título, descripción y fecha de inicio son requeridos'
+                error: 'Título es requerido'
             });
         }
         
+        // Combinar fecha y hora para crear fecha_inicio
+        let fecha_inicio = null;
+        let fecha_fin = null;
+        
+        if (fecha_evento) {
+            if (hora_evento) {
+                fecha_inicio = new Date(`${fecha_evento}T${hora_evento}:00`);
+            } else {
+                fecha_inicio = new Date(`${fecha_evento}T00:00:00`);
+            }
+            
+            // fecha_fin es obligatoria, por defecto será 2 horas después
+            fecha_fin = new Date(fecha_inicio.getTime() + 2*60*60*1000);
+        }
+        
         // Generar link de Google Calendar actualizado
-        const link_google_cal = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(titulo)}&dates=${fecha_inicio.replace(/[-:]/g, '').split('.')[0]}/${(fecha_fin || fecha_inicio).replace(/[-:]/g, '').split('.')[0]}&details=${encodeURIComponent(descripcion)}&location=${encodeURIComponent(ubicacion || '')}`;
+        let link_google_cal = null;
+        if (fecha_inicio && fecha_fin) {
+            const startDate = fecha_inicio.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            const endDate = fecha_fin.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            link_google_cal = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(titulo)}&dates=${startDate}/${endDate}&details=${encodeURIComponent(descripcion || '')}&location=${encodeURIComponent(lugar || '')}`;
+        }
         
         const query = `
             UPDATE eventos_vecinales 
-            SET titulo = $1, descripcion = $2, fecha_inicio = $3, fecha_fin = $4, 
-                tipo_evento_id = $5, ubicacion = $6, visible = $7, link_google_cal = $8
+            SET titulo = $1, descripcion = $2, fecha_inicio = $3, fecha_fin = $4,
+                tipo_evento_id = $5, ubicacion = $6, visible = $7, link_google_cal = $8,
+                updated_at = CURRENT_TIMESTAMP
             WHERE id = $9
             RETURNING *
         `;
         const result = await db.query(query, [
-            titulo, descripcion, fecha_inicio, fecha_fin, tipo_evento_id, ubicacion, visible, link_google_cal, id
+            titulo, descripcion, fecha_inicio, fecha_fin, tipo_evento_id, lugar, activo, link_google_cal, id
         ]);
         
         if (result.rows.length === 0) {

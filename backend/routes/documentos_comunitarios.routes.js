@@ -40,6 +40,44 @@ router.get('/tipos', async (req, res) => {
     }
 });
 
+// Ruta para obtener tipos de documento (alias para compatibilidad)
+router.get('/tipos/all', async (req, res) => {
+    try {
+        // Verificar si las tablas existen
+        const tableCheckQuery = `
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                AND table_name = 'tipo_documento'
+            );
+        `;
+        const tableCheck = await db.query(tableCheckQuery);
+        
+        if (!tableCheck.rows[0].exists) {
+            return res.json({
+                success: true,
+                data: [],
+                message: 'Tabla tipo_documento no encontrada'
+            });
+        }
+        
+        const query = 'SELECT * FROM tipo_documento ORDER BY nombre';
+        const result = await db.query(query);
+        
+        res.json({
+            success: true,
+            data: result.rows
+        });
+    } catch (error) {
+        console.error('Error en tipos de documento:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error interno del servidor',
+            details: error.message
+        });
+    }
+});
+
 // Ruta principal para obtener documentos
 router.get('/', async (req, res) => {
     try {
@@ -77,19 +115,36 @@ router.get('/', async (req, res) => {
         const total = parseInt(countResult.rows[0].count);
         
         const docsQuery = `
-            SELECT d.*, td.nombre as tipo_documento_nombre, td.descripcion as tipo_documento_desc,
+            SELECT d.*, td.nombre as tipo_documento, td.descripcion as tipo_documento_desc,
                    e.titulo as evento_titulo
             FROM documentos_comunitarios d
             LEFT JOIN tipo_documento td ON d.tipo_documento_id = td.id
             LEFT JOIN eventos_vecinales e ON d.evento_id = e.id
+            WHERE d.visible = true
             ORDER BY d.fecha_publicacion DESC
             LIMIT $1 OFFSET $2
         `;
         const docsResult = await db.query(docsQuery, [limit, offset]);
         
+        // Formatear los datos para coincidir con el frontend
+        const formattedDocs = docsResult.rows.map(doc => ({
+            id: doc.id,
+            titulo: doc.nombre, // Mapear nombre a titulo para el frontend
+            descripcion: doc.descripcion,
+            tipo_documento: doc.tipo_documento,
+            tipo_documento_id: doc.tipo_documento_id,
+            evento_titulo: doc.evento_titulo,
+            evento_id: doc.evento_id,
+            url_documento: doc.link_drive, // Mapear link_drive a url_documento
+            activo: doc.visible, // Mapear visible a activo
+            fecha_publicacion: doc.fecha_publicacion,
+            created_at: doc.created_at,
+            updated_at: doc.updated_at
+        }));
+        
         res.json({
             success: true,
-            data: docsResult.rows,
+            data: formattedDocs,
             pagination: {
                 total: total,
                 page: page,
@@ -150,28 +205,25 @@ router.post('/', async (req, res) => {
             descripcion, 
             tipo_documento_id, 
             link_drive, 
-            fecha_publicacion,
             evento_id = null,
-            visible = true,
-            subido_por 
+            visible = true
         } = req.body;
         
         // Validaciones básicas
-        if (!nombre || !descripcion || !tipo_documento_id || !link_drive) {
+        if (!nombre || !link_drive) {
             return res.status(400).json({
                 success: false,
-                error: 'Nombre, descripción, tipo de documento y link de Drive son requeridos'
+                error: 'Nombre y link de Google Drive son requeridos'
             });
         }
         
         const query = `
-            INSERT INTO documentos_comunitarios (nombre, descripcion, tipo_documento_id, link_drive, fecha_publicacion, evento_id, visible, subido_por)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            INSERT INTO documentos_comunitarios (nombre, descripcion, tipo_documento_id, link_drive, visible, fecha_publicacion, subido_por)
+            VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, $6)
             RETURNING *
         `;
         const result = await db.query(query, [
-            nombre, descripcion, tipo_documento_id, link_drive, 
-            fecha_publicacion || new Date().toISOString(), evento_id, visible, subido_por
+            nombre, descripcion, tipo_documento_id, link_drive, visible, 1
         ]);
         
         res.status(201).json({
@@ -183,7 +235,8 @@ router.post('/', async (req, res) => {
         console.error('Error en crear documento:', error);
         res.status(500).json({
             success: false,
-            error: 'Error interno del servidor'
+            error: 'Error interno del servidor',
+            details: error.message
         });
     }
 });
@@ -193,13 +246,12 @@ router.put('/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const { 
-            nombre, 
+            titulo, 
             descripcion, 
             tipo_documento_id, 
-            link_drive, 
-            fecha_publicacion,
+            url_documento, 
             evento_id,
-            visible 
+            activo 
         } = req.body;
         
         // Validaciones básicas

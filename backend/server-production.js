@@ -148,7 +148,7 @@ try {
   app.use('/api/admin', adminRoutes);
   app.use('/api/init', initRoutes);
   app.use('/api/eventos', eventosRoutes);
-  app.use('/api/documentos', documentosRoutes);
+  app.use('/api/documentos_comunitarios', documentosRoutes);
 
   console.log('✅ Rutas configuradas:');
   console.log('  - /api/auth (auth-debug-fixed.routes.js)');
@@ -158,7 +158,7 @@ try {
   console.log('  - /api/admin (admin.routes.js)');
   console.log('  - /api/init (init.routes.js)');
   console.log('  - /api/eventos (eventos.routes.js)');
-  console.log('  - /api/documentos (documentos_comunitarios.routes.js)');
+  console.log('  - /api/documentos_comunitarios (documentos_comunitarios.routes.js)');
 
   console.log('✅ Rutas configuradas correctamente');
 } catch (error) {

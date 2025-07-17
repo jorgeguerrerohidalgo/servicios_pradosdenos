@@ -3227,12 +3227,12 @@
                         const formData = new FormData(form);
                         
                         return {
-                            titulo: formData.get('titulo'),
+                            nombre: formData.get('titulo'), // Mapear titulo a nombre
                             descripcion: formData.get('descripcion'),
                             tipo_documento_id: formData.get('tipo_documento_id'),
                             evento_id: formData.get('evento_id'),
-                            url_documento: formData.get('url_documento'),
-                            activo: formData.get('activo') === 'on'
+                            link_drive: formData.get('url_documento'), // Mapear url_documento a link_drive
+                            visible: formData.get('activo') === 'on' // Mapear activo a visible
                         };
                     }
                 }).then(async (result) => {

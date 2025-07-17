@@ -9,55 +9,74 @@ router.post('/init-eventos-documentos', async (req, res) => {
         
         // Script SQL para crear las tablas
         const createTablesSQL = `
+            -- Crear extensión para UUID si no existe
+            CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+            
             -- Crear tabla tipo_evento si no existe
             CREATE TABLE IF NOT EXISTS tipo_evento (
-                id SERIAL PRIMARY KEY,
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 nombre VARCHAR(100) NOT NULL UNIQUE,
                 descripcion TEXT,
+                icono VARCHAR(50) DEFAULT 'calendar',
                 color VARCHAR(7) DEFAULT '#007bff',
-                icono VARCHAR(50) DEFAULT 'fas fa-calendar',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                activo BOOLEAN DEFAULT true,
+                orden INTEGER DEFAULT 0,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
             );
 
             -- Crear tabla eventos_vecinales si no existe
             CREATE TABLE IF NOT EXISTS eventos_vecinales (
-                id SERIAL PRIMARY KEY,
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 titulo VARCHAR(200) NOT NULL,
                 descripcion TEXT,
-                fecha_inicio TIMESTAMP NOT NULL,
-                fecha_fin TIMESTAMP,
-                tipo_evento_id INTEGER REFERENCES tipo_evento(id),
                 ubicacion VARCHAR(200),
-                visible BOOLEAN DEFAULT true,
-                creado_por INTEGER,
+                fecha_inicio TIMESTAMP WITH TIME ZONE NOT NULL,
+                fecha_fin TIMESTAMP WITH TIME ZONE NOT NULL,
+                tipo_evento_id UUID NOT NULL REFERENCES tipo_evento(id),
                 link_google_cal TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                link_reunion TEXT,
+                visible BOOLEAN DEFAULT true,
+                destacado BOOLEAN DEFAULT false,
+                max_participantes INTEGER CHECK (max_participantes > 0 OR max_participantes IS NULL),
+                requiere_inscripcion BOOLEAN DEFAULT false,
+                creado_por INTEGER NOT NULL,
+                modificado_por INTEGER,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
             );
 
             -- Crear tabla tipo_documento si no existe
             CREATE TABLE IF NOT EXISTS tipo_documento (
-                id SERIAL PRIMARY KEY,
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 nombre VARCHAR(100) NOT NULL UNIQUE,
                 descripcion TEXT,
+                icono VARCHAR(50) DEFAULT 'file',
                 color VARCHAR(7) DEFAULT '#28a745',
-                icono VARCHAR(50) DEFAULT 'fas fa-file-alt',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                activo BOOLEAN DEFAULT true,
+                orden INTEGER DEFAULT 0,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
             );
 
             -- Crear tabla documentos_comunitarios si no existe
             CREATE TABLE IF NOT EXISTS documentos_comunitarios (
-                id SERIAL PRIMARY KEY,
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 nombre VARCHAR(200) NOT NULL,
                 descripcion TEXT,
-                tipo_documento_id INTEGER REFERENCES tipo_documento(id),
+                tipo_documento_id UUID NOT NULL REFERENCES tipo_documento(id),
                 link_drive TEXT NOT NULL,
-                fecha_publicacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                evento_id INTEGER REFERENCES eventos_vecinales(id),
+                nombre_archivo VARCHAR(200),
+                tamaño_archivo BIGINT CHECK (tamaño_archivo > 0 OR tamaño_archivo IS NULL),
+                fecha_publicacion TIMESTAMP WITH TIME ZONE NOT NULL,
+                fecha_vencimiento TIMESTAMP WITH TIME ZONE,
                 visible BOOLEAN DEFAULT true,
-                subido_por INTEGER,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                destacado BOOLEAN DEFAULT false,
+                requiere_autenticacion BOOLEAN DEFAULT false,
+                subido_por INTEGER NOT NULL,
+                modificado_por INTEGER,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
             );
 
             -- Crear índices para mejorar rendimiento
@@ -65,7 +84,6 @@ router.post('/init-eventos-documentos', async (req, res) => {
             CREATE INDEX IF NOT EXISTS idx_eventos_visible ON eventos_vecinales(visible);
             CREATE INDEX IF NOT EXISTS idx_documentos_fecha_publicacion ON documentos_comunitarios(fecha_publicacion);
             CREATE INDEX IF NOT EXISTS idx_documentos_visible ON documentos_comunitarios(visible);
-            CREATE INDEX IF NOT EXISTS idx_documentos_evento_id ON documentos_comunitarios(evento_id);
         `;
 
         // Ejecutar el script de creación de tablas
@@ -74,10 +92,26 @@ router.post('/init-eventos-documentos', async (req, res) => {
         // Insertar tipos de evento por defecto
         const insertTiposEventoSQL = `
             INSERT INTO tipo_evento (nombre, descripcion, color, icono) VALUES
-            ('Reunión de Directorio', 'Reuniones oficiales del directorio', '#007bff', 'fas fa-users'),
-            ('Asamblea General', 'Asambleas generales de propietarios', '#28a745', 'fas fa-bullhorn'),
-            ('Actividad Social', 'Eventos sociales y recreativos', '#ffc107', 'fas fa-glass-cheers'),
-            ('Mantenimiento', 'Trabajos de mantenimiento programados', '#dc3545', 'fas fa-tools'),
+            ('Reunión de Directorio', 'Reuniones oficiales del directorio', '#007bff', 'users'),
+            ('Asamblea General', 'Asambleas generales de propietarios', '#28a745', 'bullhorn'),
+            ('Actividad Social', 'Eventos sociales y recreativos', '#ffc107', 'glass-cheers'),
+            ('Mantenimiento', 'Trabajos de mantenimiento programados', '#dc3545', 'tools'),
+            ('Emergencia', 'Situaciones de emergencia', '#6c757d', 'exclamation-triangle')
+            ON CONFLICT (nombre) DO NOTHING;
+        `;
+
+        await db.query(insertTiposEventoSQL);
+        
+        // Insertar tipos de documento por defecto
+        const insertTiposDocumentoSQL = `
+            INSERT INTO tipo_documento (nombre, descripcion, color, icono) VALUES
+            ('Acta de Reunión', 'Actas de reuniones de directorio', '#007bff', 'file-alt'),
+            ('Reglamento', 'Reglamentos internos', '#28a745', 'book'),
+            ('Presupuesto', 'Documentos de presupuesto', '#ffc107', 'calculator'),
+            ('Informe', 'Informes técnicos y administrativos', '#17a2b8', 'chart-line'),
+            ('Comunicado', 'Comunicados oficiales', '#6c757d', 'bullhorn')
+            ON CONFLICT (nombre) DO NOTHING;
+        `;
             ('Capacitación', 'Charlas y capacitaciones', '#6f42c1', 'fas fa-chalkboard-teacher')
             ON CONFLICT (nombre) DO NOTHING;
         `;
@@ -110,12 +144,11 @@ router.post('/init-eventos-documentos', async (req, res) => {
                 'documentos_comunitarios'
             ]
         });
-        
     } catch (error) {
-        console.error('❌ Error inicializando tablas:', error);
+        console.error('❌ Error creando tablas:', error);
         res.status(500).json({
             success: false,
-            error: 'Error al inicializar tablas',
+            error: 'Error al crear las tablas',
             details: error.message
         });
     }
