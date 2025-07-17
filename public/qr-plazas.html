@@ -6,7 +6,9 @@
     <title>Generador de QR para Plazas - Los Prados de Nos</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js" defer></script>
     <style>
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -359,15 +361,22 @@
         document.addEventListener('DOMContentLoaded', function() {
             debug('Documento cargado, iniciando...');
             
-            // Verificar si QRCode está disponible
-            if (typeof QRCode === 'undefined') {
-                debug('ERROR: QRCode library no está disponible');
-                showAlert('danger', 'Error: Librería QRCode no disponible. Verifique su conexión a internet.');
-                return;
-            }
-            
-            debug('QRCode library disponible');
-            loadPlazas();
+            // Esperar un poco para que las librerías se carguen
+            setTimeout(() => {
+                // Verificar si QRCode está disponible
+                if (typeof QRCode === 'undefined') {
+                    debug('ERROR: QRCode library no está disponible');
+                    showAlert('danger', 'Error: Librería QRCode no disponible. Recargando página...');
+                    // Intentar recargar después de un momento
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                    return;
+                }
+                
+                debug('QRCode library disponible');
+                loadPlazas();
+            }, 500);
         });
         
         // Cargar plazas desde la API
@@ -378,8 +387,16 @@
                 const apiUrl = `${getApiUrl()}/api/plazas`;
                 debug('URL API:', apiUrl);
                 
-                const response = await fetch(apiUrl);
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
                 debug('Response status:', response.status);
+                debug('Response headers:', response.headers);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -388,11 +405,17 @@
                 const data = await response.json();
                 debug('Datos recibidos:', data);
                 
-                if (!data.plazas || !Array.isArray(data.plazas)) {
-                    throw new Error('Formato de datos inválido: plazas no es un array');
+                if (!data || (!data.plazas && !Array.isArray(data))) {
+                    debug('Intentando interpretar datos como array directo...');
+                    if (Array.isArray(data)) {
+                        plazasData = data;
+                    } else {
+                        throw new Error('Formato de datos inválido');
+                    }
+                } else {
+                    plazasData = data.plazas || data;
                 }
                 
-                plazasData = data.plazas;
                 debug('Plazas cargadas:', plazasData.length);
                 
                 populateSelectOptions();
@@ -406,6 +429,17 @@
             } catch (error) {
                 debug('Error cargando plazas:', error);
                 showAlert('danger', 'Error al cargar las plazas: ' + error.message);
+                
+                // Intentar con datos de prueba si la API falla
+                debug('Intentando con datos de prueba...');
+                plazasData = [
+                    { id: 1, nombre: 'Plaza A1', direccion: 'Calle Principal 123', token: 'test-token-1' },
+                    { id: 2, nombre: 'Plaza A2', direccion: 'Calle Principal 124', token: 'test-token-2' },
+                    { id: 3, nombre: 'Plaza B1', direccion: 'Calle Secundaria 125', token: 'test-token-3' }
+                ];
+                
+                populateSelectOptions();
+                showAlert('info', 'Usando datos de prueba. Verifique la conexión con el servidor.');
             }
         }
         
@@ -761,5 +795,31 @@
     </script>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Script adicional para asegurar la carga correcta
+        window.onload = function() {
+            console.log('Window loaded - verificando QRCode...');
+            if (typeof QRCode === 'undefined') {
+                console.log('QRCode no disponible en window.onload, reintentando...');
+                setTimeout(() => {
+                    if (typeof QRCode === 'undefined') {
+                        console.log('Intentando cargar QRCode manualmente...');
+                        const script = document.createElement('script');
+                        script.src = 'https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js';
+                        script.onload = function() {
+                            console.log('QRCode cargado manualmente');
+                            if (plazasData.length === 0) {
+                                loadPlazas();
+                            }
+                        };
+                        document.head.appendChild(script);
+                    }
+                }, 1000);
+            } else {
+                console.log('QRCode disponible en window.onload');
+            }
+        };
+    </script>
 </body>
 </html>
