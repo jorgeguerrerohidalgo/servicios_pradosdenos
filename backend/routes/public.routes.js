@@ -27,6 +27,73 @@ router.get('/plazas', async (req, res) => {
   }
 });
 
+// Actualizar token de una plaza específica
+router.put('/plazas/:plazaId/token', async (req, res) => {
+  try {
+    const { plazaId } = req.params;
+    const { token } = req.body;
+    
+    // Validar entrada
+    if (!token || typeof token !== 'string' || token.length < 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'Token inválido. Debe ser una cadena de al menos 10 caracteres.'
+      });
+    }
+    
+    // Verificar que la plaza existe
+    const plazaExists = await query('SELECT id FROM plazas WHERE id = $1 AND activo = TRUE', [plazaId]);
+    if (plazaExists.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Plaza no encontrada'
+      });
+    }
+    
+    // Verificar que el token no esté ya en uso
+    const tokenExists = await query('SELECT plaza_id FROM plaza_tokens WHERE token = $1 AND plaza_id != $2', [token, plazaId]);
+    if (tokenExists.length > 0) {
+      return res.status(409).json({
+        success: false,
+        message: 'Este token ya está en uso por otra plaza'
+      });
+    }
+    
+    // Actualizar o insertar token
+    const existingToken = await query('SELECT id FROM plaza_tokens WHERE plaza_id = $1', [plazaId]);
+    
+    if (existingToken.length > 0) {
+      // Actualizar token existente
+      await query(
+        'UPDATE plaza_tokens SET token = $1, fecha_generacion = CURRENT_TIMESTAMP WHERE plaza_id = $2',
+        [token, plazaId]
+      );
+    } else {
+      // Insertar nuevo token
+      await query(
+        'INSERT INTO plaza_tokens (plaza_id, token, fecha_generacion) VALUES ($1, $2, CURRENT_TIMESTAMP)',
+        [plazaId, token]
+      );
+    }
+    
+    res.json({
+      success: true,
+      message: 'Token actualizado exitosamente',
+      data: {
+        plaza_id: plazaId,
+        token: token
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error actualizando token de plaza:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+});
+
 // Obtener solo nombres de plazas (para dropdown básico)
 router.get('/plazas/simple', async (req, res) => {
   try {

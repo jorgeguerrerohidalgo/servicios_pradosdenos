@@ -446,6 +446,13 @@
                 
                 debug('Plazas cargadas:', plazasData.length);
                 
+                // Verificar que las plazas tengan tokens
+                const plazasSinToken = plazasData.filter(plaza => !plaza.token);
+                if (plazasSinToken.length > 0) {
+                    debug('Plazas sin token encontradas:', plazasSinToken.length);
+                    showAlert('warning', `${plazasSinToken.length} plazas no tienen tokens generados. <a href="/generar-tokens.html" class="alert-link">Generar tokens</a>`);
+                }
+                
                 populateSelectOptions();
                 
                 if (plazasData.length > 0) {

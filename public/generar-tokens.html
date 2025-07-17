@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generar Tokens para Plazas - Los Prados de Nos</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .container-main {
+            padding: 30px 0;
+        }
+        
+        .header-section {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header-section h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 50px;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .card {
+            background: rgba(255,255,255,0.95);
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+            margin-bottom: 30px;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px 20px 0 0 !important;
+            padding: 20px;
+            border: none;
+        }
+        
+        .card-body {
+            padding: 30px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 193, 7, 0.4);
+        }
+        
+        .plaza-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .plaza-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .plaza-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .plaza-card h6 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .token-display {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #dee2e6;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            word-break: break-all;
+        }
+        
+        .token-new {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        
+        .token-regenerated {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #6c757d;
+        }
+        
+        .loading .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            color: #667eea;
+        }
+        
+        .alert-success {
+            background: rgba(40, 167, 69, 0.1);
+            border: 1px solid rgba(40, 167, 69, 0.3);
+            color: #155724;
+            border-radius: 10px;
+        }
+        
+        .alert-danger {
+            background: rgba(220, 53, 69, 0.1);
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            color: #721c24;
+            border-radius: 10px;
+        }
+        
+        .alert-info {
+            background: rgba(13, 202, 240, 0.1);
+            border: 1px solid rgba(13, 202, 240, 0.3);
+            color: #0c5460;
+            border-radius: 10px;
+        }
+        
+        .alert-warning {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            color: #664d03;
+            border-radius: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .header-section h1 {
+                font-size: 2rem;
+            }
+            
+            .card-body {
+                padding: 20px;
+            }
+            
+            .plaza-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/admin-panel.html" class="back-btn">
+        <i class="fas fa-arrow-left"></i> Volver al Panel
+    </a>
+    
+    <div class="container container-main">
+        <div class="header-section">
+            <h1><i class="fas fa-key"></i> Generar Tokens para Plazas</h1>
+            <p class="lead">Genera tokens únicos y seguros para el acceso a cada plaza</p>
+        </div>
+        
+        <!-- Controles Generales -->
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-cogs"></i> Controles Generales</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <button class="btn btn-primary w-100" onclick="generateAllTokens()">
+                            <i class="fas fa-magic"></i> Generar Todos los Tokens
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-warning w-100" onclick="regenerateAllTokens()">
+                            <i class="fas fa-refresh"></i> Regenerar Todos
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-success w-100" onclick="exportTokens()">
+                            <i class="fas fa-download"></i> Exportar Tokens
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="alertContainer" class="mt-3"></div>
+            </div>
+        </div>
+        
+        <!-- Lista de Plazas -->
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-list"></i> Tokens por Plaza</h4>
+            </div>
+            <div class="card-body">
+                <div id="loadingPlazas" class="loading" style="display: none;">
+                    <div class="spinner-border" role="status"></div>
+                    <p class="mt-3">Cargando plazas...</p>
+                </div>
+                <div id="plazasContainer" class="plaza-grid"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let plazasData = [];
+        
+        // Función para obtener la URL base de la API
+        function getApiUrl() {
+            return window.location.origin;
+        }
+        
+        // Función de debugging
+        function debug(message, data = null) {
+            console.log(`[Token Debug] ${message}`, data);
+        }
+        
+        // Cargar plazas al iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            debug('Documento cargado, iniciando...');
+            loadPlazas();
+        });
+        
+        // Cargar plazas desde la API
+        async function loadPlazas() {
+            debug('Cargando plazas desde API...');
+            
+            const loading = document.getElementById('loadingPlazas');
+            const container = document.getElementById('plazasContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+            
+            try {
+                const apiUrl = `${getApiUrl()}/api/plazas`;
+                debug('URL API:', apiUrl);
+                
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                debug('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                debug('Datos recibidos:', data);
+                
+                if (!data || (!data.plazas && !Array.isArray(data))) {
+                    if (Array.isArray(data)) {
+                        plazasData = data;
+                    } else {
+                        throw new Error('Formato de datos inválido');
+                    }
+                } else {
+                    plazasData = data.plazas || data;
+                }
+                
+                debug('Plazas cargadas:', plazasData.length);
+                
+                displayPlazas();
+                
+                if (plazasData.length > 0) {
+                    showAlert('success', `${plazasData.length} plazas cargadas correctamente`);
+                } else {
+                    showAlert('warning', 'No se encontraron plazas disponibles');
+                }
+                
+            } catch (error) {
+                debug('Error cargando plazas:', error);
+                showAlert('danger', 'Error al cargar las plazas: ' + error.message);
+                
+                // Datos de prueba si la API falla
+                debug('Usando datos de prueba...');
+                plazasData = [
+                    { id: 1, nombre: 'Plaza A1', direccion: 'Calle Principal 123', token: null },
+                    { id: 2, nombre: 'Plaza A2', direccion: 'Calle Principal 124', token: null },
+                    { id: 3, nombre: 'Plaza B1', direccion: 'Calle Secundaria 125', token: null },
+                    { id: 4, nombre: 'Plaza B2', direccion: 'Calle Secundaria 126', token: null },
+                    { id: 5, nombre: 'Plaza C1', direccion: 'Avenida Central 127', token: null }
+                ];
+                
+                displayPlazas();
+                showAlert('info', 'Usando datos de prueba. Verifique la conexión con el servidor.');
+                
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+        
+        // Mostrar plazas en el grid
+        function displayPlazas() {
+            const container = document.getElementById('plazasContainer');
+            container.innerHTML = '';
+            
+            plazasData.forEach(plaza => {
+                const plazaCard = document.createElement('div');
+                plazaCard.className = 'plaza-card';
+                plazaCard.id = `plaza-${plaza.id}`;
+                
+                const hasToken = plaza.token && plaza.token.length > 0;
+                const tokenDisplay = hasToken ? 
+                    `<div class="token-display">${plaza.token}</div>` : 
+                    '<div class="token-display text-muted">Token no generado</div>';
+                
+                plazaCard.innerHTML = `
+                    <h6>${plaza.nombre}</h6>
+                    <p class="text-muted">${plaza.direccion || 'Sin dirección'}</p>
+                    
+                    <div class="token-section">
+                        <strong>Token:</strong>
+                        ${tokenDisplay}
+                    </div>
+                    
+                    <div class="mt-3">
+                        <button class="btn btn-sm btn-primary me-2" onclick="generateToken('${plaza.id}')">
+                            <i class="fas fa-key"></i> ${hasToken ? 'Regenerar' : 'Generar'} Token
+                        </button>
+                        ${hasToken ? `
+                            <button class="btn btn-sm btn-success" onclick="copyToken('${plaza.id}')">
+                                <i class="fas fa-copy"></i> Copiar
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+                
+                container.appendChild(plazaCard);
+            });
+        }
+        
+        // Generar token único
+        function generateUniqueToken() {
+            const timestamp = Date.now().toString(36);
+            const randomStr = Math.random().toString(36).substr(2, 9);
+            const additionalRandom = Math.random().toString(36).substr(2, 5);
+            
+            return `tok_${timestamp}_${randomStr}_${additionalRandom}`.toUpperCase();
+        }
+        
+        // Generar token para una plaza específica
+        async function generateToken(plazaId) {
+            debug(`Generando token para plaza ${plazaId}`);
+            
+            try {
+                const plaza = plazasData.find(p => p.id == plazaId);
+                if (!plaza) {
+                    throw new Error('Plaza no encontrada');
+                }
+                
+                const newToken = generateUniqueToken();
+                
+                // Actualizar token en la plaza
+                plaza.token = newToken;
+                
+                // Actualizar display
+                updatePlazaTokenDisplay(plazaId, newToken, true);
+                
+                // Aquí deberías enviar el token al servidor
+                await saveTokenToServer(plazaId, newToken);
+                
+                showAlert('success', `Token generado exitosamente para ${plaza.nombre}`);
+                debug(`Token generado: ${newToken}`);
+                
+            } catch (error) {
+                debug('Error generando token:', error);
+                showAlert('danger', 'Error al generar token: ' + error.message);
+            }
+        }
+        
+        // Actualizar display del token
+        function updatePlazaTokenDisplay(plazaId, token, isNew = false) {
+            const plazaCard = document.getElementById(`plaza-${plazaId}`);
+            if (!plazaCard) return;
+            
+            const tokenSection = plazaCard.querySelector('.token-section');
+            const tokenClass = isNew ? 'token-new' : 'token-regenerated';
+            
+            tokenSection.innerHTML = `
+                <strong>Token:</strong>
+                <div class="token-display ${tokenClass}">${token}</div>
+            `;
+            
+            // Actualizar botones
+            const buttonContainer = plazaCard.querySelector('.mt-3');
+            buttonContainer.innerHTML = `
+                <button class="btn btn-sm btn-primary me-2" onclick="generateToken('${plazaId}')">
+                    <i class="fas fa-key"></i> Regenerar Token
+                </button>
+                <button class="btn btn-sm btn-success" onclick="copyToken('${plazaId}')">
+                    <i class="fas fa-copy"></i> Copiar
+                </button>
+            `;
+        }
+        
+        // Copiar token al portapapeles
+        async function copyToken(plazaId) {
+            const plaza = plazasData.find(p => p.id == plazaId);
+            if (!plaza || !plaza.token) return;
+            
+            try {
+                await navigator.clipboard.writeText(plaza.token);
+                showAlert('success', `Token copiado al portapapeles para ${plaza.nombre}`);
+            } catch (error) {
+                // Fallback para navegadores que no soportan clipboard API
+                const textArea = document.createElement('textarea');
+                textArea.value = plaza.token;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showAlert('success', `Token copiado al portapapeles para ${plaza.nombre}`);
+            }
+        }
+        
+        // Generar todos los tokens
+        async function generateAllTokens() {
+            debug('Generando todos los tokens...');
+            
+            try {
+                let generatedCount = 0;
+                
+                for (const plaza of plazasData) {
+                    if (!plaza.token) {
+                        const newToken = generateUniqueToken();
+                        plaza.token = newToken;
+                        updatePlazaTokenDisplay(plaza.id, newToken, true);
+                        await saveTokenToServer(plaza.id, newToken);
+                        generatedCount++;
+                        
+                        // Pequeña pausa para no sobrecargar
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+                }
+                
+                if (generatedCount > 0) {
+                    showAlert('success', `${generatedCount} tokens generados exitosamente`);
+                } else {
+                    showAlert('info', 'Todas las plazas ya tienen tokens generados');
+                }
+                
+            } catch (error) {
+                debug('Error generando todos los tokens:', error);
+                showAlert('danger', 'Error al generar tokens: ' + error.message);
+            }
+        }
+        
+        // Regenerar todos los tokens
+        async function regenerateAllTokens() {
+            debug('Regenerando todos los tokens...');
+            
+            if (!confirm('¿Estás seguro de que quieres regenerar TODOS los tokens? Esto invalidará todos los códigos QR existentes.')) {
+                return;
+            }
+            
+            try {
+                for (const plaza of plazasData) {
+                    const newToken = generateUniqueToken();
+                    plaza.token = newToken;
+                    updatePlazaTokenDisplay(plaza.id, newToken, false);
+                    await saveTokenToServer(plaza.id, newToken);
+                    
+                    // Pequeña pausa para no sobrecargar
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                showAlert('success', `Todos los tokens han sido regenerados exitosamente`);
+                
+            } catch (error) {
+                debug('Error regenerando tokens:', error);
+                showAlert('danger', 'Error al regenerar tokens: ' + error.message);
+            }
+        }
+        
+        // Exportar tokens
+        function exportTokens() {
+            debug('Exportando tokens...');
+            
+            const tokensWithPlazas = plazasData.filter(plaza => plaza.token);
+            
+            if (tokensWithPlazas.length === 0) {
+                showAlert('warning', 'No hay tokens para exportar');
+                return;
+            }
+            
+            const csvContent = [
+                ['Plaza', 'Direccion', 'Token', 'URL_Checkin'],
+                ...tokensWithPlazas.map(plaza => [
+                    plaza.nombre,
+                    plaza.direccion || 'N/A',
+                    plaza.token,
+                    `${getApiUrl()}/checkin.html?plaza=${plaza.token}`
+                ])
+            ].map(row => row.join(',')).join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `tokens_plazas_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showAlert('success', `Tokens exportados exitosamente (${tokensWithPlazas.length} plazas)`);
+        }
+        
+        // Guardar token en el servidor
+        async function saveTokenToServer(plazaId, token) {
+            debug(`Guardando token en servidor para plaza ${plazaId}`);
+            
+            try {
+                const response = await fetch(`${getApiUrl()}/api/plazas/${plazaId}/token`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ token: token })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                debug('Token guardado exitosamente:', result);
+                
+            } catch (error) {
+                debug('Error guardando token (continuando con local):', error);
+                // Continuar con el token local aunque falle el servidor
+            }
+        }
+        
+        // Mostrar alertas
+        function showAlert(type, message) {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            container.innerHTML = '';
+            container.appendChild(alert);
+            
+            // Auto-dismiss después de 5 segundos
+            setTimeout(() => {
+                if (alert && alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+    </script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
