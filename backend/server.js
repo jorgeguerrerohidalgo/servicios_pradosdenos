@@ -38,7 +38,8 @@ const adminRoutes = require('./routes/admin.routes');
 
 // Importar nuevas rutas - EVENTOS Y DOCUMENTOS SIMPLIFICADOS
 const eventosRoutes = require('./routes/eventos.routes');
-const documentosRoutes = require('./routes/documentos_new.routes');
+const documentosRoutes = require('./routes/documentos_comunitarios.routes');
+const initRoutes = require('./routes/init.routes');
 
 // Variables de entorno para producción
 const PORT = process.env.PORT || 3000;
@@ -207,7 +208,8 @@ app.use('/api/checkins', publicRoutes); // Para /api/checkins/public
 app.use('/api/admin', adminRoutes);
 app.use('/api', publicRoutes);
 app.use('/api/eventos', eventosRoutes);
-app.use('/api/documentos', documentosRoutes);
+app.use('/api/documentos_comunitarios', documentosRoutes);
+app.use('/api/init', initRoutes);
 
 // Servir archivos estáticos desde public (primero local, luego padre)
 const publicPaths = [
