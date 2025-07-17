@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../utils/db');
+const db = requ        const docsResult = await db.query(docsQuery, [limit, offset]);
+        
+        // Formatear los datos para coincidir con lo que espera el frontend
+        const formattedDocs = docsResult.map(doc => ({'../utils/db');
 
 // Ruta para obtener tipos de documento
 router.get('/tipos', async (req, res) => {
@@ -70,7 +73,7 @@ router.get('/', async (req, res) => {
         // Obtener documentos desde PostgreSQL con join a tipo_documento
         const countQuery = 'SELECT COUNT(*) FROM documentos_comunitarios';
         const countResult = await db.query(countQuery);
-        const total = parseInt(countResult.rows[0].count);
+        const total = parseInt(countResult[0].count);
         
         const docsQuery = `
             SELECT d.*, td.nombre as tipo_documento, td.descripcion as tipo_documento_desc,
@@ -85,7 +88,7 @@ router.get('/', async (req, res) => {
         const docsResult = await db.query(docsQuery, [limit, offset]);
         
         // Formatear los datos para coincidir con el frontend
-        const formattedDocs = docsResult.rows.map(doc => ({
+        const formattedDocs = docsResult.map(doc => ({
             id: doc.id,
             titulo: doc.nombre, // Mapear nombre a titulo para el frontend
             descripcion: doc.descripcion,

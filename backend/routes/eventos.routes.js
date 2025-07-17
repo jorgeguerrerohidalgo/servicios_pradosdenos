@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
         // Obtener eventos desde PostgreSQL
         const countQuery = 'SELECT COUNT(*) FROM eventos_vecinales WHERE visible = true';
         const countResult = await db.query(countQuery);
-        const total = parseInt(countResult.rows[0].count);
+        const total = parseInt(countResult[0].count);
         
         const eventsQuery = `
             SELECT e.*, te.nombre as tipo_evento 
@@ -25,7 +25,7 @@ router.get('/', async (req, res) => {
         const eventsResult = await db.query(eventsQuery, [limit, offset]);
         
         // Formatear los datos para coincidir con lo que espera el frontend
-        const formattedEvents = eventsResult.rows.map(event => ({
+        const formattedEvents = eventsResult.map(event => ({
             id: event.id,
             titulo: event.titulo,
             descripcion: event.descripcion,
@@ -76,7 +76,7 @@ router.get('/:id', async (req, res) => {
         `;
         const result = await db.query(query, [id]);
         
-        if (result.rows.length === 0) {
+        if (result.length === 0) {
             return res.status(404).json({
                 success: false,
                 error: 'Evento no encontrado'
@@ -84,7 +84,7 @@ router.get('/:id', async (req, res) => {
         }
         
         // Formatear el evento para coincidir con el frontend
-        const evento = result.rows[0];
+        const evento = result[0];
         const formattedEvent = {
             id: evento.id,
             titulo: evento.titulo,
@@ -170,7 +170,7 @@ router.post('/', async (req, res) => {
         
         res.status(201).json({
             success: true,
-            data: result.rows[0],
+            data: result[0],
             message: 'Evento creado exitosamente'
         });
     } catch (error) {
@@ -240,7 +240,7 @@ router.put('/:id', async (req, res) => {
             titulo, descripcion, fecha_inicio, fecha_fin, tipo_evento_id, lugar, activo, link_google_cal, id
         ]);
         
-        if (result.rows.length === 0) {
+        if (result.length === 0) {
             return res.status(404).json({
                 success: false,
                 error: 'Evento no encontrado'
@@ -249,7 +249,7 @@ router.put('/:id', async (req, res) => {
         
         res.json({
             success: true,
-            data: result.rows[0],
+            data: result[0],
             message: 'Evento actualizado exitosamente'
         });
     } catch (error) {
@@ -269,7 +269,7 @@ router.delete('/:id', async (req, res) => {
         const query = 'DELETE FROM eventos_vecinales WHERE id = $1 RETURNING *';
         const result = await db.query(query, [id]);
         
-        if (result.rows.length === 0) {
+        if (result.length === 0) {
             return res.status(404).json({
                 success: false,
                 error: 'Evento no encontrado'
@@ -297,7 +297,7 @@ router.get('/tipos/all', async (req, res) => {
         
         res.json({
             success: true,
-            data: result.rows
+            data: result
         });
     } catch (error) {
         console.error('Error en tipos de evento:', error);
