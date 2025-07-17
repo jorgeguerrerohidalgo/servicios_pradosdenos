@@ -97,21 +97,13 @@ async function checkDatabaseConnection() {
     
     await client.connect();
     console.log('✅ Conexión a base de datos exitosa');
-    
-    // Verificar tablas críticas
-    const result = await client.query(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      AND table_name IN ('security_logs', 'admin_users', 'guardias')
-    `);
-    
-    console.log('📋 Tablas verificadas:', result.rows.map(r => r.table_name));
-    
     await client.end();
     return true;
   } catch (error) {
     console.error('❌ Error de conexión a base de datos:', error.message);
+    if (isProduction) {
+      console.error('❌ En producción, la base de datos es requerida');
+    }
     return false;
   }
 }
@@ -120,6 +112,7 @@ async function checkDatabaseConnection() {
 
 // Importar rutas con manejo de errores
 try {
+  // Verificar que los archivos existen antes de importar
   const authRoutes = require('./routes/auth-debug-fixed.routes');
   const checkinRoutes = require('./routes/checkin.routes');
   const publicRoutes = require('./routes/public.routes');
@@ -148,6 +141,26 @@ try {
   console.log('✅ Rutas configuradas correctamente');
 } catch (error) {
   console.error('❌ Error cargando rutas:', error.message);
+  
+  // Cargar rutas básicas como fallback
+  try {
+    const authRoutes = require('./routes/auth.routes');
+    const checkinRoutes = require('./routes/checkin.routes');
+    const publicRoutes = require('./routes/public.routes');
+    const adminRoutes = require('./routes/admin.routes');
+    
+    app.use('/api/auth', authRoutes);
+    app.use('/api/checkin', checkinRoutes);
+    app.use('/api/checkins', publicRoutes);
+    app.use('/api', publicRoutes);
+    app.use('/api/admin', adminRoutes);
+    
+    console.log('✅ Rutas básicas configuradas como fallback');
+  } catch (fallbackError) {
+    console.error('❌ Error crítico cargando rutas básicas:', fallbackError.message);
+    console.error('❌ El servidor no puede continuar sin rutas básicas');
+    process.exit(1);
+  }
 }
 
 // ========== ARCHIVOS ESTÁTICOS ==========
@@ -199,16 +212,25 @@ app.use((req, res) => {
 
 async function startServer() {
   try {
+    console.log('🚀 Iniciando servidor de producción...');
+    
     // Verificar conexión a base de datos
+    console.log('🔍 Verificando conexión a base de datos...');
     const dbConnected = await checkDatabaseConnection();
     
     if (!dbConnected && isProduction) {
       console.error('❌ No se pudo conectar a la base de datos en producción');
+      console.error('❌ Variables de entorno requeridas:');
+      console.error('   DATABASE_URL:', process.env.DATABASE_URL ? '✅ Configurada' : '❌ Faltante');
       process.exit(1);
     }
     
+    if (!dbConnected) {
+      console.warn('⚠️  Base de datos no disponible en desarrollo - continuando...');
+    }
+    
     // Iniciar servidor
-    app.listen(PORT, '0.0.0.0', () => {
+    const server = app.listen(PORT, '0.0.0.0', () => {
       console.log('🚀 Servidor corriendo en puerto', PORT);
       console.log('🌍 Entorno:', NODE_ENV);
       console.log('⚡ Health check disponible en: /health');
@@ -216,13 +238,26 @@ async function startServer() {
       
       if (isProduction) {
         console.log('🔒 Modo producción: Todas las funciones de seguridad activadas');
+        console.log('🌐 URL: https://servicios-prados-de-nos.onrender.com');
       } else {
         console.log('🛠️  Modo desarrollo: Algunas funciones de seguridad relajadas');
       }
+      
+      console.log('✅ Servidor iniciado correctamente');
+    });
+    
+    // Manejo de errores del servidor
+    server.on('error', (error) => {
+      console.error('❌ Error del servidor:', error.message);
+      if (error.code === 'EADDRINUSE') {
+        console.error(`❌ Puerto ${PORT} ya está en uso`);
+      }
+      process.exit(1);
     });
     
   } catch (error) {
     console.error('❌ Error iniciando servidor:', error.message);
+    console.error('Stack:', error.stack);
     process.exit(1);
   }
 }
@@ -231,10 +266,23 @@ async function startServer() {
 process.on('uncaughtException', (error) => {
   console.error('❌ Excepción no capturada:', error.message);
   console.error('Stack:', error.stack);
+  process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ Promesa rechazada no manejada:', reason);
+  process.exit(1);
+});
+
+// Manejo de señales del sistema
+process.on('SIGTERM', () => {
+  console.log('🛑 Recibido SIGTERM, cerrando servidor gracefully...');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('🛑 Recibido SIGINT, cerrando servidor gracefully...');
+  process.exit(0);
 });
 
 // Iniciar servidor

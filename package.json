@@ -8,7 +8,7 @@
     "npm": ">=8.0.0"
   },
   "scripts": {
-    "start": "node backend/server.js",
+    "start": "node backend/server-production.js",
     "dev": "nodemon backend/server.js",
     "build": "npm install --prefix backend",
     "test": "echo 'No tests specified' && exit 0",
