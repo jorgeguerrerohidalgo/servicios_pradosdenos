@@ -1,5 +1,125 @@
 const express = require('express');
 const router = express.Router();
+const db = require('../utils/db');
+
+// Ruta para obtener tipos de documento
+router.get('/tipos', async (req, res) => {
+    try {
+        const query = 'SELECT * FROM tipo_documento WHERE activo = true ORDER BY orden, nombre';
+        const result = await db.query(query);
+        
+        res.json({
+            success: true,
+            data: result
+        });
+    } catch (error) {
+        console.error('Error en tipos de documento:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error interno del servidor',
+            details: error.message
+        });
+    }
+});
+
+// Ruta principal para obtener documentos
+router.get('/', async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+        
+        // Obtener documentos desde PostgreSQL con join a tipo_documento
+        const countQuery = 'SELECT COUNT(*) FROM documentos_comunitarios';
+        const countResult = await db.query(countQuery);
+        const total = parseInt(countResult[0].count);
+        
+        const docsQuery = `
+            SELECT d.*, td.nombre as tipo_documento, td.descripcion as tipo_documento_desc,
+                   e.titulo as evento_titulo
+            FROM documentos_comunitarios d
+            LEFT JOIN tipo_documento td ON d.tipo_documento_id = td.id
+            LEFT JOIN eventos_vecinales e ON d.evento_id = e.id
+            WHERE d.visible = true
+            ORDER BY d.fecha_publicacion DESC
+            LIMIT $1 OFFSET $2
+        `;
+        const docsResult = await db.query(docsQuery, [limit, offset]);
+        
+        // Formatear los datos para coincidir con el frontend
+        const formattedDocs = docsResult.map(doc => ({
+            id: doc.id,
+            titulo: doc.nombre, // Mapear nombre a titulo para el frontend
+            descripcion: doc.descripcion,
+            tipo_documento: doc.tipo_documento,
+            tipo_documento_desc: doc.tipo_documento_desc,
+            link_drive: doc.link_drive,
+            fecha_publicacion: doc.fecha_publicacion,
+            fecha_vencimiento: doc.fecha_vencimiento,
+            visible: doc.visible,
+            destacado: doc.destacado,
+            requiere_autenticacion: doc.requiere_autenticacion,
+            evento_titulo: doc.evento_titulo
+        }));
+        
+        res.json({
+            success: true,
+            data: formattedDocs,
+            pagination: {
+                page,
+                limit,
+                total,
+                pages: Math.ceil(total / limit)
+            }
+        });
+    } catch (error) {
+        console.error('Error en documentos:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error interno del servidor',
+            details: error.message
+        });
+    }
+});
+
+// Ruta para obtener documento por ID
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const query = `
+            SELECT d.*, td.nombre as tipo_documento, td.descripcion as tipo_documento_desc,
+                   e.titulo as evento_titulo
+            FROM documentos_comunitarios d
+            LEFT JOIN tipo_documento td ON d.tipo_documento_id = td.id
+            LEFT JOIN eventos_vecinales e ON d.evento_id = e.id
+            WHERE d.id = $1
+        `;
+        const result = await db.query(query, [id]);
+        
+        if (result.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'Documento no encontrado'
+            });
+        }
+        
+        res.json({
+            success: true,
+            data: result[0]
+        });
+    } catch (error) {
+        console.error('Error en documento específico:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error interno del servidor',
+            details: error.message
+        });
+    }
+});
+
+module.exports = router;
+const router = express.Router();
 const db = requ        const docsResult = await db.query(docsQuery, [limit, offset]);
         
         // Formatear los datos para coincidir con lo que espera el frontend
@@ -13,7 +133,7 @@ router.get('/tipos', async (req, res) => {
         
         res.json({
             success: true,
-            data: result.rows
+            data: result
         });
     } catch (error) {
         console.error('Error en tipos de documento:', error);
@@ -38,7 +158,7 @@ router.get('/tipos/all', async (req, res) => {
         `;
         const tableCheck = await db.query(tableCheckQuery);
         
-        if (!tableCheck.rows[0].exists) {
+        if (!tableCheck[0].exists) {
             return res.json({
                 success: true,
                 data: [],
@@ -51,7 +171,7 @@ router.get('/tipos/all', async (req, res) => {
         
         res.json({
             success: true,
-            data: result.rows
+            data: result
         });
     } catch (error) {
         console.error('Error en tipos de documento:', error);
@@ -138,7 +258,7 @@ router.get('/:id', async (req, res) => {
         `;
         const result = await db.query(query, [id]);
         
-        if (result.rows.length === 0) {
+        if (result.length === 0) {
             return res.status(404).json({
                 success: false,
                 error: 'Documento no encontrado'
@@ -147,7 +267,7 @@ router.get('/:id', async (req, res) => {
         
         res.json({
             success: true,
-            data: result.rows[0]
+            data: result[0]
         });
     } catch (error) {
         console.error('Error en documento específico:', error);
@@ -189,7 +309,7 @@ router.post('/', async (req, res) => {
         
         res.status(201).json({
             success: true,
-            data: result.rows[0],
+            data: result[0],
             message: 'Documento creado exitosamente'
         });
     } catch (error) {
@@ -234,7 +354,7 @@ router.put('/:id', async (req, res) => {
             nombre, descripcion, tipo_documento_id, link_drive, fecha_publicacion, evento_id, visible, id
         ]);
         
-        if (result.rows.length === 0) {
+        if (result.length === 0) {
             return res.status(404).json({
                 success: false,
                 error: 'Documento no encontrado'
@@ -243,7 +363,7 @@ router.put('/:id', async (req, res) => {
         
         res.json({
             success: true,
-            data: result.rows[0],
+            data: result[0],
             message: 'Documento actualizado exitosamente'
         });
     } catch (error) {
@@ -263,7 +383,7 @@ router.delete('/:id', async (req, res) => {
         const query = 'DELETE FROM documentos_comunitarios WHERE id = $1 RETURNING *';
         const result = await db.query(query, [id]);
         
-        if (result.rows.length === 0) {
+        if (result.length === 0) {
             return res.status(404).json({
                 success: false,
                 error: 'Documento no encontrado'
@@ -299,7 +419,7 @@ router.get('/evento/:evento_id', async (req, res) => {
         
         res.json({
             success: true,
-            data: result.rows
+            data: result
         });
     } catch (error) {
         console.error('Error en documentos por evento:', error);
