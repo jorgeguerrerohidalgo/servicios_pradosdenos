@@ -96,7 +96,8 @@ router.post('/init-eventos-documentos', async (req, res) => {
             ('Asamblea General', 'Asambleas generales de propietarios', '#28a745', 'bullhorn'),
             ('Actividad Social', 'Eventos sociales y recreativos', '#ffc107', 'glass-cheers'),
             ('Mantenimiento', 'Trabajos de mantenimiento programados', '#dc3545', 'tools'),
-            ('Emergencia', 'Situaciones de emergencia', '#6c757d', 'exclamation-triangle')
+            ('Emergencia', 'Situaciones de emergencia', '#6c757d', 'exclamation-triangle'),
+            ('Capacitación', 'Charlas y capacitaciones', '#6f42c1', 'chalkboard-teacher')
             ON CONFLICT (nombre) DO NOTHING;
         `;
 
@@ -105,28 +106,12 @@ router.post('/init-eventos-documentos', async (req, res) => {
         // Insertar tipos de documento por defecto
         const insertTiposDocumentoSQL = `
             INSERT INTO tipo_documento (nombre, descripcion, color, icono) VALUES
-            ('Acta de Reunión', 'Actas de reuniones de directorio', '#007bff', 'file-alt'),
-            ('Reglamento', 'Reglamentos internos', '#28a745', 'book'),
-            ('Presupuesto', 'Documentos de presupuesto', '#ffc107', 'calculator'),
-            ('Informe', 'Informes técnicos y administrativos', '#17a2b8', 'chart-line'),
-            ('Comunicado', 'Comunicados oficiales', '#6c757d', 'bullhorn')
-            ON CONFLICT (nombre) DO NOTHING;
-        `;
-            ('Capacitación', 'Charlas y capacitaciones', '#6f42c1', 'fas fa-chalkboard-teacher')
-            ON CONFLICT (nombre) DO NOTHING;
-        `;
-        
-        await db.query(insertTiposEventoSQL);
-        
-        // Insertar tipos de documento por defecto
-        const insertTiposDocumentoSQL = `
-            INSERT INTO tipo_documento (nombre, descripcion, color, icono) VALUES
-            ('Acta de Reunión', 'Actas oficiales de reuniones', '#007bff', 'fas fa-file-alt'),
-            ('Reglamento', 'Reglamentos y normativas', '#28a745', 'fas fa-file-contract'),
-            ('Comunicado', 'Comunicados oficiales', '#ffc107', 'fas fa-bullhorn'),
-            ('Informe Financiero', 'Estados financieros y reportes', '#17a2b8', 'fas fa-chart-line'),
-            ('Documento Legal', 'Documentos legales y contratos', '#6f42c1', 'fas fa-balance-scale'),
-            ('Manual', 'Manuales y guías', '#fd7e14', 'fas fa-book')
+            ('Acta de Reunión', 'Actas oficiales de reuniones', '#007bff', 'file-alt'),
+            ('Reglamento', 'Reglamentos y normativas', '#28a745', 'book'),
+            ('Comunicado', 'Comunicados oficiales', '#ffc107', 'bullhorn'),
+            ('Informe Financiero', 'Estados financieros y reportes', '#17a2b8', 'chart-line'),
+            ('Documento Legal', 'Documentos legales y contratos', '#6f42c1', 'balance-scale'),
+            ('Manual', 'Manuales y guías', '#fd7e14', 'book')
             ON CONFLICT (nombre) DO NOTHING;
         `;
         

@@ -40,9 +40,64 @@ app.use((req, res, next) => {
   next();
 });
 
-// Ruta de prueba
+const express = require('express');
+const app = express();
+const cors = require('cors');
+
+// Middleware básico
+app.use(cors());
+app.use(express.json());
+
+// Probar importación de rutas
+console.log('🔄 Cargando rutas...');
+
+try {
+    const initRoutes = require('./routes/init.routes.js');
+    console.log('✅ init.routes.js cargado correctamente');
+    app.use('/api/init', initRoutes);
+} catch (error) {
+    console.error('❌ Error cargando init.routes.js:', error.message);
+    process.exit(1);
+}
+
+try {
+    const eventosRoutes = require('./routes/eventos.routes.js');
+    console.log('✅ eventos.routes.js cargado correctamente');
+    app.use('/api/eventos', eventosRoutes);
+} catch (error) {
+    console.error('❌ Error cargando eventos.routes.js:', error.message);
+    process.exit(1);
+}
+
+try {
+    const documentosRoutes = require('./routes/documentos_comunitarios.routes.js');
+    console.log('✅ documentos_comunitarios.routes.js cargado correctamente');
+    app.use('/api/documentos_comunitarios', documentosRoutes);
+} catch (error) {
+    console.error('❌ Error cargando documentos_comunitarios.routes.js:', error.message);
+    process.exit(1);
+}
+
+// Endpoint de prueba
 app.get('/test', (req, res) => {
-  res.json({ message: 'Servidor de prueba funcionando', timestamp: new Date().toISOString() });
+    res.json({ 
+        message: 'Servidor funcionando correctamente',
+        routes: [
+            '/api/init',
+            '/api/eventos',
+            '/api/documentos_comunitarios'
+        ]
+    });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`🚀 Servidor de prueba ejecutándose en puerto ${PORT}`);
+    console.log('🔗 Endpoints disponibles:');
+    console.log('   - GET /test');
+    console.log('   - POST /api/init/init-eventos-documentos');
+    console.log('   - GET /api/eventos');
+    console.log('   - GET /api/documentos_comunitarios');
 });
 
 // Iniciar servidor
