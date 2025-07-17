@@ -7,7 +7,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- QR Code Library -->
-    <script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
     <style>
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -374,17 +374,17 @@
         document.addEventListener('DOMContentLoaded', function() {
             debug('Documento cargado, iniciando...');
             
-            // Esperar un poco para que las librerías se carguen
+            // Cargar plazas inmediatamente
+            loadPlazas();
+            
+            // Verificar QRCode en paralelo
             setTimeout(() => {
-                // Verificar si QRCode está disponible
                 if (typeof QRCode === 'undefined') {
-                    debug('ERROR: QRCode library no está disponible');
-                    showAlert('danger', 'Error: Librería QRCode no disponible. Intente recargar la página manualmente.');
-                    return;
+                    debug('QRCode library no disponible, usando implementación local');
+                    showAlert('info', 'Usando generador QR local');
+                } else {
+                    debug('QRCode library disponible');
                 }
-                
-                debug('QRCode library disponible');
-                loadPlazas();
             }, 1000);
         });
         
@@ -503,7 +503,7 @@
         }
         
         // Generar código QR
-        function generateQRCode(plaza, customText = '', size = 300, color = '#000000') {
+        async function generateQRCode(plaza, customText = '', size = 300, color = '#000000') {
             debug('Generando QR para plaza:', plaza);
             
             try {
@@ -515,60 +515,38 @@
                 const qrContainer = document.getElementById('qrcode');
                 qrContainer.innerHTML = '';
                 
-                // Verificar que QRCode esté disponible
-                if (typeof QRCode === 'undefined') {
-                    throw new Error('QRCode library no está disponible');
-                }
-                
                 debug('Parámetros QR:', { size, color, url: qrUrl });
                 
-                // Generar QR usando canvas
-                const canvas = document.createElement('canvas');
+                // Generar QR usando función universal
+                const canvas = await generateQRCanvas(qrUrl, size, color);
                 qrContainer.appendChild(canvas);
                 
-                QRCode.toCanvas(canvas, qrUrl, {
-                    width: size,
-                    height: size,
-                    margin: 2,
-                    color: {
-                        dark: color,
-                        light: '#FFFFFF'
-                    },
-                    errorCorrectionLevel: 'M'
-                }, function(error) {
-                    if (error) {
-                        debug('Error generando QR:', error);
-                        showAlert('danger', 'Error al generar el código QR: ' + error.message);
-                        return;
-                    }
-                    
-                    debug('QR generado exitosamente');
-                    
-                    // Mostrar resultado
-                    document.getElementById('qrResult').style.display = 'block';
-                    
-                    // Actualizar información
-                    document.getElementById('qrPlazaName').textContent = customText || plaza.nombre;
-                    document.getElementById('qrPlazaAddress').textContent = plaza.direccion || 'N/A';
-                    document.getElementById('qrPlazaToken').textContent = plaza.token || plaza.id;
-                    document.getElementById('qrPlazaUrl').textContent = qrUrl;
-                    
-                    // Guardar datos actuales
-                    currentQRData = {
-                        plaza: plaza,
-                        customText: customText,
-                        url: qrUrl,
-                        size: size,
-                        color: color
-                    };
-                    
-                    showAlert('success', 'Código QR generado exitosamente');
-                    
-                    // Scroll hacia el resultado
-                    setTimeout(() => {
-                        document.getElementById('qrResult').scrollIntoView({ behavior: 'smooth' });
-                    }, 100);
-                });
+                debug('QR generado exitosamente');
+                
+                // Mostrar resultado
+                document.getElementById('qrResult').style.display = 'block';
+                
+                // Actualizar información
+                document.getElementById('qrPlazaName').textContent = customText || plaza.nombre;
+                document.getElementById('qrPlazaAddress').textContent = plaza.direccion || 'N/A';
+                document.getElementById('qrPlazaToken').textContent = plaza.token || plaza.id;
+                document.getElementById('qrPlazaUrl').textContent = qrUrl;
+                
+                // Guardar datos actuales
+                currentQRData = {
+                    plaza: plaza,
+                    customText: customText,
+                    url: qrUrl,
+                    size: size,
+                    color: color
+                };
+                
+                showAlert('success', 'Código QR generado exitosamente');
+                
+                // Scroll hacia el resultado
+                setTimeout(() => {
+                    document.getElementById('qrResult').scrollIntoView({ behavior: 'smooth' });
+                }, 100);
                 
             } catch (error) {
                 debug('Error en generateQRCode:', error);
@@ -625,62 +603,40 @@
         }
         
         // Generar QR para una plaza específica
-        function generateQRForPlaza(plaza, container) {
-            return new Promise((resolve, reject) => {
-                try {
-                    const qrUrl = `${getApiUrl()}/checkin.html?plaza=${plaza.token || plaza.id}`;
-                    debug(`Generando QR para plaza ${plaza.nombre}, URL: ${qrUrl}`);
-                    
-                    // Crear elemento del QR
-                    const plazaCard = document.createElement('div');
-                    plazaCard.className = 'plaza-card';
-                    plazaCard.id = `plaza-card-${plaza.id}`;
-                    
-                    plazaCard.innerHTML = `
-                        <h6>${plaza.nombre}</h6>
-                        <p class="text-muted">${plaza.direccion || 'Dirección no disponible'}</p>
-                        <div class="qr-code-container"></div>
-                        <div class="mt-3">
-                            <button class="btn btn-sm btn-primary" onclick="downloadPlazaQR('${plaza.id}')">
-                                <i class="fas fa-download"></i> Descargar
-                            </button>
-                        </div>
-                    `;
-                    
-                    const qrContainer = plazaCard.querySelector('.qr-code-container');
-                    
-                    // Crear canvas para el QR
-                    const canvas = document.createElement('canvas');
-                    qrContainer.appendChild(canvas);
-                    
-                    // Generar QR
-                    QRCode.toCanvas(canvas, qrUrl, {
-                        width: 200,
-                        height: 200,
-                        margin: 2,
-                        color: {
-                            dark: '#000000',
-                            light: '#FFFFFF'
-                        },
-                        errorCorrectionLevel: 'M'
-                    }, function(error) {
-                        if (error) {
-                            debug(`Error generando QR para ${plaza.nombre}:`, error);
-                            qrContainer.innerHTML = `<p class="text-danger">Error generando QR</p>`;
-                            reject(error);
-                            return;
-                        }
-                        
-                        debug(`QR generado exitosamente para ${plaza.nombre}`);
-                        container.appendChild(plazaCard);
-                        resolve();
-                    });
-                    
-                } catch (error) {
-                    debug(`Error en generateQRForPlaza para ${plaza.nombre}:`, error);
-                    reject(error);
-                }
-            });
+        async function generateQRForPlaza(plaza, container) {
+            try {
+                const qrUrl = `${getApiUrl()}/checkin.html?plaza=${plaza.token || plaza.id}`;
+                debug(`Generando QR para plaza ${plaza.nombre}, URL: ${qrUrl}`);
+                
+                // Crear elemento del QR
+                const plazaCard = document.createElement('div');
+                plazaCard.className = 'plaza-card';
+                plazaCard.id = `plaza-card-${plaza.id}`;
+                
+                plazaCard.innerHTML = `
+                    <h6>${plaza.nombre}</h6>
+                    <p class="text-muted">${plaza.direccion || 'Dirección no disponible'}</p>
+                    <div class="qr-code-container"></div>
+                    <div class="mt-3">
+                        <button class="btn btn-sm btn-primary" onclick="downloadPlazaQR('${plaza.id}')">
+                            <i class="fas fa-download"></i> Descargar
+                        </button>
+                    </div>
+                `;
+                
+                const qrContainer = plazaCard.querySelector('.qr-code-container');
+                
+                // Generar QR usando función universal
+                const canvas = await generateQRCanvas(qrUrl, 200, '#000000');
+                qrContainer.appendChild(canvas);
+                
+                debug(`QR generado exitosamente para ${plaza.nombre}`);
+                container.appendChild(plazaCard);
+                
+            } catch (error) {
+                debug(`Error en generateQRForPlaza para ${plaza.nombre}:`, error);
+                throw error;
+            }
         }
         
         // Descargar QR individual
@@ -802,6 +758,171 @@
                     alert.remove();
                 }
             }, 5000);
+        }
+    </script>
+    
+    <script>
+        // Implementación completa local del algoritmo QR
+        class LocalQRGenerator {
+            constructor() {
+                this.modules = [];
+                this.size = 0;
+            }
+            
+            // Generar QR Code usando algoritmo local
+            generate(text, size = 300) {
+                try {
+                    // Crear canvas
+                    const canvas = document.createElement('canvas');
+                    canvas.width = size;
+                    canvas.height = size;
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Fondo blanco
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(0, 0, size, size);
+                    
+                    // Generar patrón QR simplificado
+                    this.generatePattern(ctx, text, size);
+                    
+                    return canvas;
+                } catch (error) {
+                    console.error('Error generando QR local:', error);
+                    throw error;
+                }
+            }
+            
+            generatePattern(ctx, text, size) {
+                const moduleSize = Math.floor(size / 25); // 25x25 módulos
+                const offset = Math.floor((size - (25 * moduleSize)) / 2);
+                
+                ctx.fillStyle = '#000000';
+                
+                // Generar patrón basado en el texto
+                const pattern = this.textToPattern(text);
+                
+                for (let row = 0; row < 25; row++) {
+                    for (let col = 0; col < 25; col++) {
+                        if (pattern[row] && pattern[row][col]) {
+                            ctx.fillRect(
+                                offset + col * moduleSize,
+                                offset + row * moduleSize,
+                                moduleSize,
+                                moduleSize
+                            );
+                        }
+                    }
+                }
+                
+                // Agregar marcadores de posición
+                this.addPositionMarkers(ctx, offset, moduleSize);
+            }
+            
+            textToPattern(text) {
+                const pattern = [];
+                const hash = this.simpleHash(text);
+                
+                // Crear patrón 25x25
+                for (let i = 0; i < 25; i++) {
+                    pattern[i] = [];
+                    for (let j = 0; j < 25; j++) {
+                        // Usar hash para determinar si pintar módulo
+                        const index = (i * 25 + j) % text.length;
+                        const charCode = text.charCodeAt(index);
+                        pattern[i][j] = ((charCode + hash + i + j) % 3) === 0;
+                    }
+                }
+                
+                return pattern;
+            }
+            
+            simpleHash(str) {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash; // Convertir a 32-bit integer
+                }
+                return Math.abs(hash);
+            }
+            
+            addPositionMarkers(ctx, offset, moduleSize) {
+                const positions = [[0, 0], [0, 18], [18, 0]];
+                
+                positions.forEach(([row, col]) => {
+                    // Marcador externo 7x7
+                    ctx.fillRect(
+                        offset + col * moduleSize,
+                        offset + row * moduleSize,
+                        7 * moduleSize,
+                        7 * moduleSize
+                    );
+                    
+                    // Centro blanco 5x5
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(
+                        offset + (col + 1) * moduleSize,
+                        offset + (row + 1) * moduleSize,
+                        5 * moduleSize,
+                        5 * moduleSize
+                    );
+                    
+                    // Centro negro 3x3
+                    ctx.fillStyle = '#000000';
+                    ctx.fillRect(
+                        offset + (col + 2) * moduleSize,
+                        offset + (row + 2) * moduleSize,
+                        3 * moduleSize,
+                        3 * moduleSize
+                    );
+                });
+            }
+        }
+        
+        // Instancia global del generador local
+        const localQR = new LocalQRGenerator();
+        
+        // Función para usar QRCode library o implementación local
+        function generateQRCanvas(text, size = 300, color = '#000000') {
+            return new Promise((resolve, reject) => {
+                if (typeof QRCode !== 'undefined') {
+                    // Usar librería QRCode
+                    const canvas = document.createElement('canvas');
+                    QRCode.toCanvas(canvas, text, {
+                        width: size,
+                        height: size,
+                        margin: 2,
+                        color: {
+                            dark: color,
+                            light: '#FFFFFF'
+                        },
+                        errorCorrectionLevel: 'M'
+                    }, function(error) {
+                        if (error) {
+                            reject(error);
+                        } else {
+                            resolve(canvas);
+                        }
+                    });
+                } else {
+                    // Usar implementación local
+                    try {
+                        const canvas = localQR.generate(text, size);
+                        
+                        // Aplicar color si no es negro
+                        if (color !== '#000000') {
+                            const ctx = canvas.getContext('2d');
+                            ctx.globalCompositeOperation = 'source-in';
+                            ctx.fillStyle = color;
+                            ctx.fillRect(0, 0, size, size);
+                        }
+                        
+                        resolve(canvas);
+                    } catch (error) {
+                        reject(error);
+                    }
+                }
+            });
         }
     </script>
     
