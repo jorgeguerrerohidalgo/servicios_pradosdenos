@@ -671,12 +671,16 @@
                 const data = await response.json();
                 console.log('Auth data:', data);
                 
-                if (data.authenticated && data.guardia) {
+                // Manejar ambos formatos: authenticated o isAuthenticated
+                const isAuth = data.authenticated || data.isAuthenticated;
+                
+                if (isAuth && data.guardia) {
                     currentUser = data.guardia;
                     document.getElementById('adminName').textContent = currentUser.nombre;
                     loadDashboard();
                 } else {
                     console.log('Usuario no autenticado o no es admin');
+                    console.log('isAuth:', isAuth, 'data.guardia:', data.guardia);
                     window.location.href = 'admin-login.html';
                 }
             } catch (error) {
