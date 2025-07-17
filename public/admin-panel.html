@@ -288,13 +288,13 @@
                                     </button>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <button class="management-btn" style="background: linear-gradient(135deg, #28a745, #20c997); color: white;" onclick="window.location.href='admin-eventos-documentos.html'">
+                                    <button class="management-btn" style="background: linear-gradient(135deg, #28a745, #20c997); color: white;" onclick="viewEventos()">
                                         <i class="fas fa-calendar-alt"></i><br>
                                         Gestionar Eventos
                                     </button>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <button class="management-btn" style="background: linear-gradient(135deg, #6f42c1, #e83e8c); color: white;" onclick="window.location.href='admin-eventos-documentos.html'">
+                                    <button class="management-btn" style="background: linear-gradient(135deg, #6f42c1, #e83e8c); color: white;" onclick="viewDocumentos()">
                                         <i class="fas fa-file-alt"></i><br>
                                         Gestionar Documentos
                                     </button>
@@ -525,6 +525,89 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de Eventos -->
+    <div id="eventosSection" class="section-hidden">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h3><i class="fas fa-calendar-alt"></i> Gestión de Eventos</h3>
+                            <button class="btn btn-primary" onclick="showEventForm()">
+                                <i class="fas fa-plus"></i> Nuevo Evento
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Título</th>
+                                            <th>Fecha Inicio</th>
+                                            <th>Fecha Fin</th>
+                                            <th>Ubicación</th>
+                                            <th>Tipo</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="eventosTableBody">
+                                        <tr>
+                                            <td colspan="7" class="text-center">
+                                                Cargando eventos...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de Documentos -->
+    <div id="documentosSection" class="section-hidden">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h3><i class="fas fa-file-alt"></i> Gestión de Documentos</h3>
+                            <button class="btn btn-primary" onclick="showDocumentForm()">
+                                <i class="fas fa-plus"></i> Nuevo Documento
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Nombre</th>
+                                            <th>Tipo</th>
+                                            <th>Fecha Publicación</th>
+                                            <th>Evento Asociado</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="documentosTableBody">
+                                        <tr>
+                                            <td colspan="6" class="text-center">
+                                                Cargando documentos...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1900,6 +1983,539 @@
             }
         }
         
+        // ==================== REPORTES ====================
+        
+        function viewReports() {
+            hideAllSections();
+            document.getElementById('reportsSection').classList.remove('section-hidden');
+            
+            // Establecer fechas por defecto (últimos 30 días)
+            const hoy = new Date();
+            const hace30Dias = new Date(hoy.getTime() - (30 * 24 * 60 * 60 * 1000));
+            
+            document.getElementById('fechaFin').value = hoy.toISOString().split('T')[0];
+            document.getElementById('fechaInicio').value = hace30Dias.toISOString().split('T')[0];
+            
+            generateReport();
+        }
+
+        // ==================== EVENTOS ====================
+        
+        function viewEventos() {
+            hideAllSections();
+            document.getElementById('eventosSection').classList.remove('section-hidden');
+            loadEventos();
+        }
+
+        let eventosData = [];
+        let tiposEvento = [];
+
+        async function loadEventos() {
+            try {
+                // Cargar eventos y tipos de evento en paralelo
+                const [eventosResponse, tiposResponse] = await Promise.all([
+                    fetch('/api/eventos'),
+                    fetch('/api/eventos/tipos/all')
+                ]);
+
+                const eventosResult = await eventosResponse.json();
+                const tiposResult = await tiposResponse.json();
+
+                if (eventosResult.success) {
+                    eventosData = eventosResult.data;
+                    renderEventosTable();
+                }
+
+                if (tiposResult.success) {
+                    tiposEvento = tiposResult.data;
+                }
+            } catch (error) {
+                console.error('Error cargando eventos:', error);
+                document.getElementById('eventosTableBody').innerHTML = 
+                    '<tr><td colspan="7" class="text-center text-danger">Error cargando eventos</td></tr>';
+            }
+        }
+
+        function renderEventosTable() {
+            const tbody = document.getElementById('eventosTableBody');
+            
+            if (eventosData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No hay eventos registrados</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = eventosData.map(evento => {
+                const fechaInicio = new Date(evento.fecha_inicio).toLocaleDateString();
+                const fechaFin = evento.fecha_fin ? new Date(evento.fecha_fin).toLocaleDateString() : 'N/A';
+                const tipoEvento = tiposEvento.find(t => t.id === evento.tipo_evento_id)?.nombre || 'N/A';
+                const estado = evento.visible ? 
+                    '<span class="badge bg-success">Visible</span>' : 
+                    '<span class="badge bg-secondary">Oculto</span>';
+
+                return `
+                    <tr>
+                        <td>${evento.titulo}</td>
+                        <td>${fechaInicio}</td>
+                        <td>${fechaFin}</td>
+                        <td>${evento.ubicacion || 'N/A'}</td>
+                        <td>${tipoEvento}</td>
+                        <td>${estado}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="editEvento(${evento.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteEvento(${evento.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <a href="${evento.link_google_cal}" target="_blank" class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-calendar-plus"></i>
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function showEventForm(eventoId = null) {
+            const isEdit = eventoId !== null;
+            const evento = isEdit ? eventosData.find(e => e.id === eventoId) : null;
+            
+            const modalTitle = isEdit ? 'Editar Evento' : 'Nuevo Evento';
+            const submitText = isEdit ? 'Actualizar' : 'Crear';
+            
+            const form = `
+                <form id="eventoForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="eventoTitulo" class="form-label">Título *</label>
+                                <input type="text" class="form-control" id="eventoTitulo" value="${evento?.titulo || ''}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="eventoUbicacion" class="form-label">Ubicación</label>
+                                <input type="text" class="form-control" id="eventoUbicacion" value="${evento?.ubicacion || ''}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="eventoDescripcion" class="form-label">Descripción *</label>
+                        <textarea class="form-control" id="eventoDescripcion" rows="3" required>${evento?.descripcion || ''}</textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="eventoFechaInicio" class="form-label">Fecha y Hora Inicio *</label>
+                                <input type="datetime-local" class="form-control" id="eventoFechaInicio" 
+                                       value="${evento?.fecha_inicio?.slice(0, 16) || ''}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="eventoFechaFin" class="form-label">Fecha y Hora Fin</label>
+                                <input type="datetime-local" class="form-control" id="eventoFechaFin" 
+                                       value="${evento?.fecha_fin?.slice(0, 16) || ''}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="eventoTipo" class="form-label">Tipo de Evento</label>
+                                <select class="form-select" id="eventoTipo">
+                                    <option value="">Seleccionar tipo</option>
+                                    ${tiposEvento.map(tipo => 
+                                        `<option value="${tipo.id}" ${evento?.tipo_evento_id === tipo.id ? 'selected' : ''}>${tipo.nombre}</option>`
+                                    ).join('')}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="eventoVisible" class="form-label">Visibilidad</label>
+                                <select class="form-select" id="eventoVisible">
+                                    <option value="true" ${evento?.visible !== false ? 'selected' : ''}>Visible</option>
+                                    <option value="false" ${evento?.visible === false ? 'selected' : ''}>Oculto</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">${submitText}</button>
+                    </div>
+                </form>
+            `;
+            
+            showModal(modalTitle, form);
+            
+            document.getElementById('eventoForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await handleEventoSubmit(eventoId);
+            });
+        }
+
+        async function handleEventoSubmit(eventoId) {
+            const formData = {
+                titulo: document.getElementById('eventoTitulo').value,
+                descripcion: document.getElementById('eventoDescripcion').value,
+                fecha_inicio: document.getElementById('eventoFechaInicio').value,
+                fecha_fin: document.getElementById('eventoFechaFin').value || null,
+                tipo_evento_id: parseInt(document.getElementById('eventoTipo').value) || null,
+                ubicacion: document.getElementById('eventoUbicacion').value,
+                visible: document.getElementById('eventoVisible').value === 'true',
+                creado_por: currentUser.id
+            };
+
+            try {
+                const url = eventoId ? `/api/eventos/${eventoId}` : '/api/eventos';
+                const method = eventoId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: result.message,
+                        icon: 'success'
+                    });
+                    closeModal();
+                    loadEventos();
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: result.error,
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al procesar la solicitud',
+                    icon: 'error'
+                });
+            }
+        }
+
+        function editEvento(eventoId) {
+            showEventForm(eventoId);
+        }
+
+        async function deleteEvento(eventoId) {
+            const result = await Swal.fire({
+                title: '¿Estás seguro?',
+                text: "Esta acción no se puede deshacer",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/api/eventos/${eventoId}`, {
+                        method: 'DELETE'
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        Swal.fire({
+                            title: 'Eliminado',
+                            text: result.message,
+                            icon: 'success'
+                        });
+                        loadEventos();
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: result.error,
+                            icon: 'error'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al eliminar el evento',
+                        icon: 'error'
+                    });
+                }
+            }
+        }
+
+        // ==================== DOCUMENTOS ====================
+        
+        function viewDocumentos() {
+            hideAllSections();
+            document.getElementById('documentosSection').classList.remove('section-hidden');
+            loadDocumentos();
+        }
+
+        let documentosData = [];
+        let tiposDocumento = [];
+
+        async function loadDocumentos() {
+            try {
+                // Cargar documentos y tipos en paralelo
+                const [documentosResponse, tiposResponse] = await Promise.all([
+                    fetch('/api/documentos'),
+                    fetch('/api/documentos/tipos')
+                ]);
+
+                const documentosResult = await documentosResponse.json();
+                const tiposResult = await tiposResponse.json();
+
+                if (documentosResult.success) {
+                    documentosData = documentosResult.data;
+                    renderDocumentosTable();
+                }
+
+                if (tiposResult.success) {
+                    tiposDocumento = tiposResult.data;
+                }
+            } catch (error) {
+                console.error('Error cargando documentos:', error);
+                document.getElementById('documentosTableBody').innerHTML = 
+                    '<tr><td colspan="6" class="text-center text-danger">Error cargando documentos</td></tr>';
+            }
+        }
+
+        function renderDocumentosTable() {
+            const tbody = document.getElementById('documentosTableBody');
+            
+            if (documentosData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No hay documentos registrados</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = documentosData.map(documento => {
+                const fechaPublicacion = new Date(documento.fecha_publicacion).toLocaleDateString();
+                const tipoDoc = documento.tipo_documento?.nombre || 'N/A';
+                const eventoAsociado = documento.evento_id ? `Evento #${documento.evento_id}` : 'N/A';
+                const estado = documento.visible ? 
+                    '<span class="badge bg-success">Visible</span>' : 
+                    '<span class="badge bg-secondary">Oculto</span>';
+
+                return `
+                    <tr>
+                        <td>${documento.nombre}</td>
+                        <td>${tipoDoc}</td>
+                        <td>${fechaPublicacion}</td>
+                        <td>${eventoAsociado}</td>
+                        <td>${estado}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="editDocumento(${documento.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteDocumento(${documento.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <a href="${documento.link_drive}" target="_blank" class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function showDocumentForm(documentoId = null) {
+            const isEdit = documentoId !== null;
+            const documento = isEdit ? documentosData.find(d => d.id === documentoId) : null;
+            
+            const modalTitle = isEdit ? 'Editar Documento' : 'Nuevo Documento';
+            const submitText = isEdit ? 'Actualizar' : 'Crear';
+            
+            const form = `
+                <form id="documentoForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="documentoNombre" class="form-label">Nombre *</label>
+                                <input type="text" class="form-control" id="documentoNombre" value="${documento?.nombre || ''}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="documentoTipo" class="form-label">Tipo de Documento *</label>
+                                <select class="form-select" id="documentoTipo" required>
+                                    <option value="">Seleccionar tipo</option>
+                                    ${tiposDocumento.map(tipo => 
+                                        `<option value="${tipo.id}" ${documento?.tipo_documento_id === tipo.id ? 'selected' : ''}>${tipo.nombre}</option>`
+                                    ).join('')}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="documentoDescripcion" class="form-label">Descripción *</label>
+                        <textarea class="form-control" id="documentoDescripcion" rows="3" required>${documento?.descripcion || ''}</textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="documentoLinkDrive" class="form-label">Link Google Drive *</label>
+                                <input type="url" class="form-control" id="documentoLinkDrive" value="${documento?.link_drive || ''}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="documentoFechaPublicacion" class="form-label">Fecha Publicación</label>
+                                <input type="date" class="form-control" id="documentoFechaPublicacion" 
+                                       value="${documento?.fecha_publicacion?.slice(0, 10) || new Date().toISOString().slice(0, 10)}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="documentoEvento" class="form-label">Evento Asociado (opcional)</label>
+                                <select class="form-select" id="documentoEvento">
+                                    <option value="">Sin evento asociado</option>
+                                    ${eventosData.map(evento => 
+                                        `<option value="${evento.id}" ${documento?.evento_id === evento.id ? 'selected' : ''}>${evento.titulo}</option>`
+                                    ).join('')}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="documentoVisible" class="form-label">Visibilidad</label>
+                                <select class="form-select" id="documentoVisible">
+                                    <option value="true" ${documento?.visible !== false ? 'selected' : ''}>Visible</option>
+                                    <option value="false" ${documento?.visible === false ? 'selected' : ''}>Oculto</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">${submitText}</button>
+                    </div>
+                </form>
+            `;
+            
+            showModal(modalTitle, form);
+            
+            document.getElementById('documentoForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await handleDocumentoSubmit(documentoId);
+            });
+        }
+
+        async function handleDocumentoSubmit(documentoId) {
+            const formData = {
+                nombre: document.getElementById('documentoNombre').value,
+                descripcion: document.getElementById('documentoDescripcion').value,
+                tipo_documento_id: parseInt(document.getElementById('documentoTipo').value),
+                link_drive: document.getElementById('documentoLinkDrive').value,
+                fecha_publicacion: document.getElementById('documentoFechaPublicacion').value,
+                evento_id: parseInt(document.getElementById('documentoEvento').value) || null,
+                visible: document.getElementById('documentoVisible').value === 'true',
+                subido_por: currentUser.id
+            };
+
+            try {
+                const url = documentoId ? `/api/documentos/${documentoId}` : '/api/documentos';
+                const method = documentoId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: result.message,
+                        icon: 'success'
+                    });
+                    closeModal();
+                    loadDocumentos();
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: result.error,
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al procesar la solicitud',
+                    icon: 'error'
+                });
+            }
+        }
+
+        function editDocumento(documentoId) {
+            showDocumentForm(documentoId);
+        }
+
+        async function deleteDocumento(documentoId) {
+            const result = await Swal.fire({
+                title: '¿Estás seguro?',
+                text: "Esta acción no se puede deshacer",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/api/documentos/${documentoId}`, {
+                        method: 'DELETE'
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        Swal.fire({
+                            title: 'Eliminado',
+                            text: result.message,
+                            icon: 'success'
+                        });
+                        loadDocumentos();
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: result.error,
+                            icon: 'error'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al eliminar el documento',
+                        icon: 'error'
+                    });
+                }
+            }
+        }
+
         // ==================== REPORTES ====================
         
         function viewReports() {

@@ -118,7 +118,7 @@ try {
   const publicRoutes = require('./routes/public.routes');
   const adminRoutes = require('./routes/admin.routes');
   const eventosRoutes = require('./routes/eventos.routes');
-  const documentosRoutes = require('./routes/documentos_new.routes');
+  const documentosRoutes = require('./routes/documentos_comunitarios.routes');
 
   // Configurar rutas
   app.use('/api/auth', authRoutes);
@@ -136,7 +136,7 @@ try {
   console.log('  - /api (public.routes.js)');
   console.log('  - /api/admin (admin.routes.js)');
   console.log('  - /api/eventos (eventos.routes.js)');
-  console.log('  - /api/documentos (documentos_new.routes.js)');
+  console.log('  - /api/documentos (documentos_comunitarios.routes.js)');
 
   console.log('✅ Rutas configuradas correctamente');
 } catch (error) {

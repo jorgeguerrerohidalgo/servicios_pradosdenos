@@ -1,19 +1,29 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../utils/db');
+const { supabase } = require('../utils/supabase');
 
-// Ruta para obtener categorías de documentos
-router.get('/categorias', async (req, res) => {
+// Ruta para obtener tipos de documento
+router.get('/tipos', async (req, res) => {
     try {
+        const { data: tipos, error } = await supabase
+            .from('tipo_documento')
+            .select('*')
+            .order('nombre');
+        
+        if (error) {
+            console.error('Error obteniendo tipos de documento:', error);
+            return res.status(500).json({
+                success: false,
+                error: 'Error al obtener tipos de documento'
+            });
+        }
+        
         res.json({
             success: true,
-            data: [
-                { id: 1, nombre: 'Reglamentos', icono: 'fas fa-file-contract', color: '#007bff' },
-                { id: 2, nombre: 'Actas', icono: 'fas fa-file-alt', color: '#28a745' },
-                { id: 3, nombre: 'Noticias', icono: 'fas fa-newspaper', color: '#ffc107' }
-            ]
+            data: tipos || []
         });
     } catch (error) {
+        console.error('Error en tipos de documento:', error);
         res.status(500).json({
             success: false,
             error: 'Error interno del servidor'
@@ -21,33 +31,103 @@ router.get('/categorias', async (req, res) => {
     }
 });
 
-// Ruta principal para documentos
+// Ruta principal para obtener documentos
 router.get('/', async (req, res) => {
     try {
-        const { limit = 10, offset = 0 } = req.query;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+        
+        // Obtener documentos desde Supabase con join a tipo_documento
+        const { data: documentos, error, count } = await supabase
+            .from('documentos_comunitarios')
+            .select(`
+                *,
+                tipo_documento:tipo_documento_id (
+                    id,
+                    nombre,
+                    descripcion
+                )
+            `, { count: 'exact' })
+            .order('fecha_publicacion', { ascending: false })
+            .range(offset, offset + limit - 1);
+        
+        if (error) {
+            console.error('Error obteniendo documentos:', error);
+            return res.status(500).json({
+                success: false,
+                error: 'Error al obtener documentos'
+            });
+        }
         
         res.json({
             success: true,
-            data: [
-                {
-                    id: 1,
-                    titulo: 'Reglamento de Convivencia',
-                    descripcion: 'Normas básicas de convivencia en el condominio',
-                    categoria_nombre: 'Reglamentos',
-                    created_at: new Date().toISOString()
-                },
-                {
-                    id: 2,
-                    titulo: 'Acta Reunión Directorio',
-                    descripcion: 'Acta de la última reunión del directorio',
-                    categoria_nombre: 'Actas',
-                    created_at: new Date().toISOString()
-                }
-            ],
+            data: documentos || [],
             pagination: {
-                total: 2,
-                limit: parseInt(limit),
-                offset: parseInt(offset),
+                total: count || 0,
+                page: page,
+                limit: limit,
+                totalPages: Math.ceil((count || 0) / limit)
+            }
+        });
+    } catch (error) {
+        console.error('Error en documentos:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error interno del servidor'
+        });
+    }
+});
+
+module.exports = router;
+
+// Ruta principal para obtener documentos
+router.get('/', async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+        
+        // Obtener documentos desde Supabase con join a tipo_documento
+        const { data: documentos, error, count } = await supabase
+            .from('documentos_comunitarios')
+            .select(`
+                *,
+                tipo_documento:tipo_documento_id (
+                    id,
+                    nombre,
+                    descripcion
+                )
+            `, { count: 'exact' })
+            .order('fecha_publicacion', { ascending: false })
+            .range(offset, offset + limit - 1);
+        
+        if (error) {
+            console.error('Error obteniendo documentos:', error);
+            return res.status(500).json({
+                success: false,
+                error: 'Error al obtener documentos'
+            });
+        }
+        
+        res.json({
+            success: true,
+            data: documentos || [],
+            pagination: {
+                total: count || 0,
+                page: page,
+                limit: limit,
+                totalPages: Math.ceil((count || 0) / limit)
+            }
+        });
+    } catch (error) {
+        console.error('Error en documentos:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error interno del servidor'
+        });
+    }
+});
                 hasMore: false
             }
         });
