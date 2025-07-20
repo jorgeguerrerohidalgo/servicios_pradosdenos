@@ -553,6 +553,9 @@
         let eventosGlobal = [];
         let tiposDocumentoGlobal = [];
         let documentosGlobal = [];
+        let plazasGlobal = [];
+        let guardiasGlobal = [];
+        let adminsGlobal = [];
 
         // ==================== FUNCIONES DE NAVEGACIÓN ====================
         function hideAllSections() {
@@ -595,6 +598,7 @@
             } else if (sectionName === 'plazas') {
                 loadPlazas();
             } else if (sectionName === 'admins') {
+                loadPlazas(); // Cargar plazas primero para el formulario
                 loadAdmins();
             } else if (sectionName === 'reportes') {
                 loadReportes();
@@ -1421,8 +1425,8 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    const guardias = data.data || [];
-                    renderGuardiasTable(guardias);
+                    guardiasGlobal = data.data || [];
+                    renderGuardiasTable(guardiasGlobal);
                 } else {
                     console.error('Error al cargar guardias:', await response.text());
                 }
@@ -1669,16 +1673,16 @@
                 const token = localStorage.getItem('adminToken');
                 if (!token) return;
 
-                const response = await fetch('/api/admin/plazas', {
+                const plazasResponse = await fetch('/api/admin/plazas', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    const plazas = data.data || [];
-                    renderPlazasTable(plazas);
+                if (plazasResponse.ok) {
+                    const data = await plazasResponse.json();
+                    plazasGlobal = data.data || [];
+                    renderPlazasTable(plazasGlobal);
                 } else {
-                    console.error('Error al cargar plazas:', await response.text());
+                    console.error('Error al cargar plazas:', await plazasResponse.text());
                 }
             } catch (error) {
                 console.error('Error al cargar plazas:', error);
@@ -1734,11 +1738,11 @@
             if (isEdit && plazaId) {
                 try {
                     const token = localStorage.getItem('adminToken');
-                    const response = await fetch(`/api/admin/plazas/${plazaId}`, {
+                    const plazaResp = await fetch(`/api/admin/plazas/${plazaId}`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
-                    if (response.ok) {
-                        plaza = await response.json();
+                    if (plazaResp.ok) {
+                        plaza = await plazaResp.json();
                     }
                 } catch (error) {
                     console.error('Error al cargar plaza:', error);
@@ -1793,7 +1797,7 @@
                 };
                 try {
                     const token = localStorage.getItem('adminToken');
-                    const response = await fetch(isEdit ? `/api/admin/plazas/${plazaId}` : '/api/admin/plazas', {
+                    const plazaSaveResp = await fetch(isEdit ? `/api/admin/plazas/${plazaId}` : '/api/admin/plazas', {
                         method: isEdit ? 'PUT' : 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1801,12 +1805,12 @@
                         },
                         body: JSON.stringify(data)
                     });
-                    if (response.ok) {
+                    if (plazaSaveResp.ok) {
                         Swal.fire('Éxito', `Plaza ${isEdit ? 'actualizada' : 'creada'} correctamente`, 'success');
                         await loadPlazas();
                         Swal.close();
                     } else {
-                        const error = await response.json();
+                        const error = await plazaSaveResp.json();
                         Swal.fire('Error', error.message || 'No se pudo guardar la plaza', 'error');
                     }
                 } catch (error) {
@@ -1814,250 +1818,50 @@
                 }
             };
 
-        // Editar plaza
-        function editPlaza(plazaId) {
-            showPlazaForm(plazaId);
-        }
-
-        // Ver checkins de una plaza
-        async function viewPlazaCheckins(plazaId) {
-            try {
-                const token = localStorage.getItem('adminToken');
-                const response = await fetch(`/api/admin/plazas/${plazaId}/checkins`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-            let guardia = {
-                nombre: '',
-                rut: '',
-                email: '',
-                telefono: '',
-                activo: true,
-                validation_code: ''
-            };
-
-            if (isEdit && guardiaId) {
-                try {
-                    const token = localStorage.getItem('adminToken');
-                    const response = await fetch(`/api/admin/guardias/${guardiaId}`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    if (response.ok) {
-                        const data = await response.json();
-                        guardia = data.data;
-                    }
-                } catch (error) {
-                    console.error('Error al cargar guardia:', error);
-                }
-            }
-
-            const formHTML = `
-                <form id="guardiaForm">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="nombre" class="form-label">Nombre *</label>
-                                <input type="text" class="form-control" name="nombre" value="${guardia.nombre}" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="rut" class="form-label">RUT</label>
-                                <input type="text" class="form-control" name="rut" value="${guardia.rut || ''}">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="email" class="form-label">Email *</label>
-                                <input type="email" class="form-control" name="email" value="${guardia.email}" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="telefono" class="form-label">Teléfono</label>
-                                <input type="tel" class="form-control" name="telefono" value="${guardia.telefono || ''}">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" name="activo" ${guardia.activo ? 'checked' : ''}>
-                        <label class="form-check-label" for="activo">Activo</label>
-                    </div>
-                    <div class="d-flex justify-content-end">
-                        <button type="button" class="btn btn-secondary me-2" onclick="Swal.close()">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                    </div>
-                </form>
-            `;
-
+        // Eliminar plaza
+        function deletePlaza(plazaId) {
             Swal.fire({
-                title: title,
-                html: formHTML,
-                width: '600px',
-                showConfirmButton: false,
-                showCancelButton: false,
-                allowOutsideClick: false
-            });
+                title: '¿Eliminar plaza?',
+                text: 'Esta acción no se puede deshacer.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const token = localStorage.getItem('adminToken');
+                        const plazaDeleteResp = await fetch(`/api/admin/plazas/${plazaId}`, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
 
-            document.getElementById('guardiaForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const formData = new FormData(e.target);
-                const data = Object.fromEntries(formData.entries());
-                data.activo = formData.has('activo');
-                await saveGuardia(guardiaId, data);
-            });
-        }
+                        const data = await plazaDeleteResp.json();
 
-                const response = await fetch('/api/admin/plazas', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    const plazas = data.data || [];
-                    renderPlazasTable(plazas);
-                } else {
-                    console.error('Error al cargar plazas:', await response.text());
-                }
-            } catch (error) {
-                console.error('Error al cargar plazas:', error);
-            }
-        }
-
-        // Renderizar tabla de plazas
-        function renderPlazasTable(plazas) {
-            const tbody = document.getElementById('plazasTableBody');
-
-            if (plazas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No hay plazas registradas</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = plazas.map(plaza => `
-                <tr>
-                    <td>${plaza.nombre}</td>
-                    <td>${plaza.direccion}</td>
-                    <td>${plaza.latitud || ''}</td>
-                    <td>${plaza.longitud || ''}</td>
-                    <td>${plaza.activo ? 'Sí' : 'No'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-info me-1" onclick="showPlazaForm(${plaza.id})">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-sm btn-success me-1" onclick="viewPlazaCheckins(${plaza.id})">
-                            <i class="fas fa-list"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="deletePlaza(${plaza.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-                    const token = localStorage.getItem('adminToken');
-                    const response = await fetch(`/api/admin/plazas/${plazaId}`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    if (response.ok) {
-                        plaza = await response.json();
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Eliminada',
+                                text: 'Plaza eliminada correctamente',
+                                icon: 'success'
+                            });
+                            loadPlazas();
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.message || 'Error al eliminar plaza',
+                                icon: 'error'
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error eliminando plaza:', error);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Error de conexión al eliminar plaza',
+                            icon: 'error'
+                        });
                     }
-                } catch (error) {
-                    console.error('Error al cargar plaza:', error);
                 }
-            }
-
-            const formHTML = `
-                <form id="plazaForm">
-                    <div class="mb-3">
-                        <label for="nombre" class="form-label">Nombre de la Plaza *</label>
-                        <input type="text" class="form-control" name="nombre" value="${plaza.nombre || ''}" required />
-                    </div>
-                    <div class="mb-3">
-                        <label for="direccion" class="form-label">Dirección *</label>
-                        <input type="text" class="form-control" name="direccion" value="${plaza.direccion || ''}" required />
-                    </div>
-                    <div class="mb-3">
-                        <label for="latitud" class="form-label">Latitud</label>
-                        <input type="number" step="any" class="form-control" name="latitud" value="${plaza.latitud || ''}" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="longitud" class="form-label">Longitud</label>
-                        <input type="number" step="any" class="form-control" name="longitud" value="${plaza.longitud || ''}" />
-                    </div>
-                    <div class="form-check mb-3">
-                        <input type="checkbox" class="form-check-input" name="activo" id="activoCheck" ${plaza.activo ? 'checked' : ''} />
-                        <label class="form-check-label" for="activoCheck">Activa</label>
-                    </div>
-                    <div class="d-flex justify-content-end">
-                        <button type="button" class="btn btn-secondary me-2" onclick="Swal.close()">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                    </div>
-                </form>
-            `;
-
-            Swal.fire({
-                title: plazaId ? 'Editar Plaza' : 'Nueva Plaza',
-                html: formHTML,
-                width: 600,
-                showConfirmButton: false,
-                allowOutsideClick: false
             });
-
-            document.getElementById('plazaForm').onsubmit = async function(e) {
-                e.preventDefault();
-                const formData = new FormData(e.target);
-                const data = Object.fromEntries(formData.entries());
-                data.activo = formData.has('activo');
-                data.latitud = data.latitud ? parseFloat(data.latitud) : null;
-                data.longitud = data.longitud ? parseFloat(data.longitud) : null;
-                await savePlaza(plazaId, data);
-            };
-        }
-
-        // Guardar plaza
-        async function savePlaza(plazaId, data) {
-            try {
-                const token = localStorage.getItem('adminToken');
-                const method = plazaId ? 'PUT' : 'POST';
-                const url = plazaId ? `/api/admin/plazas/${plazaId}` : '/api/admin/plazas';
-
-                const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    Swal.fire({
-                        title: 'Éxito',
-                        text: plazaId ? 'Plaza actualizada correctamente' : 'Plaza creada correctamente',
-                        icon: 'success'
-                    });
-                    Swal.close();
-                    loadPlazas();
-                } else {
-                    Swal.fire({
-                        title: 'Error',
-                        text: result.message || 'Error al guardar plaza',
-                        icon: 'error'
-                    });
-                }
-            } catch (error) {
-                console.error('Error al guardar plaza:', error);
-                Swal.fire({
-                    title: 'Error',
-                    text: 'Error de conexión al guardar plaza',
-                    icon: 'error'
-                });
-            }
         }
 
         // Editar plaza
@@ -2069,12 +1873,12 @@
         async function viewPlazaCheckins(plazaId) {
             try {
                 const token = localStorage.getItem('adminToken');
-                const response = await fetch(`/api/admin/plazas/${plazaId}/checkins`, {
+                const checkinsResponse = await fetch(`/api/admin/plazas/${plazaId}/checkins`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
+                if (checkinsResponse.ok) {
+                    const data = await checkinsResponse.json();
                     const checkins = data.data;
 
                     const tablaHTML = checkins.length > 0 ? `
@@ -2179,8 +1983,8 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    const admins = data.data || [];
-                    renderAdminsTable(admins);
+                    adminsGlobal = data.data || [];
+                    renderAdminsTable(adminsGlobal);
                 } else {
                     console.error('Error al cargar administradores:', await response.text());
                 }
@@ -2255,10 +2059,10 @@
                 }
             }
 
-            // Opciones de plazas (deberías cargar las plazas antes y guardarlas en una variable global)
+            // Opciones de plazas
             let plazasOptions = '<option value="">Sin asignar</option>';
-            if (window.plazasGlobal && Array.isArray(window.plazasGlobal)) {
-                plazasOptions += window.plazasGlobal.map(p => `<option value="${p.id}" ${admin.plaza_id == p.id ? 'selected' : ''}>${p.nombre}</option>`).join('');
+            if (plazasGlobal && Array.isArray(plazasGlobal)) {
+                plazasOptions += plazasGlobal.map(p => `<option value="${p.id}" ${admin.plaza_id == p.id ? 'selected' : ''}>${p.nombre}</option>`).join('');
             }
 
             const formHTML = `
@@ -2568,9 +2372,34 @@
             }
         }
 
-        // ==================== FUNCIONES GENERALES ====================
+        // ==================== FUNCIONES DE FILTROS ====================
         
-        // Cargar estadísticas del dashboard
+        // Filtrar eventos
+        function filterEventos() {
+            renderEventosTable();
+        }
+
+        // Filtrar documentos
+        function filterDocumentos() {
+            renderDocumentosTable();
+        }
+
+        // Limpiar filtros de eventos
+        function clearEventFilters() {
+            document.getElementById('filterTipoEvento').value = '';
+            document.getElementById('filterEstadoEvento').value = '';
+            document.getElementById('filterPeriodoEvento').value = '';
+            renderEventosTable();
+        }
+
+        // Limpiar filtros de documentos
+        function clearDocumentFilters() {
+            document.getElementById('filterTipoDocumento').value = '';
+            document.getElementById('filterEstadoDocumento').value = '';
+            document.getElementById('filterDestacadoDocumento').value = '';
+            renderDocumentosTable();
+        }
+        // ==================== FUNCIONES GENERALES ====================
         async function loadDashboardStats() {
             try {
                 const token = localStorage.getItem('adminToken');
