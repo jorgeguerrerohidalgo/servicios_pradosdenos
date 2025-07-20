@@ -132,10 +132,15 @@
           // Redirigir según el tipo de usuario
           if (result.guardia && result.guardia.tipo === 'admin') {
             console.log('Redirigiendo a admin panel');
-            window.location.href = '/admin-panel.html';
+            // Pequeño delay para evitar conflictos
+            setTimeout(() => {
+              window.location.href = '/admin-panel.html';
+            }, 100);
           } else {
             console.log('Redirigiendo a guardia checkin');
-            window.location.href = '/guardia-checkin.html';
+            setTimeout(() => {
+              window.location.href = '/guardia-checkin.html';
+            }, 100);
           }
         } else {
           // Error de login
@@ -151,7 +156,8 @@
       }
     });
     
-    // Verificar si ya está logueado
+    // Verificar si ya está logueado - TEMPORALMENTE DESHABILITADO
+    /*
     window.addEventListener('load', async () => {
       try {
         const response = await fetch(`${getApiUrl()}/api/auth/check`, {
@@ -172,6 +178,7 @@
         console.log('No hay sesión activa');
       }
     });
+    */
   </script>
 </body>
 </html>

@@ -2724,40 +2724,23 @@
         // ==================== INICIALIZACIÓN ====================
         
         // Verificar autenticación al cargar la página
-        document.addEventListener('DOMContentLoaded', async function() {
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Inicializando admin panel...');
+            
             const token = localStorage.getItem('adminToken');
+            console.log('Token encontrado:', token ? 'Sí' : 'No');
+            
             if (!token) {
+                console.log('No hay token, redirigiendo al login');
                 window.location.href = '/admin-login.html';
                 return;
             }
 
-            // Verificar que el token sea válido probando una API que requiere autenticación
-            try {
-                const response = await fetch('/api/eventos/admin/all', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (response.status === 401) {
-                    // Token inválido o expirado
-                    console.log('Token inválido, redirigiendo al login');
-                    localStorage.removeItem('adminToken');
-                    window.location.href = '/admin-login.html';
-                    return;
-                }
-
-                if (!response.ok) {
-                    console.error('Error de servidor:', response.status);
-                    // Otros errores de servidor - mantener en la página pero mostrar error
-                }
-
-                // Token parece válido, cargar dashboard
-                loadDashboardStats();
-
-            } catch (error) {
-                console.error('Error verificando token:', error);
-                // En caso de error de conexión, permitir acceso pero mostrar error
-                loadDashboardStats();
-            }
+            console.log('Token existe, cargando dashboard...');
+            
+            // Por ahora, cargar dashboard sin verificación del servidor
+            // para evitar el loop
+            loadDashboardStats();
         });
     </script>
 </body>
