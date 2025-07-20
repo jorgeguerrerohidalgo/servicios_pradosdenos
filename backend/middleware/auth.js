@@ -2,9 +2,9 @@ const jwt = require('jsonwebtoken');
 const db = require('../utils/db');
 
 /**
- * Middleware de autenticación JWT
+ * Middleware de autenticación JWT para admin_users
  */
-const authMiddleware = async (req, res, next) => {
+const authenticateToken = async (req, res, next) => {
     try {
         const token = req.header('Authorization')?.replace('Bearer ', '');
         
@@ -17,31 +17,22 @@ const authMiddleware = async (req, res, next) => {
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        // Verificar que el usuario existe y está activo
-        const userResult = await db.query(`
-            SELECT id, nombre, email, rol, activo, token_version
-            FROM usuarios 
+        // Verificar que el admin existe y está activo
+        const adminResult = await db.query(`
+            SELECT id, nombre, apellido_paterno, apellido_materno, email, activo, plaza_id
+            FROM admin_users 
             WHERE id = $1 AND activo = TRUE
         `, [decoded.userId]);
 
-        if (userResult.rows.length === 0) {
+        if (adminResult.rows.length === 0) {
             return res.status(401).json({ 
                 success: false, 
-                message: 'Usuario no encontrado o inactivo' 
+                message: 'Usuario administrativo no encontrado o inactivo' 
             });
         }
 
-        const user = userResult.rows[0];
-
-        // Verificar versión del token para invalidar tokens antiguos
-        if (decoded.tokenVersion !== user.token_version) {
-            return res.status(401).json({ 
-                success: false, 
-                message: 'Token inválido' 
-            });
-        }
-
-        req.user = user;
+        const admin = adminResult.rows[0];
+        req.user = admin;
         next();
 
     } catch (error) {
@@ -59,7 +50,7 @@ const authMiddleware = async (req, res, next) => {
             });
         }
 
-        console.error('Error en authMiddleware:', error);
+        console.error('Error en authenticateToken:', error);
         return res.status(500).json({ 
             success: false, 
             message: 'Error interno del servidor' 
@@ -68,50 +59,19 @@ const authMiddleware = async (req, res, next) => {
 };
 
 /**
- * Middleware para requerir roles específicos
+ * Middleware para requerir usuario admin
  */
-const requireRole = (requiredRole) => {
-    return (req, res, next) => {
-        if (!req.user) {
-            return res.status(401).json({ 
-                success: false, 
-                message: 'Usuario no autenticado' 
-            });
-        }
+const requireAdmin = (req, res, next) => {
+    if (!req.user) {
+        return res.status(401).json({ 
+            success: false, 
+            message: 'Usuario no autenticado' 
+        });
+    }
 
-        // Verificar rol específico
-        if (req.user.rol !== requiredRole) {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'Permisos insuficientes' 
-            });
-        }
-
-        next();
-    };
-};
-
-/**
- * Middleware para verificar múltiples roles
- */
-const requireAnyRole = (allowedRoles) => {
-    return (req, res, next) => {
-        if (!req.user) {
-            return res.status(401).json({ 
-                success: false, 
-                message: 'Usuario no autenticado' 
-            });
-        }
-
-        if (!allowedRoles.includes(req.user.rol)) {
-            return res.status(403).json({ 
-                success: false, 
-                message: 'Permisos insuficientes' 
-            });
-        }
-
-        next();
-    };
+    // Todos los usuarios en admin_users son admins por defecto
+    // Si en el futuro se añade un campo rol, se puede verificar aquí
+    next();
 };
 
 /**
@@ -126,9 +86,10 @@ const requireAdminOrOwner = (ownerIdParam = 'userId') => {
             });
         }
 
-        const resourceOwnerId = req.params[ownerIdParam];
+        const resourceOwnerId = parseInt(req.params[ownerIdParam]);
         
-        if (req.user.rol === 'admin' || req.user.id === resourceOwnerId) {
+        // Si es el mismo usuario o es admin (todos en admin_users son admin)
+        if (req.user.id === resourceOwnerId) {
             next();
         } else {
             return res.status(403).json({ 
@@ -140,8 +101,9 @@ const requireAdminOrOwner = (ownerIdParam = 'userId') => {
 };
 
 module.exports = {
-    authMiddleware,
-    requireRole,
-    requireAnyRole,
-    requireAdminOrOwner
+    authenticateToken,
+    requireAdmin,
+    requireAdminOrOwner,
+    // Legacy exports para compatibilidad
+    authMiddleware: authenticateToken
 };

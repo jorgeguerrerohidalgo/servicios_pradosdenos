@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Comunitario - Los Prados de Nos</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --accent-color: #20b2aa;
+            --warning-color: #ff6347;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .hero-section {
+            padding: 80px 0;
+            text-align: center;
+            color: white;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .section-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .section-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .section-title {
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            font-weight: bold;
+        }
+
+        .item-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .item-card:hover {
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .item-title {
+            color: var(--secondary-color);
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .item-meta {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .badge-tipo {
+            font-size: 0.8rem;
+            padding: 8px 12px;
+            border-radius: 20px;
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, var(--accent-color), #48d1cc);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 8px 16px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-download:hover {
+            transform: scale(1.05);
+            color: white;
+        }
+
+        .btn-event {
+            background: linear-gradient(135deg, var(--warning-color), #ff8c69);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 8px 16px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-event:hover {
+            transform: scale(1.05);
+            color: white;
+        }
+
+        .filter-section {
+            background: rgba(255,255,255,0.9);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .destacado-badge {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #333;
+            font-weight: bold;
+        }
+
+        .navbar-custom {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .footer {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            padding: 30px 0;
+            margin-top: 50px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light navbar-custom fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#inicio">
+                <i class="fas fa-home me-2"></i>
+                Los Prados de Nos
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#inicio" onclick="showSection('inicio')">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#eventos" onclick="showSection('eventos')">Eventos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#documentos" onclick="showSection('documentos')">Documentos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="login.html">
+                            <i class="fas fa-sign-in-alt me-1"></i>
+                            Acceso Guardias
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="admin-login.html">
+                            <i class="fas fa-user-shield me-1"></i>
+                            Administración
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sección de Inicio -->
+    <section id="inicioSection" class="hero-section">
+        <div class="container">
+            <h1 class="hero-title">Portal Comunitario</h1>
+            <p class="hero-subtitle">
+                Mantente informado sobre eventos y documentos importantes de nuestra comunidad
+            </p>
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="section-card">
+                        <h3 class="section-title">
+                            <i class="fas fa-calendar-alt me-2"></i>
+                            Próximos Eventos
+                        </h3>
+                        <p>Descubre las actividades y reuniones programadas para la comunidad.</p>
+                        <button class="btn btn-event" onclick="showSection('eventos')">
+                            Ver Eventos
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="section-card">
+                        <h3 class="section-title">
+                            <i class="fas fa-file-alt me-2"></i>
+                            Documentos Comunitarios
+                        </h3>
+                        <p>Accede a documentos importantes, reglamentos y comunicados oficiales.</p>
+                        <button class="btn btn-download" onclick="showSection('documentos')">
+                            Ver Documentos
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección de Eventos -->
+    <section id="eventosSection" class="d-none">
+        <div class="container" style="padding-top: 100px;">
+            <div class="section-card">
+                <h2 class="section-title">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    Eventos Vecinales
+                </h2>
+                
+                <!-- Filtros -->
+                <div class="filter-section">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label class="form-label">Filtrar por tipo:</label>
+                            <select class="form-select" id="filterTipoEvento" onchange="loadEventos()">
+                                <option value="">Todos los tipos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Período:</label>
+                            <select class="form-select" id="filterPeriodo" onchange="loadEventos()">
+                                <option value="proximos">Próximos eventos</option>
+                                <option value="">Todos los eventos</option>
+                                <option value="pasados">Eventos pasados</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Solo destacados:</label>
+                            <select class="form-select" id="filterDestacado" onchange="loadEventos()">
+                                <option value="">Todos</option>
+                                <option value="true">Solo destacados</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contenedor de eventos -->
+                <div id="eventosContainer">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p class="mt-2">Cargando eventos...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección de Documentos -->
+    <section id="documentosSection" class="d-none">
+        <div class="container" style="padding-top: 100px;">
+            <div class="section-card">
+                <h2 class="section-title">
+                    <i class="fas fa-file-alt me-2"></i>
+                    Documentos Comunitarios
+                </h2>
+                
+                <!-- Filtros -->
+                <div class="filter-section">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label class="form-label">Filtrar por tipo:</label>
+                            <select class="form-select" id="filterTipoDocumento" onchange="loadDocumentos()">
+                                <option value="">Todos los tipos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Solo destacados:</label>
+                            <select class="form-select" id="filterDestacadoDoc" onchange="loadDocumentos()">
+                                <option value="">Todos</option>
+                                <option value="true">Solo destacados</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Búsqueda:</label>
+                            <input type="text" class="form-control" id="searchDocumentos" placeholder="Buscar documentos..." onkeyup="loadDocumentos()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contenedor de documentos -->
+                <div id="documentosContainer">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p class="mt-2">Cargando documentos...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container text-center">
+            <p class="mb-0">
+                © 2024 Los Prados de Nos - Portal Comunitario
+            </p>
+        </div>
+    </footer>
+
+    <!-- Modal para descarga de documentos -->
+    <div class="modal fade" id="downloadModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Descargar Documento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Para descargar el documento, necesitamos algunos datos para nuestros registros:</p>
+                    <form id="downloadForm">
+                        <div class="mb-3">
+                            <label class="form-label">Email (opcional):</label>
+                            <input type="email" class="form-control" id="emailDescarga" placeholder="tu@email.com">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nombre (opcional):</label>
+                            <input type="text" class="form-control" id="nombreDescarga" placeholder="Tu nombre">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="proceedDownload()">
+                        <i class="fas fa-download me-1"></i> Descargar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        let eventosData = [];
+        let documentosData = [];
+        let tiposEvento = [];
+        let tiposDocumento = [];
+        let pendingDocumentDownload = null;
+
+        // Mostrar sección específica
+        function showSection(sectionName) {
+            // Ocultar todas las secciones
+            document.getElementById('inicioSection').classList.add('d-none');
+            document.getElementById('eventosSection').classList.add('d-none');
+            document.getElementById('documentosSection').classList.add('d-none');
+
+            // Mostrar la sección solicitada
+            if (sectionName === 'inicio') {
+                document.getElementById('inicioSection').classList.remove('d-none');
+            } else if (sectionName === 'eventos') {
+                document.getElementById('eventosSection').classList.remove('d-none');
+                loadTiposEvento();
+                loadEventos();
+            } else if (sectionName === 'documentos') {
+                document.getElementById('documentosSection').classList.remove('d-none');
+                loadTiposDocumento();
+                loadDocumentos();
+            }
+
+            // Actualizar navegación activa
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            const activeLink = document.querySelector(`[href="#${sectionName}"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+        }
+
+        // ==================== FUNCIONES DE EVENTOS ====================
+
+        // Cargar tipos de evento
+        async function loadTiposEvento() {
+            try {
+                const response = await fetch('/api/eventos/tipos');
+                if (response.ok) {
+                    const data = await response.json();
+                    tiposEvento = data.data;
+                    
+                    const filterSelect = document.getElementById('filterTipoEvento');
+                    filterSelect.innerHTML = '<option value="">Todos los tipos</option>';
+                    data.data.forEach(tipo => {
+                        filterSelect.innerHTML += `<option value="${tipo.id}">${tipo.nombre}</option>`;
+                    });
+                }
+            } catch (error) {
+                console.error('Error al cargar tipos de evento:', error);
+            }
+        }
+
+        // Cargar eventos
+        async function loadEventos() {
+            try {
+                const filterTipo = document.getElementById('filterTipoEvento')?.value || '';
+                const filterPeriodo = document.getElementById('filterPeriodo')?.value || '';
+                const filterDestacado = document.getElementById('filterDestacado')?.value || '';
+
+                let url = '/api/eventos?visible=true';
+                if (filterTipo) url += `&tipo=${filterTipo}`;
+                if (filterDestacado) url += `&destacado=${filterDestacado}`;
+                if (filterPeriodo === 'proximos') url += `&proximos=true`;
+
+                const response = await fetch(url);
+                if (response.ok) {
+                    const data = await response.json();
+                    eventosData = data.data;
+                    
+                    // Filtrar por período si es necesario
+                    if (filterPeriodo === 'pasados') {
+                        eventosData = eventosData.filter(evento => new Date(evento.fecha_inicio) < new Date());
+                    }
+                    
+                    renderEventos();
+                } else {
+                    console.error('Error al cargar eventos:', await response.text());
+                }
+            } catch (error) {
+                console.error('Error al cargar eventos:', error);
+            }
+        }
+
+        // Renderizar eventos
+        function renderEventos() {
+            const container = document.getElementById('eventosContainer');
+
+            if (eventosData.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-times"></i>
+                        <h4>No hay eventos disponibles</h4>
+                        <p>No se encontraron eventos que coincidan con los filtros seleccionados.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = eventosData.map(evento => {
+                const fechaInicio = new Date(evento.fecha_inicio);
+                const fechaFin = new Date(evento.fecha_fin);
+                const isProximo = fechaInicio >= new Date();
+                
+                return `
+                    <div class="item-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h4 class="item-title">
+                                    ${evento.titulo}
+                                    ${evento.destacado ? '<span class="badge destacado-badge ms-2">Destacado</span>' : ''}
+                                </h4>
+                                <div class="item-meta">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    ${fechaInicio.toLocaleDateString('es-CL')} ${fechaInicio.toLocaleTimeString('es-CL', {hour: '2-digit', minute: '2-digit'})}
+                                    ${fechaInicio.toDateString() !== fechaFin.toDateString() ? 
+                                        ` - ${fechaFin.toLocaleDateString('es-CL')} ${fechaFin.toLocaleTimeString('es-CL', {hour: '2-digit', minute: '2-digit'})}` : 
+                                        ` - ${fechaFin.toLocaleTimeString('es-CL', {hour: '2-digit', minute: '2-digit'})}`
+                                    }
+                                </div>
+                                ${evento.ubicacion ? `
+                                    <div class="item-meta">
+                                        <i class="fas fa-map-marker-alt me-1"></i>
+                                        ${evento.ubicacion}
+                                    </div>
+                                ` : ''}
+                                <div class="item-meta">
+                                    <span class="badge-tipo" style="background-color: ${evento.tipo_color || '#007bff'}">
+                                        <i class="fas fa-${evento.tipo_icono || 'calendar'}"></i>
+                                        ${evento.tipo_nombre || 'Evento'}
+                                    </span>
+                                    ${evento.max_participantes ? `
+                                        <span class="badge bg-info ms-2">
+                                            <i class="fas fa-users me-1"></i>
+                                            ${evento.inscripciones_confirmadas || 0}/${evento.max_participantes}
+                                        </span>
+                                    ` : ''}
+                                </div>
+                                ${evento.descripcion ? `
+                                    <p class="mt-2">${evento.descripcion}</p>
+                                ` : ''}
+                            </div>
+                            <div class="text-end">
+                                ${evento.link_google_cal ? `
+                                    <a href="${evento.link_google_cal}" target="_blank" class="btn btn-outline-primary btn-sm me-1 mb-1">
+                                        <i class="fas fa-calendar-plus"></i> Calendario
+                                    </a>
+                                ` : ''}
+                                ${evento.link_reunion ? `
+                                    <a href="${evento.link_reunion}" target="_blank" class="btn btn-event btn-sm mb-1">
+                                        <i class="fas fa-video"></i> Reunión
+                                    </a>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ==================== FUNCIONES DE DOCUMENTOS ====================
+
+        // Cargar tipos de documento
+        async function loadTiposDocumento() {
+            try {
+                const response = await fetch('/api/documentos/tipos');
+                if (response.ok) {
+                    const data = await response.json();
+                    tiposDocumento = data.data;
+                    
+                    const filterSelect = document.getElementById('filterTipoDocumento');
+                    filterSelect.innerHTML = '<option value="">Todos los tipos</option>';
+                    data.data.forEach(tipo => {
+                        filterSelect.innerHTML += `<option value="${tipo.id}">${tipo.nombre}</option>`;
+                    });
+                }
+            } catch (error) {
+                console.error('Error al cargar tipos de documento:', error);
+            }
+        }
+
+        // Cargar documentos
+        async function loadDocumentos() {
+            try {
+                const filterTipo = document.getElementById('filterTipoDocumento')?.value || '';
+                const filterDestacado = document.getElementById('filterDestacadoDoc')?.value || '';
+                const searchTerm = document.getElementById('searchDocumentos')?.value || '';
+
+                let url = '/api/documentos?visible=true';
+                if (filterTipo) url += `&tipo=${filterTipo}`;
+                if (filterDestacado) url += `&destacado=${filterDestacado}`;
+
+                const response = await fetch(url);
+                if (response.ok) {
+                    const data = await response.json();
+                    documentosData = data.data;
+                    
+                    // Filtrar por búsqueda si hay término
+                    if (searchTerm) {
+                        documentosData = documentosData.filter(doc => 
+                            doc.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            (doc.descripcion && doc.descripcion.toLowerCase().includes(searchTerm.toLowerCase()))
+                        );
+                    }
+                    
+                    renderDocumentos();
+                } else {
+                    console.error('Error al cargar documentos:', await response.text());
+                }
+            } catch (error) {
+                console.error('Error al cargar documentos:', error);
+            }
+        }
+
+        // Renderizar documentos
+        function renderDocumentos() {
+            const container = document.getElementById('documentosContainer');
+
+            if (documentosData.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-file-excel"></i>
+                        <h4>No hay documentos disponibles</h4>
+                        <p>No se encontraron documentos que coincidan con los filtros seleccionados.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = documentosData.map(documento => {
+                const fechaPublicacion = new Date(documento.fecha_publicacion);
+                const isVencido = documento.fecha_vencimiento && new Date(documento.fecha_vencimiento) < new Date();
+                
+                return `
+                    <div class="item-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h4 class="item-title">
+                                    ${documento.nombre}
+                                    ${documento.destacado ? '<span class="badge destacado-badge ms-2">Destacado</span>' : ''}
+                                    ${isVencido ? '<span class="badge bg-warning ms-2">Vencido</span>' : ''}
+                                </h4>
+                                <div class="item-meta">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    Publicado: ${fechaPublicacion.toLocaleDateString('es-CL')}
+                                    ${documento.fecha_vencimiento ? 
+                                        ` | Vence: ${new Date(documento.fecha_vencimiento).toLocaleDateString('es-CL')}` : 
+                                        ''
+                                    }
+                                </div>
+                                <div class="item-meta">
+                                    <span class="badge-tipo" style="background-color: ${documento.tipo_color || '#28a745'}">
+                                        <i class="fas fa-${documento.tipo_icono || 'file'}"></i>
+                                        ${documento.tipo_nombre || 'Documento'}
+                                    </span>
+                                    ${documento.tamaño_archivo ? `
+                                        <span class="badge bg-secondary ms-2">
+                                            ${formatFileSize(documento.tamaño_archivo)}
+                                        </span>
+                                    ` : ''}
+                                </div>
+                                ${documento.descripcion ? `
+                                    <p class="mt-2">${documento.descripcion}</p>
+                                ` : ''}
+                            </div>
+                            <div class="text-end">
+                                <button class="btn btn-download btn-sm" onclick="requestDownload('${documento.id}', '${documento.nombre}')">
+                                    <i class="fas fa-download me-1"></i>
+                                    Descargar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Formatear tamaño de archivo
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Solicitar descarga
+        function requestDownload(documentoId, documentoNombre) {
+            pendingDocumentDownload = { id: documentoId, nombre: documentoNombre };
+            const modal = new bootstrap.Modal(document.getElementById('downloadModal'));
+            modal.show();
+        }
+
+        // Proceder con la descarga
+        async function proceedDownload() {
+            if (!pendingDocumentDownload) return;
+
+            const emailDescarga = document.getElementById('emailDescarga').value;
+            const nombreDescarga = document.getElementById('nombreDescarga').value;
+
+            try {
+                // Registrar la descarga
+                await fetch(`/api/documentos/download/${pendingDocumentDownload.id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email_descarga: emailDescarga,
+                        nombre_descarga: nombreDescarga
+                    })
+                });
+
+                // Obtener el link de descarga
+                const documento = documentosData.find(d => d.id === pendingDocumentDownload.id);
+                if (documento && documento.link_drive) {
+                    window.open(documento.link_drive, '_blank');
+                }
+
+                // Cerrar modal y limpiar
+                const modal = bootstrap.Modal.getInstance(document.getElementById('downloadModal'));
+                modal.hide();
+                document.getElementById('downloadForm').reset();
+                pendingDocumentDownload = null;
+
+                Swal.fire({
+                    title: 'Descarga iniciada',
+                    text: 'Se ha abierto una nueva ventana con el documento.',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+
+            } catch (error) {
+                console.error('Error al registrar descarga:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Hubo un problema al procesar la descarga. Inténtalo nuevamente.',
+                    icon: 'error'
+                });
+            }
+        }
+
+        // Inicialización al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar si hay hash en la URL
+            const hash = window.location.hash.substring(1);
+            if (hash && ['inicio', 'eventos', 'documentos'].includes(hash)) {
+                showSection(hash);
+            } else {
+                showSection('inicio');
+            }
+        });
+    </script>
+</body>
+</html>

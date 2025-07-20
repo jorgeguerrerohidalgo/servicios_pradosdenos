@@ -135,6 +135,14 @@ try {
   const initRoutes = require('./routes/init.routes');
   console.log('✅ init.routes importado');
   
+  console.log('📦 Importando documentos.routes...');
+  const documentosRoutes = require('./routes/documentos.routes');
+  console.log('✅ documentos.routes importado');
+  
+  console.log('📦 Importando eventos.routes...');
+  const eventosRoutes = require('./routes/eventos.routes');
+  console.log('✅ eventos.routes importado');
+  
   console.log('✅ Todas las rutas importadas correctamente');
 
   // Configurar rutas EN EL ORDEN CORRECTO
@@ -144,6 +152,8 @@ try {
   app.use('/api/checkins', publicRoutes); // Para /api/checkins/public
   app.use('/api/admin', adminRoutes);
   app.use('/api/init', initRoutes);
+  app.use('/api/documentos', documentosRoutes);
+  app.use('/api/eventos', eventosRoutes);
   app.use('/api', publicRoutes); // Para /api/plazas - DEBE IR AL FINAL
 
   console.log('✅ Rutas configuradas:');
@@ -152,6 +162,8 @@ try {
   console.log('  - /api/checkins (public.routes.js)');
   console.log('  - /api/admin (admin.routes.js)');
   console.log('  - /api/init (init.routes.js)');
+  console.log('  - /api/documentos (documentos.routes.js)');
+  console.log('  - /api/eventos (eventos.routes.js)');
   console.log('  - /api (public.routes.js) - CATCH-ALL al final');
 
   console.log('✅ Rutas configuradas correctamente');
@@ -178,6 +190,18 @@ try {
     app.use('/api/checkin', checkinRoutes);
     app.use('/api/checkins', publicRoutes);
     app.use('/api/admin', adminRoutes);
+    
+    // Intentar cargar documentos y eventos si existen
+    try {
+      const documentosRoutes = require('./routes/documentos.routes');
+      const eventosRoutes = require('./routes/eventos.routes');
+      app.use('/api/documentos', documentosRoutes);
+      app.use('/api/eventos', eventosRoutes);
+      console.log('✅ Rutas de documentos y eventos cargadas en fallback');
+    } catch (newRoutesError) {
+      console.warn('⚠️ Documentos/Eventos routes no disponibles en fallback:', newRoutesError.message);
+    }
+    
     app.use('/api', publicRoutes); // DEBE IR AL FINAL para no interceptar otras rutas
     
     console.log('✅ Rutas básicas configuradas como fallback');
