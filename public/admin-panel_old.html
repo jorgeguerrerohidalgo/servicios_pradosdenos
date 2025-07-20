@@ -1,0 +1,3281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Los Prados de Nos</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar-admin {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .container-main {
+            padding: 30px 0;
+        }
+        
+        .admin-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stats-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .management-section {
+            margin-bottom: 40px;
+        }
+        
+        .management-btn {
+            width: 100%;
+            height: 80px;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .management-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .btn-success-custom {
+            background: linear-gradient(135deg, #56ab2f, #a8e6cf);
+            color: white;
+        }
+        
+        .btn-warning-custom {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+        }
+        
+        .btn-info-custom {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+        }
+        
+        .recent-activity {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .activity-item {
+            padding: 15px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .activity-time {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .welcome-section {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .init-db-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .section-hidden {
+            display: none !important;
+        }
+        
+        /* Estilos para tablas ordenables */
+        .sortable-header {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            transition: background-color 0.3s ease;
+        }
+        
+        .sortable-header:hover {
+            background-color: rgba(102, 126, 234, 0.1);
+        }
+        
+        .sortable-header::after {
+            content: '\f0dc';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            float: right;
+            margin-left: 10px;
+            color: #ccc;
+            transition: color 0.3s ease;
+        }
+        
+        .sortable-header.sort-asc::after {
+            content: '\f0de';
+            color: #667eea;
+        }
+        
+        .sortable-header.sort-desc::after {
+            content: '\f0dd';
+            color: #667eea;
+        }
+        
+        .sortable-header.active {
+            background-color: rgba(102, 126, 234, 0.15);
+        }
+        
+        /* Animación para las filas al ordenar */
+        .table tbody tr {
+            transition: all 0.3s ease;
+        }
+        
+        .table tbody tr:hover {
+            background-color: rgba(102, 126, 234, 0.05);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-admin">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-shield-alt"></i> Panel de Administración
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    <i class="fas fa-user"></i> <span id="adminName">Cargando...</span>
+                </span>
+                <button class="btn btn-outline-danger btn-sm" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-main">
+        <div class="container">
+            <!-- Dashboard Principal -->
+            <div id="dashboardSection">
+                <!-- Welcome Section -->
+                <div class="welcome-section">
+                    <h2><i class="fas fa-tachometer-alt"></i> Dashboard Administrativo</h2>
+                    <p>Gestiona el sistema de seguridad de Los Prados de Nos</p>
+                </div>
+
+                <!-- Sección de inicialización eliminada (tablas ya existen) -->
+
+                <!-- Estadísticas -->
+                <div class="row">
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stats-card" onclick="managePlazas()">
+                            <div class="stats-number" id="totalPlazas">0</div>
+                            <div class="stats-label">
+                                <i class="fas fa-map-marked-alt"></i> Plazas Activas
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stats-card" onclick="manageGuardias()">
+                            <div class="stats-number" id="guardiasActivos">0</div>
+                            <div class="stats-label">
+                                <i class="fas fa-users"></i> Guardias Activos
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stats-card" onclick="viewReports()">
+                            <div class="stats-number" id="checkinsHoy">0</div>
+                            <div class="stats-label">
+                                <i class="fas fa-clock"></i> Rondas Hoy
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="stats-card" onclick="viewReports()">
+                            <div class="stats-number" id="checkinsSemana">0</div>
+                            <div class="stats-label">
+                                <i class="fas fa-chart-line"></i> Rondas Semana
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Management Sections -->
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="admin-card">
+                            <h4><i class="fas fa-cogs"></i> Gestión del Sistema</h4>
+                            <div class="row management-section">
+                                <div class="col-md-6 mb-3">
+                                    <button class="management-btn btn-primary-custom" onclick="manageGuardias()">
+                                        <i class="fas fa-users"></i><br>
+                                        Gestionar Guardias
+                                    </button>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <button class="management-btn btn-success-custom" onclick="managePlazas()">
+                                        <i class="fas fa-map-marked-alt"></i><br>
+                                        Gestionar Plazas
+                                    </button>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <button class="management-btn btn-warning-custom" onclick="viewReports()">
+                                        <i class="fas fa-chart-bar"></i><br>
+                                        Reportes y Estadísticas
+                                    </button>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <button class="management-btn btn-info-custom" onclick="manageAdmins()">
+                                        <i class="fas fa-user-cog"></i><br>
+                                        Administradores
+                                    </button>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <button class="management-btn" style="background: linear-gradient(135deg, #ff6b6b, #feca57); color: white;" onclick="window.location.href='generar-tokens.html'">
+                                        <i class="fas fa-key"></i><br>
+                                        Generar Tokens
+                                    </button>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <button class="management-btn" style="background: linear-gradient(135deg, #5f27cd, #341f97); color: white;" onclick="window.location.href='qr-plazas.html'">
+                                        <i class="fas fa-qrcode"></i><br>
+                                        Generar QR
+                                    </button>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <button class="management-btn" style="background: linear-gradient(135deg, #28a745, #20c997); color: white;" onclick="viewEventos()">
+                                        <i class="fas fa-calendar-alt"></i><br>
+                                        Gestionar Eventos
+                                    </button>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <button class="management-btn" style="background: linear-gradient(135deg, #6f42c1, #e83e8c); color: white;" onclick="viewDocumentos()">
+                                        <i class="fas fa-file-alt"></i><br>
+                                        Gestionar Documentos
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="admin-card">
+                            <h5><i class="fas fa-history"></i> Actividad Reciente</h5>
+                            <div class="recent-activity" id="actividadReciente">
+                                <div class="text-center">
+                                    <i class="fas fa-spinner fa-spin"></i> Cargando...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gestión de Guardias -->
+            <div id="guardiasSection" class="section-hidden">
+                <div class="admin-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4><i class="fas fa-users"></i> Gestión de Guardias</h4>
+                        <div>
+                            <button class="btn btn-success me-2" onclick="showAddGuardiaForm()">
+                                <i class="fas fa-plus"></i> Nuevo Guardia
+                            </button>
+                            <button class="btn btn-secondary" onclick="showDashboard()">
+                                <i class="fas fa-arrow-left"></i> Volver
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Teléfono</th>
+                                    <th>Estado</th>
+                                    <th>Código Validación</th>
+                                    <th>Último Login</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="guardiasTableBody">
+                                <tr>
+                                    <td colspan="7" class="text-center">
+                                        <i class="fas fa-spinner fa-spin"></i> Cargando...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gestión de Plazas -->
+            <div id="plazasSection" class="section-hidden">
+                <div class="admin-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4><i class="fas fa-map-marked-alt"></i> Gestión de Plazas</h4>
+                        <div>
+                            <button class="btn btn-success me-2" onclick="showAddPlazaForm()">
+                                <i class="fas fa-plus"></i> Nueva Plaza
+                            </button>
+                            <button class="btn btn-secondary" onclick="showDashboard()">
+                                <i class="fas fa-arrow-left"></i> Volver
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Dirección</th>
+                                    <th>Total Checkins</th>
+                                    <th>Último Checkin</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="plazasTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center">
+                                        <i class="fas fa-spinner fa-spin"></i> Cargando...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gestión de Administradores -->
+            <div id="adminsSection" class="section-hidden">
+                <div class="admin-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4><i class="fas fa-user-cog"></i> Gestión de Administradores</h4>
+                        <div>
+                            <button class="btn btn-success me-2" onclick="showAddAdminForm()">
+                                <i class="fas fa-plus"></i> Nuevo Administrador
+                            </button>
+                            <button class="btn btn-secondary" onclick="showDashboard()">
+                                <i class="fas fa-arrow-left"></i> Volver
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Teléfono</th>
+                                    <th>Estado</th>
+                                    <th>Fecha Creación</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminsTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center">
+                                        <i class="fas fa-spinner fa-spin"></i> Cargando...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reportes y Estadísticas -->
+            <div id="reportsSection" class="section-hidden">
+                <div class="admin-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4><i class="fas fa-chart-bar"></i> Reportes y Estadísticas</h4>
+                        <button class="btn btn-secondary" onclick="showDashboard()">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </button>
+                    </div>
+                    
+                    <!-- Filtros de Reporte -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <input type="date" class="form-control" id="fechaInicio" placeholder="Fecha Inicio">
+                                <label for="fechaInicio">Fecha Inicio</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <input type="date" class="form-control" id="fechaFin" placeholder="Fecha Fin">
+                                <label for="fechaFin">Fecha Fin</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-primary h-100" onclick="generateReport()">
+                                <i class="fas fa-chart-line"></i> Generar Reporte
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Estadísticas Detalladas -->
+                    <div class="row mb-4">
+                        <div class="col-md-2">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary" id="reportTotalCheckins">0</h5>
+                                    <p class="card-text">Total Checkins</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5 class="card-title text-success" id="reportPlazasActivas">0</h5>
+                                    <p class="card-text">Plazas con Actividad</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5 class="card-title text-warning" id="reportGuardiasActivos">0</h5>
+                                    <p class="card-text">Guardias Activos</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5 class="card-title text-info" id="reportPromedioDiario">0</h5>
+                                    <p class="card-text">Promedio Diario</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-success h-100" onclick="exportReport()">
+                                <i class="fas fa-download"></i> Exportar Excel
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Tabla de Reporte -->
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th class="sortable-header" data-column="plaza">Plaza</th>
+                                    <th class="sortable-header" data-column="guardia">Guardia</th>
+                                    <th class="sortable-header" data-column="total_checkins">Total Checkins</th>
+                                    <th class="sortable-header" data-column="primer_checkin">Primer Checkin</th>
+                                    <th class="sortable-header" data-column="ultimo_checkin">Último Checkin</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportTableBody">
+                                <tr>
+                                    <td colspan="5" class="text-center">
+                                        Selecciona fechas y genera un reporte
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de Eventos -->
+    <div id="eventosSection" class="section-hidden">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h3><i class="fas fa-calendar-alt"></i> Gestión de Eventos</h3>
+                            <button class="btn btn-primary" onclick="showEventForm()">
+                                <i class="fas fa-plus"></i> Nuevo Evento
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Título</th>
+                                            <th>Fecha Inicio</th>
+                                            <th>Fecha Fin</th>
+                                            <th>Ubicación</th>
+                                            <th>Tipo</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="eventosTableBody">
+                                        <tr>
+                                            <td colspan="7" class="text-center">
+                                                Cargando eventos...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de Documentos -->
+    <div id="documentosSection" class="section-hidden">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h3><i class="fas fa-file-alt"></i> Gestión de Documentos</h3>
+                            <button class="btn btn-primary" onclick="showDocumentForm()">
+                                <i class="fas fa-plus"></i> Nuevo Documento
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Nombre</th>
+                                            <th>Tipo</th>
+                                            <th>Fecha Publicación</th>
+                                            <th>Evento Asociado</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="documentosTableBody">
+                                        <tr>
+                                            <td colspan="6" class="text-center">
+                                                Cargando documentos...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Formularios -->
+    <div class="modal fade" id="formModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Formulario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- Contenido dinámico -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        let currentUser = null;
+        let guardias = [];
+        let plazas = [];
+        let admins = [];
+        let reportData = [];
+        let isInitialized = false;
+        
+        // Verificar autenticación al cargar
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!isInitialized) {
+                isInitialized = true;
+                checkAuth();
+            }
+        });
+        
+        async function checkAuth() {
+            try {
+                console.log('Verificando autenticación...');
+                const response = await fetch('/api/auth/check', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('Auth response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Auth data:', data);
+                
+                // Manejar ambos formatos: authenticated o isAuthenticated
+                const isAuth = data.authenticated || data.isAuthenticated;
+                
+                if (isAuth && data.guardia) {
+                    currentUser = data.guardia;
+                    document.getElementById('adminName').textContent = currentUser.nombre;
+                    loadDashboard();
+                } else {
+                    console.log('Usuario no autenticado o no es admin');
+                    console.log('isAuth:', isAuth, 'data.guardia:', data.guardia);
+                    window.location.href = 'admin-login.html';
+                }
+            } catch (error) {
+                console.error('Error verificando autenticación:', error);
+                window.location.href = 'admin-login.html';
+            }
+        }
+        
+        async function loadDashboard() {
+            try {
+                console.log('Iniciando carga del dashboard...');
+                
+                // Mostrar loading state
+                const loadingElements = [
+                    { id: 'totalPlazas', text: '...' },
+                    { id: 'guardiasActivos', text: '...' },
+                    { id: 'checkinsHoy', text: '...' },
+                    { id: 'checkinsSemana', text: '...' }
+                ];
+                
+                loadingElements.forEach(element => {
+                    const el = document.getElementById(element.id);
+                    if (el) el.textContent = element.text;
+                });
+                
+                // Cargar estadísticas
+                console.log('Solicitando estadísticas...');
+                const statsResponse = await fetch('/api/admin/stats', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('Stats response status:', statsResponse.status);
+                
+                if (!statsResponse.ok) {
+                    if (statsResponse.status === 403) {
+                        console.log('Acceso denegado - redirigiendo al login');
+                        window.location.href = 'admin-login.html';
+                        return;
+                    } else if (statsResponse.status === 404) {
+                        console.log('Endpoint de estadísticas no encontrado');
+                        // Cargar estadísticas básicas manualmente
+                        await loadBasicStats();
+                        loadRecentActivity();
+                        return;
+                    }
+                    throw new Error(`Error HTTP: ${statsResponse.status} - ${statsResponse.statusText}`);
+                }
+                
+                const statsData = await statsResponse.json();
+                console.log('Stats data received:', statsData);
+                
+                if (statsData.success && statsData.stats) {
+                    const stats = statsData.stats;
+                    
+                    // Actualizar estadísticas con verificación de elementos
+                    const updates = [
+                        { id: 'totalPlazas', value: stats.total_plazas || 0 },
+                        { id: 'guardiasActivos', value: stats.guardias_activos || 0 },
+                        { id: 'checkinsHoy', value: stats.checkins_hoy || 0 },
+                        { id: 'checkinsSemana', value: stats.checkins_semana || 0 }
+                    ];
+                    
+                    updates.forEach(update => {
+                        const element = document.getElementById(update.id);
+                        if (element) {
+                            element.textContent = update.value;
+                            console.log(`Actualizado ${update.id}: ${update.value}`);
+                        }
+                    });
+                } else {
+                    console.error('Respuesta de estadísticas sin datos válidos:', statsData);
+                    await loadBasicStats();
+                }
+                
+                // Cargar actividad reciente
+                loadRecentActivity();
+                
+            } catch (error) {
+                console.error('Error cargando dashboard:', error);
+                
+                // Intentar cargar estadísticas básicas como fallback
+                try {
+                    await loadBasicStats();
+                    loadRecentActivity();
+                } catch (fallbackError) {
+                    console.error('Error en fallback:', fallbackError);
+                    Swal.fire({
+                        title: 'Error',
+                        text: `Error al cargar el dashboard: ${error.message}`,
+                        icon: 'error'
+                    });
+                }
+            }
+        }
+        
+        async function loadRecentActivity() {
+            try {
+                const activityContainer = document.getElementById('actividadReciente');
+                
+                // Limpiar el contenido previo para evitar duplicaciones
+                activityContainer.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando actividad...</div>';
+                
+                console.log('Solicitando actividad reciente...');
+                const response = await fetch('/api/admin/reports/recent?limit=10', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('Recent activity response status:', response.status);
+                
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        window.location.href = 'admin-login.html';
+                        return;
+                    } else if (response.status === 404) {
+                        console.log('Endpoint de actividad reciente no encontrado');
+                        activityContainer.innerHTML = '<div class="text-center text-muted">Función de actividad reciente no disponible</div>';
+                        return;
+                    }
+                    throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('Recent activity data:', data);
+                
+                if (data.success && data.checkins && data.checkins.length > 0) {
+                    const activityHtml = data.checkins.map(checkin => `
+                        <div class="activity-item">
+                            <strong>${checkin.guardia_nombre}</strong> realizó checkin en 
+                            <strong>${checkin.plaza_nombre}</strong>
+                            <div class="activity-time">
+                                <i class="fas fa-clock"></i> ${formatearFecha(new Date(checkin.fecha))}
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    activityContainer.innerHTML = activityHtml;
+                } else {
+                    activityContainer.innerHTML = '<div class="text-center text-muted">No hay actividad reciente</div>';
+                }
+            } catch (error) {
+                console.error('Error cargando actividad:', error);
+                document.getElementById('actividadReciente').innerHTML = 
+                    `<div class="text-center text-muted">Error al cargar actividad: ${error.message}</div>`;
+            }
+        }
+        
+        // ==================== FUNCIÓN FALLBACK PARA ESTADÍSTICAS ====================
+        
+        async function loadBasicStats() {
+            console.log('Cargando estadísticas básicas...');
+            
+            try {
+                // Cargar plazas
+                const plazasResponse = await fetch('/api/admin/plazas', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (plazasResponse.ok) {
+                    const plazasData = await plazasResponse.json();
+                    if (plazasData.success) {
+                        const totalPlazas = plazasData.plazas ? plazasData.plazas.length : 0;
+                        const element = document.getElementById('totalPlazas');
+                        if (element) element.textContent = totalPlazas;
+                        console.log('Plazas cargadas:', totalPlazas);
+                    }
+                }
+                
+                // Cargar guardias
+                const guardiasResponse = await fetch('/api/admin/guardias', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (guardiasResponse.ok) {
+                    const guardiasData = await guardiasResponse.json();
+                    if (guardiasData.success) {
+                        const guardiasActivos = guardiasData.guardias ? 
+                            guardiasData.guardias.filter(g => g.activo).length : 0;
+                        const element = document.getElementById('guardiasActivos');
+                        if (element) element.textContent = guardiasActivos;
+                        console.log('Guardias activos:', guardiasActivos);
+                    }
+                }
+                
+                // Para checkins, usar valores básicos si no tenemos endpoints específicos
+                const checkinsHoyElement = document.getElementById('checkinsHoy');
+                const checkinsSemanaElement = document.getElementById('checkinsSemana');
+                
+                if (checkinsHoyElement) checkinsHoyElement.textContent = '0';
+                if (checkinsSemanaElement) checkinsSemanaElement.textContent = '0';
+                
+                console.log('Estadísticas básicas cargadas como fallback');
+                
+            } catch (error) {
+                console.error('Error cargando estadísticas básicas:', error);
+                // Establecer valores por defecto
+                const defaultElements = [
+                    { id: 'totalPlazas', value: '0' },
+                    { id: 'guardiasActivos', value: '0' },
+                    { id: 'checkinsHoy', value: '0' },
+                    { id: 'checkinsSemana', value: '0' }
+                ];
+                
+                defaultElements.forEach(item => {
+                    const element = document.getElementById(item.id);
+                    if (element) element.textContent = item.value;
+                });
+            }
+        }
+        
+        // ==================== NAVEGACIÓN ====================
+        
+        function showDashboard() {
+            hideAllSections();
+            document.getElementById('dashboardSection').classList.remove('section-hidden');
+            loadDashboard();
+        }
+        
+        function hideAllSections() {
+            const sections = ['dashboardSection', 'guardiasSection', 'plazasSection', 'adminsSection', 'reportsSection'];
+            sections.forEach(sectionId => {
+                const section = document.getElementById(sectionId);
+                if (section) {
+                    section.classList.add('section-hidden');
+                }
+            });
+        }
+        
+        // ==================== GESTIÓN DE GUARDIAS ====================
+        
+        async function manageGuardias() {
+            hideAllSections();
+            document.getElementById('guardiasSection').classList.remove('section-hidden');
+            
+            // Verificar autenticación antes de cargar datos
+            if (!currentUser) {
+                await checkAuth();
+                if (!currentUser) {
+                    window.location.href = 'admin-login.html';
+                    return;
+                }
+            }
+            
+            await loadGuardias();
+        }
+        
+        async function loadGuardias() {
+            try {
+                console.log('Cargando guardias...');
+                const response = await fetch('/api/admin/guardias', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        window.location.href = 'admin-login.html';
+                        return;
+                    }
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Data received:', data);
+                
+                if (data.success) {
+                    guardias = data.guardias || [];
+                    renderGuardiasTable();
+                } else {
+                    console.error('Error en respuesta:', data.message);
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message || 'Error al cargar guardias',
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error cargando guardias:', error);
+                document.getElementById('guardiasTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-danger">
+                            Error: ${error.message}
+                        </td>
+                    </tr>
+                `;
+                Swal.fire({
+                    title: 'Error',
+                    text: `Error al cargar guardias: ${error.message}`,
+                    icon: 'error'
+                });
+            }
+        }
+        
+        function renderGuardiasTable() {
+            const tbody = document.getElementById('guardiasTableBody');
+            
+            if (guardias.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No hay guardias registrados</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = guardias.map(guardia => `
+                <tr>
+                    <td>${guardia.nombre}</td>
+                    <td>${guardia.email}</td>
+                    <td>${guardia.telefono || 'N/A'}</td>
+                    <td>
+                        <span class="badge ${guardia.activo ? 'bg-success' : 'bg-danger'}">
+                            ${guardia.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                        <br>
+                        <small class="text-muted">${guardia.estado}</small>
+                    </td>
+                    <td>
+                        <span class="badge bg-info text-dark" style="font-family: monospace; font-size: 14px;">
+                            ${guardia.validation_code || 'N/A'}
+                        </span>
+                        <br>
+                        <button class="btn btn-sm btn-outline-secondary mt-1" onclick="regenerateValidationCode(${guardia.id})">
+                            <i class="fas fa-refresh"></i> Regenerar
+                        </button>
+                    </td>
+                    <td>${guardia.last_login ? formatearFecha(new Date(guardia.last_login)) : 'Nunca'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editGuardia(${guardia.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteGuardia(${guardia.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function showAddGuardiaForm() {
+            document.getElementById('modalTitle').textContent = 'Nuevo Guardia';
+            document.getElementById('modalBody').innerHTML = `
+                <form id="guardiaForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="guardiaNombre" required>
+                                <label for="guardiaNombre">Nombre Completo</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="email" class="form-control" id="guardiaEmail" required>
+                                <label for="guardiaEmail">Email</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="tel" class="form-control" id="guardiaTelefono">
+                                <label for="guardiaTelefono">Teléfono</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="password" class="form-control" id="guardiaPassword" required>
+                                <label for="guardiaPassword">Contraseña</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            `;
+            
+            document.getElementById('guardiaForm').addEventListener('submit', handleGuardiaSubmit);
+            new bootstrap.Modal(document.getElementById('formModal')).show();
+        }
+        
+        async function handleGuardiaSubmit(e) {
+            e.preventDefault();
+            
+            const formData = {
+                nombre: document.getElementById('guardiaNombre').value,
+                email: document.getElementById('guardiaEmail').value,
+                telefono: document.getElementById('guardiaTelefono').value,
+                password: document.getElementById('guardiaPassword').value
+            };                try {
+                    const response = await fetch('/api/admin/guardias', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: 'Guardia creado exitosamente',
+                        icon: 'success'
+                    });
+                    bootstrap.Modal.getInstance(document.getElementById('formModal')).hide();
+                    loadGuardias();
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message,
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error creando guardia:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al crear guardia',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        async function editGuardia(id) {
+            const guardia = guardias.find(g => g.id === id);
+            if (!guardia) return;
+            
+            document.getElementById('modalTitle').textContent = 'Editar Guardia';
+            document.getElementById('modalBody').innerHTML = `
+                <form id="editGuardiaForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="editGuardiaNombre" value="${guardia.nombre}" required>
+                                <label for="editGuardiaNombre">Nombre Completo</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="email" class="form-control" id="editGuardiaEmail" value="${guardia.email}" required>
+                                <label for="editGuardiaEmail">Email</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="tel" class="form-control" id="editGuardiaTelefono" value="${guardia.telefono || ''}">
+                                <label for="editGuardiaTelefono">Teléfono</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="password" class="form-control" id="editGuardiaPassword" placeholder="Dejar vacío para no cambiar">
+                                <label for="editGuardiaPassword">Nueva Contraseña</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="editGuardiaActivo" ${guardia.activo ? 'checked' : ''}>
+                        <label class="form-check-label" for="editGuardiaActivo">
+                            Guardia Activo
+                        </label>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Actualizar</button>
+                    </div>
+                </form>
+            `;
+            
+            document.getElementById('editGuardiaForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = {
+                    nombre: document.getElementById('editGuardiaNombre').value,
+                    email: document.getElementById('editGuardiaEmail').value,
+                    telefono: document.getElementById('editGuardiaTelefono').value,
+                    activo: document.getElementById('editGuardiaActivo').checked
+                };
+                
+                const password = document.getElementById('editGuardiaPassword').value;
+                if (password) {
+                    formData.password = password;
+                }
+                
+                try {
+                    const response = await fetch(`/api/admin/guardias/${id}`, {
+                        method: 'PUT',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Éxito',
+                            text: 'Guardia actualizado exitosamente',
+                            icon: 'success'
+                        });
+                        bootstrap.Modal.getInstance(document.getElementById('formModal')).hide();
+                        loadGuardias();
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message,
+                            icon: 'error'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error actualizando guardia:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al actualizar guardia',
+                        icon: 'error'
+                    });
+                }
+            });
+            
+            new bootstrap.Modal(document.getElementById('formModal')).show();
+        }
+        
+        async function deleteGuardia(id) {
+            const guardia = guardias.find(g => g.id === id);
+            if (!guardia) return;
+            
+            const result = await Swal.fire({
+                title: '¿Estás seguro?',
+                text: `¿Deseas eliminar al guardia "${guardia.nombre}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            });
+            
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/api/admin/guardias/${id}`, {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Eliminado',
+                            text: data.message,
+                            icon: 'success'
+                        });
+                        loadGuardias();
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message,
+                            icon: 'error'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error eliminando guardia:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al eliminar guardia',
+                        icon: 'error'
+                    });
+                }
+            }
+        }
+        
+        // Regenerar código de validación
+        async function regenerateValidationCode(guardiaId) {
+            const guardia = guardias.find(g => g.id === guardiaId);
+            if (!guardia) return;
+            
+            const result = await Swal.fire({
+                title: '¿Regenerar código?',
+                text: `¿Deseas generar un nuevo código de validación para ${guardia.nombre}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, regenerar',
+                cancelButtonText: 'Cancelar'
+            });
+            
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/api/admin/guardias/${guardiaId}/regenerate-code`, {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Código regenerado',
+                            text: `Nuevo código: ${data.validation_code}`,
+                            icon: 'success',
+                            timer: 5000,
+                            showConfirmButton: true
+                        });
+                        loadGuardias(); // Recargar la tabla
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message,
+                            icon: 'error'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error regenerando código:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al regenerar código de validación',
+                        icon: 'error'
+                    });
+                }
+            }
+        }
+        
+        // ==================== GESTIÓN DE PLAZAS ====================
+        
+        async function managePlazas() {
+            hideAllSections();
+            document.getElementById('plazasSection').classList.remove('section-hidden');
+            
+            // Verificar autenticación antes de cargar datos
+            if (!currentUser) {
+                await checkAuth();
+                if (!currentUser) {
+                    window.location.href = 'admin-login.html';
+                    return;
+                }
+            }
+            
+            await loadPlazas();
+        }
+        
+        async function loadPlazas() {
+            try {
+                console.log('Cargando plazas...');
+                const response = await fetch('/api/admin/plazas', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        window.location.href = 'admin-login.html';
+                        return;
+                    }
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Data received:', data);
+                
+                if (data.success) {
+                    plazas = data.plazas || [];
+                    renderPlazasTable();
+                } else {
+                    console.error('Error en respuesta:', data.message);
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message || 'Error al cargar plazas',
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error cargando plazas:', error);
+                document.getElementById('plazasTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-danger">
+                            Error: ${error.message}
+                        </td>
+                    </tr>
+                `;
+                Swal.fire({
+                    title: 'Error',
+                    text: `Error al cargar plazas: ${error.message}`,
+                    icon: 'error'
+                });
+            }
+        }
+        
+        function renderPlazasTable() {
+            const tbody = document.getElementById('plazasTableBody');
+            
+            if (plazas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No hay plazas registradas</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = plazas.map(plaza => `
+                <tr>
+                    <td>${plaza.nombre}</td>
+                    <td>${plaza.direccion || 'N/A'}</td>
+                    <td>${plaza.total_checkins || 0}</td>
+                    <td>${plaza.ultimo_checkin ? formatearFecha(new Date(plaza.ultimo_checkin)) : 'Nunca'}</td>
+                    <td>
+                        <span class="badge ${plaza.activo ? 'bg-success' : 'bg-danger'}">
+                            ${plaza.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editPlaza(${plaza.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deletePlaza(${plaza.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function showAddPlazaForm() {
+            document.getElementById('modalTitle').textContent = 'Nueva Plaza';
+            document.getElementById('modalBody').innerHTML = `
+                <form id="plazaForm">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="plazaNombre" required>
+                        <label for="plazaNombre">Nombre de la Plaza</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="plazaDireccion">
+                        <label for="plazaDireccion">Dirección</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <textarea class="form-control" id="plazaDescripcion" style="height: 100px"></textarea>
+                        <label for="plazaDescripcion">Descripción</label>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            `;
+            
+            document.getElementById('plazaForm').addEventListener('submit', handlePlazaSubmit);
+            new bootstrap.Modal(document.getElementById('formModal')).show();
+        }
+        
+        async function handlePlazaSubmit(e) {
+            e.preventDefault();
+            
+            const formData = {
+                nombre: document.getElementById('plazaNombre').value,
+                direccion: document.getElementById('plazaDireccion').value,
+                descripcion: document.getElementById('plazaDescripcion').value
+            };
+            
+            try {
+                const response = await fetch('/api/admin/plazas', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: 'Plaza creada exitosamente',
+                        icon: 'success'
+                    });
+                    bootstrap.Modal.getInstance(document.getElementById('formModal')).hide();
+                    loadPlazas();
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message,
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error creando plaza:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al crear plaza',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        async function editPlaza(id) {
+            const plaza = plazas.find(p => p.id === id);
+            if (!plaza) return;
+            
+            document.getElementById('modalTitle').textContent = 'Editar Plaza';
+            document.getElementById('modalBody').innerHTML = `
+                <form id="editPlazaForm">
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="editPlazaNombre" value="${plaza.nombre}" required>
+                        <label for="editPlazaNombre">Nombre de la Plaza</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="editPlazaDireccion" value="${plaza.direccion || ''}">
+                        <label for="editPlazaDireccion">Dirección</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <textarea class="form-control" id="editPlazaDescripcion" style="height: 100px">${plaza.descripcion || ''}</textarea>
+                        <label for="editPlazaDescripcion">Descripción</label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="editPlazaActivo" ${plaza.activo ? 'checked' : ''}>
+                        <label class="form-check-label" for="editPlazaActivo">
+                            Plaza Activa
+                        </label>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Actualizar</button>
+                    </div>
+                </form>
+            `;
+            
+            document.getElementById('editPlazaForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = {
+                    nombre: document.getElementById('editPlazaNombre').value,
+                    direccion: document.getElementById('editPlazaDireccion').value,
+                    descripcion: document.getElementById('editPlazaDescripcion').value,
+                    activo: document.getElementById('editPlazaActivo').checked
+                };
+                
+                try {
+                    const response = await fetch(`/api/admin/plazas/${id}`, {
+                        method: 'PUT',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Éxito',
+                            text: 'Plaza actualizada exitosamente',
+                            icon: 'success'
+                        });
+                        bootstrap.Modal.getInstance(document.getElementById('formModal')).hide();
+                        loadPlazas();
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message,
+                            icon: 'error'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error actualizando plaza:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al actualizar plaza',
+                        icon: 'error'
+                    });
+                }
+            });
+            
+            new bootstrap.Modal(document.getElementById('formModal')).show();
+        }
+        
+        async function deletePlaza(id) {
+            const plaza = plazas.find(p => p.id === id);
+            if (!plaza) return;
+            
+            const result = await Swal.fire({
+                title: '¿Estás seguro?',
+                text: `¿Deseas eliminar la plaza "${plaza.nombre}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            });
+            
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/api/admin/plazas/${id}`, {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Eliminado',
+                            text: data.message,
+                            icon: 'success'
+                        });
+                        loadPlazas();
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message,
+                            icon: 'error'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error eliminando plaza:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al eliminar plaza',
+                        icon: 'error'
+                    });
+                }
+            }
+        }
+        
+        // ==================== GESTIÓN DE ADMINISTRADORES ====================
+        
+        async function manageAdmins() {
+            hideAllSections();
+            document.getElementById('adminsSection').classList.remove('section-hidden');
+            
+            // Verificar autenticación antes de cargar datos
+            if (!currentUser) {
+                await checkAuth();
+                if (!currentUser) {
+                    window.location.href = 'admin-login.html';
+                    return;
+                }
+            }
+            
+            await loadAdmins();
+        }
+        
+        async function loadAdmins() {
+            try {
+                console.log('Cargando administradores...');
+                const response = await fetch('/api/admin/admins', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        window.location.href = 'admin-login.html';
+                        return;
+                    }
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Data received:', data);
+                
+                if (data.success) {
+                    admins = data.admins || [];
+                    renderAdminsTable();
+                } else {
+                    console.error('Error en respuesta:', data.message);
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message || 'Error al cargar administradores',
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error cargando administradores:', error);
+                document.getElementById('adminsTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-danger">
+                            Error: ${error.message}
+                        </td>
+                    </tr>
+                `;
+                Swal.fire({
+                    title: 'Error',
+                    text: `Error al cargar administradores: ${error.message}`,
+                    icon: 'error'
+                });
+            }
+        }
+        
+        function renderAdminsTable() {
+            const tbody = document.getElementById('adminsTableBody');
+            
+            if (admins.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No hay administradores registrados</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = admins.map(admin => `
+                <tr>
+                    <td>${admin.nombre} ${admin.apellido_paterno} ${admin.apellido_materno || ''}</td>
+                    <td>${admin.email}</td>
+                    <td>${admin.telefono || 'N/A'}</td>
+                    <td>
+                        <span class="badge ${admin.activo ? 'bg-success' : 'bg-danger'}">
+                            ${admin.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                    </td>
+                    <td>${formatearFecha(new Date(admin.created_at))}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editAdmin(${admin.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        ${admin.id !== currentUser.id ? `
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteAdmin(${admin.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        ` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function showAddAdminForm() {
+            document.getElementById('modalTitle').textContent = 'Nuevo Administrador';
+            document.getElementById('modalBody').innerHTML = `
+                <form id="adminForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="adminNombre" required>
+                                <label for="adminNombre">Nombre</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="adminApellidoPaterno" required>
+                                <label for="adminApellidoPaterno">Apellido Paterno</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="adminApellidoMaterno">
+                                <label for="adminApellidoMaterno">Apellido Materno</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="email" class="form-control" id="adminEmail" required>
+                                <label for="adminEmail">Email</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="tel" class="form-control" id="adminTelefono">
+                                <label for="adminTelefono">Teléfono</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="password" class="form-control" id="adminPassword" required>
+                                <label for="adminPassword">Contraseña</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            `;
+            
+            document.getElementById('adminForm').addEventListener('submit', handleAdminSubmit);
+            new bootstrap.Modal(document.getElementById('formModal')).show();
+        }
+        
+        async function handleAdminSubmit(e) {
+            e.preventDefault();
+            
+            const formData = {
+                nombre: document.getElementById('adminNombre').value,
+                apellido_paterno: document.getElementById('adminApellidoPaterno').value,
+                apellido_materno: document.getElementById('adminApellidoMaterno').value,
+                email: document.getElementById('adminEmail').value,
+                telefono: document.getElementById('adminTelefono').value,
+                password: document.getElementById('adminPassword').value
+            };
+            
+            try {
+                const response = await fetch('/api/admin/admins', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: 'Administrador creado exitosamente',
+                        icon: 'success'
+                    });
+                    bootstrap.Modal.getInstance(document.getElementById('formModal')).hide();
+                    loadAdmins();
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message,
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error creando administrador:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al crear administrador',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        async function editAdmin(id) {
+            const admin = admins.find(a => a.id === id);
+            if (!admin) return;
+            
+            document.getElementById('modalTitle').textContent = 'Editar Administrador';
+            document.getElementById('modalBody').innerHTML = `
+                <form id="editAdminForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="editAdminNombre" value="${admin.nombre}" required>
+                                <label for="editAdminNombre">Nombre</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="editAdminApellidoPaterno" value="${admin.apellido_paterno}" required>
+                                <label for="editAdminApellidoPaterno">Apellido Paterno</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="editAdminApellidoMaterno" value="${admin.apellido_materno || ''}">
+                                <label for="editAdminApellidoMaterno">Apellido Materno</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="email" class="form-control" id="editAdminEmail" value="${admin.email}" required>
+                                <label for="editAdminEmail">Email</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="tel" class="form-control" id="editAdminTelefono" value="${admin.telefono || ''}">
+                                <label for="editAdminTelefono">Teléfono</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating mb-3">
+                                <input type="password" class="form-control" id="editAdminPassword" placeholder="Dejar vacío para no cambiar">
+                                <label for="editAdminPassword">Nueva Contraseña</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="editAdminActivo" ${admin.activo ? 'checked' : ''}>
+                        <label class="form-check-label" for="editAdminActivo">
+                            Administrador Activo
+                        </label>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Actualizar</button>
+                    </div>
+                </form>
+            `;
+            
+            document.getElementById('editAdminForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = {
+                    nombre: document.getElementById('editAdminNombre').value,
+                    apellido_paterno: document.getElementById('editAdminApellidoPaterno').value,
+                    apellido_materno: document.getElementById('editAdminApellidoMaterno').value,
+                    email: document.getElementById('editAdminEmail').value,
+                    telefono: document.getElementById('editAdminTelefono').value,
+                    activo: document.getElementById('editAdminActivo').checked
+                };
+                
+                const password = document.getElementById('editAdminPassword').value;
+                if (password) {
+                    formData.password = password;
+                }
+                
+                try {
+                    const response = await fetch(`/api/admin/admins/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Éxito',
+                            text: 'Administrador actualizado exitosamente',
+                            icon: 'success'
+                        });
+                        bootstrap.Modal.getInstance(document.getElementById('formModal')).hide();
+                        loadAdmins();
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message,
+                            icon: 'error'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error actualizando administrador:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al actualizar administrador',
+                        icon: 'error'
+                    });
+                }
+            });
+            
+            new bootstrap.Modal(document.getElementById('formModal')).show();
+        }
+        
+        async function deleteAdmin(id) {
+            const admin = admins.find(a => a.id === id);
+            if (!admin) return;
+            
+            const result = await Swal.fire({
+                title: '¿Estás seguro?',
+                text: `¿Deseas eliminar al administrador "${admin.nombre} ${admin.apellido_paterno}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            });
+            
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/api/admin/admins/${id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Eliminado',
+                            text: data.message,
+                            icon: 'success'
+                        });
+                        loadAdmins();
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message,
+                            icon: 'error'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error eliminando administrador:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al eliminar administrador',
+                        icon: 'error'
+                    });
+                }
+            }
+        }
+        
+        // ==================== REPORTES ====================
+        
+        function viewReports() {
+            hideAllSections();
+            document.getElementById('reportsSection').classList.remove('section-hidden');
+            
+            // Establecer fechas por defecto (últimos 30 días)
+            const hoy = new Date();
+            const hace30Dias = new Date(hoy.getTime() - (30 * 24 * 60 * 60 * 1000));
+            
+            document.getElementById('fechaFin').value = hoy.toISOString().split('T')[0];
+            document.getElementById('fechaInicio').value = hace30Dias.toISOString().split('T')[0];
+            
+            generateReport();
+        }
+
+        // ==================== EVENTOS ====================
+        
+        function viewEventos() {
+            hideAllSections();
+            document.getElementById('eventosSection').classList.remove('section-hidden');
+            loadEventos();
+        }
+
+        let eventosData = [];
+        let tiposEvento = [];
+
+        async function loadEventos() {
+            try {
+                // Cargar eventos y tipos de evento en paralelo
+                const [eventosResponse, tiposResponse] = await Promise.all([
+                    fetch('/api/eventos'),
+                    fetch('/api/eventos/tipos/all')
+                ]);
+
+                const eventosResult = await eventosResponse.json();
+                const tiposResult = await tiposResponse.json();
+
+                if (eventosResult.success) {
+                    eventosData = eventosResult.data;
+                    renderEventosTable();
+                }
+
+                if (tiposResult.success) {
+                    tiposEvento = tiposResult.data;
+                }
+            } catch (error) {
+                console.error('Error cargando eventos:', error);
+                document.getElementById('eventosTableBody').innerHTML = 
+                    '<tr><td colspan="7" class="text-center text-danger">Error cargando eventos</td></tr>';
+            }
+        }
+
+        function renderEventosTable() {
+            const tbody = document.getElementById('eventosTableBody');
+            
+            if (eventosData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No hay eventos registrados</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = eventosData.map(evento => {
+                const fechaInicio = new Date(evento.fecha_inicio).toLocaleDateString();
+                const fechaFin = evento.fecha_fin ? new Date(evento.fecha_fin).toLocaleDateString() : 'N/A';
+                const tipoEvento = tiposEvento.find(t => t.id === evento.tipo_evento_id)?.nombre || 'N/A';
+                const estado = evento.visible ? 
+                    '<span class="badge bg-success">Visible</span>' : 
+                    '<span class="badge bg-secondary">Oculto</span>';
+
+                return `
+                    <tr>
+                        <td>${evento.titulo}</td>
+                        <td>${fechaInicio}</td>
+                        <td>${fechaFin}</td>
+                        <td>${evento.ubicacion || 'N/A'}</td>
+                        <td>${tipoEvento}</td>
+                        <td>${estado}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="editEvento(${evento.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteEvento(${evento.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <a href="${evento.link_google_cal}" target="_blank" class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-calendar-plus"></i>
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function showEventForm(eventoId = null) {
+            const isEdit = eventoId !== null;
+            const evento = isEdit ? eventosData.find(e => e.id === eventoId) : null;
+            
+            const modalTitle = isEdit ? 'Editar Evento' : 'Nuevo Evento';
+            const submitText = isEdit ? 'Actualizar' : 'Crear';
+            
+            const form = `
+                <form id="eventoForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="eventoTitulo" class="form-label">Título *</label>
+                                <input type="text" class="form-control" id="eventoTitulo" value="${evento?.titulo || ''}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="eventoUbicacion" class="form-label">Ubicación</label>
+                                <input type="text" class="form-control" id="eventoUbicacion" value="${evento?.ubicacion || ''}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="eventoDescripcion" class="form-label">Descripción *</label>
+                        <textarea class="form-control" id="eventoDescripcion" rows="3" required>${evento?.descripcion || ''}</textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="eventoFechaInicio" class="form-label">Fecha y Hora Inicio *</label>
+                                <input type="datetime-local" class="form-control" id="eventoFechaInicio" 
+                                       value="${evento?.fecha_inicio?.slice(0, 16) || ''}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="eventoFechaFin" class="form-label">Fecha y Hora Fin</label>
+                                <input type="datetime-local" class="form-control" id="eventoFechaFin" 
+                                       value="${evento?.fecha_fin?.slice(0, 16) || ''}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="eventoTipo" class="form-label">Tipo de Evento</label>
+                                <select class="form-select" id="eventoTipo">
+                                    <option value="">Seleccionar tipo</option>
+                                    ${tiposEvento.map(tipo => 
+                                        `<option value="${tipo.id}" ${evento?.tipo_evento_id === tipo.id ? 'selected' : ''}>${tipo.nombre}</option>`
+                                    ).join('')}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="eventoVisible" class="form-label">Visibilidad</label>
+                                <select class="form-select" id="eventoVisible">
+                                    <option value="true" ${evento?.visible !== false ? 'selected' : ''}>Visible</option>
+                                    <option value="false" ${evento?.visible === false ? 'selected' : ''}>Oculto</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">${submitText}</button>
+                    </div>
+                </form>
+            `;
+            
+            showModal(modalTitle, form);
+            
+            document.getElementById('eventoForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await handleEventoSubmit(eventoId);
+            });
+        }
+
+        async function handleEventoSubmit(eventoId) {
+            const formData = {
+                titulo: document.getElementById('eventoTitulo').value,
+                descripcion: document.getElementById('eventoDescripcion').value,
+                fecha_inicio: document.getElementById('eventoFechaInicio').value,
+                fecha_fin: document.getElementById('eventoFechaFin').value || null,
+                tipo_evento_id: parseInt(document.getElementById('eventoTipo').value) || null,
+                ubicacion: document.getElementById('eventoUbicacion').value,
+                visible: document.getElementById('eventoVisible').value === 'true',
+                creado_por: currentUser.id
+            };
+
+            try {
+                const url = eventoId ? `/api/eventos/${eventoId}` : '/api/eventos';
+                const method = eventoId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: result.message,
+                        icon: 'success'
+                    });
+                    closeModal();
+                    loadEventos();
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: result.error,
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al procesar la solicitud',
+                    icon: 'error'
+                });
+            }
+        }
+
+        function editEvento(eventoId) {
+            showEventForm(eventoId);
+        }
+
+        async function deleteEvento(eventoId) {
+            const result = await Swal.fire({
+                title: '¿Estás seguro?',
+                text: "Esta acción no se puede deshacer",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/api/eventos/${eventoId}`, {
+                        method: 'DELETE'
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        Swal.fire({
+                            title: 'Eliminado',
+                            text: result.message,
+                            icon: 'success'
+                        });
+                        loadEventos();
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: result.error,
+                            icon: 'error'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al eliminar el evento',
+                        icon: 'error'
+                    });
+                }
+            }
+        }
+
+        // ==================== DOCUMENTOS ====================
+        
+        function viewDocumentos() {
+            hideAllSections();
+            document.getElementById('documentosSection').classList.remove('section-hidden');
+            loadDocumentos();
+        }
+
+        let documentosData = [];
+        let tiposDocumento = [];
+
+        async function loadDocumentos() {
+            try {
+                // Cargar documentos y tipos en paralelo
+                const [documentosResponse, tiposResponse] = await Promise.all([
+                    fetch('/api/documentos'),
+                    fetch('/api/documentos/tipos')
+                ]);
+
+                const documentosResult = await documentosResponse.json();
+                const tiposResult = await tiposResponse.json();
+
+                if (documentosResult.success) {
+                    documentosData = documentosResult.data;
+                    renderDocumentosTable();
+                }
+
+                if (tiposResult.success) {
+                    tiposDocumento = tiposResult.data;
+                }
+            } catch (error) {
+                console.error('Error cargando documentos:', error);
+                document.getElementById('documentosTableBody').innerHTML = 
+                    '<tr><td colspan="6" class="text-center text-danger">Error cargando documentos</td></tr>';
+            }
+        }
+
+        function renderDocumentosTable() {
+            const tbody = document.getElementById('documentosTableBody');
+            
+            if (documentosData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No hay documentos registrados</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = documentosData.map(documento => {
+                const fechaPublicacion = new Date(documento.fecha_publicacion).toLocaleDateString();
+                const tipoDoc = documento.tipo_documento?.nombre || 'N/A';
+                const eventoAsociado = documento.evento_id ? `Evento #${documento.evento_id}` : 'N/A';
+                const estado = documento.visible ? 
+                    '<span class="badge bg-success">Visible</span>' : 
+                    '<span class="badge bg-secondary">Oculto</span>';
+
+                return `
+                    <tr>
+                        <td>${documento.nombre}</td>
+                        <td>${tipoDoc}</td>
+                        <td>${fechaPublicacion}</td>
+                        <td>${eventoAsociado}</td>
+                        <td>${estado}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="editDocumento(${documento.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteDocumento(${documento.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <a href="${documento.link_drive}" target="_blank" class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function showDocumentForm(documentoId = null) {
+            const isEdit = documentoId !== null;
+            const documento = isEdit ? documentosData.find(d => d.id === documentoId) : null;
+            
+            const modalTitle = isEdit ? 'Editar Documento' : 'Nuevo Documento';
+            const submitText = isEdit ? 'Actualizar' : 'Crear';
+            
+            const form = `
+                <form id="documentoForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="documentoNombre" class="form-label">Nombre *</label>
+                                <input type="text" class="form-control" id="documentoNombre" value="${documento?.nombre || ''}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="documentoTipo" class="form-label">Tipo de Documento *</label>
+                                <select class="form-select" id="documentoTipo" required>
+                                    <option value="">Seleccionar tipo</option>
+                                    ${tiposDocumento.map(tipo => 
+                                        `<option value="${tipo.id}" ${documento?.tipo_documento_id === tipo.id ? 'selected' : ''}>${tipo.nombre}</option>`
+                                    ).join('')}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="documentoDescripcion" class="form-label">Descripción *</label>
+                        <textarea class="form-control" id="documentoDescripcion" rows="3" required>${documento?.descripcion || ''}</textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="documentoLinkDrive" class="form-label">Link Google Drive *</label>
+                                <input type="url" class="form-control" id="documentoLinkDrive" value="${documento?.link_drive || ''}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="documentoFechaPublicacion" class="form-label">Fecha Publicación</label>
+                                <input type="date" class="form-control" id="documentoFechaPublicacion" 
+                                       value="${documento?.fecha_publicacion?.slice(0, 10) || new Date().toISOString().slice(0, 10)}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="documentoEvento" class="form-label">Evento Asociado (opcional)</label>
+                                <select class="form-select" id="documentoEvento">
+                                    <option value="">Sin evento asociado</option>
+                                    ${eventosData.map(evento => 
+                                        `<option value="${evento.id}" ${documento?.evento_id === evento.id ? 'selected' : ''}>${evento.titulo}</option>`
+                                    ).join('')}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="documentoVisible" class="form-label">Visibilidad</label>
+                                <select class="form-select" id="documentoVisible">
+                                    <option value="true" ${documento?.visible !== false ? 'selected' : ''}>Visible</option>
+                                    <option value="false" ${documento?.visible === false ? 'selected' : ''}>Oculto</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">${submitText}</button>
+                    </div>
+                </form>
+            `;
+            
+            showModal(modalTitle, form);
+            
+            document.getElementById('documentoForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await handleDocumentoSubmit(documentoId);
+            });
+        }
+
+        async function handleDocumentoSubmit(documentoId) {
+            const formData = {
+                nombre: document.getElementById('documentoNombre').value,
+                descripcion: document.getElementById('documentoDescripcion').value,
+                tipo_documento_id: parseInt(document.getElementById('documentoTipo').value),
+                link_drive: document.getElementById('documentoLinkDrive').value,
+                fecha_publicacion: document.getElementById('documentoFechaPublicacion').value,
+                evento_id: parseInt(document.getElementById('documentoEvento').value) || null,
+                visible: document.getElementById('documentoVisible').value === 'true',
+                subido_por: currentUser.id
+            };
+
+            try {
+                const url = documentoId ? `/api/documentos/${documentoId}` : '/api/documentos';
+                const method = documentoId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: result.message,
+                        icon: 'success'
+                    });
+                    closeModal();
+                    loadDocumentos();
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: result.error,
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al procesar la solicitud',
+                    icon: 'error'
+                });
+            }
+        }
+
+        function editDocumento(documentoId) {
+            showDocumentForm(documentoId);
+        }
+
+        async function deleteDocumento(documentoId) {
+            const result = await Swal.fire({
+                title: '¿Estás seguro?',
+                text: "Esta acción no se puede deshacer",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/api/documentos/${documentoId}`, {
+                        method: 'DELETE'
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        Swal.fire({
+                            title: 'Eliminado',
+                            text: result.message,
+                            icon: 'success'
+                        });
+                        loadDocumentos();
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: result.error,
+                            icon: 'error'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Error al eliminar el documento',
+                        icon: 'error'
+                    });
+                }
+            }
+        }
+
+        // ==================== REPORTES ====================
+        
+        function viewReports() {
+            hideAllSections();
+            document.getElementById('reportsSection').classList.remove('section-hidden');
+            
+            // Establecer fechas por defecto (últimos 30 días)
+            const hoy = new Date();
+            const hace30Dias = new Date(hoy.getTime() - (30 * 24 * 60 * 60 * 1000));
+            
+            document.getElementById('fechaFin').value = hoy.toISOString().split('T')[0];
+            document.getElementById('fechaInicio').value = hace30Dias.toISOString().split('T')[0];
+            
+            generateReport();
+        }
+        
+        async function generateReport() {
+            const fechaInicio = document.getElementById('fechaInicio').value;
+            const fechaFin = document.getElementById('fechaFin').value;
+            
+            try {
+                let url = '/api/admin/reports/activity';
+                if (fechaInicio && fechaFin) {
+                    url += `?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
+                } else if (fechaInicio) {
+                    url += `?fecha_inicio=${fechaInicio}`;
+                }
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.success) {
+                    reportData = data.actividad;
+                    renderReportTable();
+                    updateReportStats();
+                }
+            } catch (error) {
+                console.error('Error generando reporte:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al generar reporte',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        function renderReportTable(data = null) {
+            const tbody = document.getElementById('reportTableBody');
+            const dataToRender = data || reportData;
+            
+            if (dataToRender.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No hay datos para el período seleccionado</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = dataToRender.map(item => `
+                <tr>
+                    <td>${item.plaza_nombre || item.plaza}</td>
+                    <td>${item.guardia_nombre || item.guardia}</td>
+                    <td><span class="badge bg-primary">${item.total_checkins}</span></td>
+                    <td>${item.primer_checkin ? formatearFecha(new Date(item.primer_checkin)) : 'N/A'}</td>
+                    <td>${item.ultimo_checkin ? formatearFecha(new Date(item.ultimo_checkin)) : 'N/A'}</td>
+                </tr>
+            `).join('');
+        }
+        
+        function updateReportStats() {
+            const totalCheckins = reportData.reduce((sum, item) => sum + parseInt(item.total_checkins), 0);
+            const plazasUnicas = new Set(reportData.map(item => item.plaza_nombre)).size;
+            const guardiasUnicos = new Set(reportData.map(item => item.guardia_nombre)).size;
+            
+            // Calcular promedio diario
+            const fechaInicio = new Date(document.getElementById('fechaInicio').value);
+            const fechaFin = new Date(document.getElementById('fechaFin').value);
+            const dias = Math.ceil((fechaFin - fechaInicio) / (1000 * 60 * 60 * 24)) + 1;
+            const promedioDiario = Math.round(totalCheckins / dias);
+            
+            document.getElementById('reportTotalCheckins').textContent = totalCheckins;
+            document.getElementById('reportPlazasActivas').textContent = plazasUnicas;
+            document.getElementById('reportGuardiasActivos').textContent = guardiasUnicos;
+            document.getElementById('reportPromedioDiario').textContent = promedioDiario;
+        }
+        
+        function exportReport() {
+            if (reportData.length === 0) {
+                Swal.fire({
+                    title: 'Sin datos',
+                    text: 'No hay datos para exportar',
+                    icon: 'warning'
+                });
+                return;
+            }
+            
+            // Crear CSV
+            const headers = ['Plaza', 'Guardia', 'Total Checkins', 'Primer Checkin', 'Último Checkin'];
+            const csvContent = [
+                headers.join(','),
+                ...reportData.map(item => [
+                    item.plaza_nombre,
+                    item.guardia_nombre,
+                    item.total_checkins,
+                    formatearFecha(new Date(item.primer_checkin)),
+                    formatearFecha(new Date(item.ultimo_checkin))
+                ].join(','))
+            ].join('\n');
+            
+            // Descargar archivo
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `reporte_checkins_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // ==================== UTILIDADES ====================
+        
+        function formatearFecha(fecha) {
+            const opciones = {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'America/Santiago'
+            };
+            return fecha.toLocaleDateString('es-CL', opciones);
+        }
+        
+        async function logout() {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = 'admin-login.html';
+            } catch (error) {
+                console.error('Error al cerrar sesión:', error);
+                window.location.href = 'admin-login.html';
+            }
+        }
+        
+        // Auto-refresh del dashboard cada 5 minutos
+        let autoRefreshInterval;
+        
+        function startAutoRefresh() {
+            // Limpiar intervalo anterior si existe
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+            
+            autoRefreshInterval = setInterval(function() {
+                const dashboardSection = document.getElementById('dashboardSection');
+                if (dashboardSection && !dashboardSection.classList.contains('section-hidden')) {
+                    loadDashboard();
+                }
+            }, 300000); // 5 minutos
+        }
+        
+        // Funcionalidad de ordenamiento de tablas
+        let currentSort = { column: null, direction: 'asc' };
+        
+        function initTableSorting() {
+            const headers = document.querySelectorAll('.sortable-header');
+            headers.forEach(header => {
+                header.addEventListener('click', function() {
+                    const column = this.getAttribute('data-column');
+                    sortTable(column);
+                });
+            });
+        }
+        
+        function sortTable(column) {
+            // Determinar la dirección del ordenamiento
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.direction = 'asc';
+            }
+            currentSort.column = column;
+            
+            // Actualizar clases visuales
+            updateSortHeaders();
+            
+            // Ordenar los datos
+            const sortedData = [...reportData].sort((a, b) => {
+                let aVal, bVal;
+                
+                // Mapear columnas a las propiedades correctas
+                switch(column) {
+                    case 'plaza':
+                        aVal = a.plaza_nombre || a.plaza;
+                        bVal = b.plaza_nombre || b.plaza;
+                        break;
+                    case 'guardia':
+                        aVal = a.guardia_nombre || a.guardia;
+                        bVal = b.guardia_nombre || b.guardia;
+                        break;
+                    case 'total_checkins':
+                        aVal = parseInt(a.total_checkins) || 0;
+                        bVal = parseInt(b.total_checkins) || 0;
+                        break;
+                    case 'primer_checkin':
+                        aVal = a.primer_checkin ? new Date(a.primer_checkin) : new Date(0);
+                        bVal = b.primer_checkin ? new Date(b.primer_checkin) : new Date(0);
+                        break;
+                    case 'ultimo_checkin':
+                        aVal = a.ultimo_checkin ? new Date(a.ultimo_checkin) : new Date(0);
+                        bVal = b.ultimo_checkin ? new Date(b.ultimo_checkin) : new Date(0);
+                        break;
+                    default:
+                        aVal = a[column];
+                        bVal = b[column];
+                }
+                
+                // Convertir a string para comparación de texto si no es número o fecha
+                if (typeof aVal === 'string') {
+                    aVal = aVal.toLowerCase();
+                    bVal = String(bVal).toLowerCase();
+                }
+                
+                // Comparar valores
+                if (aVal < bVal) return currentSort.direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return currentSort.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            // Actualizar la tabla
+            renderReportTable(sortedData);
+        }
+        
+        function updateSortHeaders() {
+            const headers = document.querySelectorAll('.sortable-header');
+            headers.forEach(header => {
+                header.classList.remove('sort-asc', 'sort-desc', 'active');
+                if (header.getAttribute('data-column') === currentSort.column) {
+                    header.classList.add('active');
+                    header.classList.add(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+                }
+            });
+        }
+        
+        // Función de inicialización eliminada - las tablas ya existen
+        
+        // Función para verificar si necesita inicialización - ELIMINADA (tablas ya existen)
+        
+        // Iniciar auto-refresh después de cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar ordenamiento de tablas
+            initTableSorting();
+            
+            // Esperar un poco antes de iniciar auto-refresh para evitar conflictos
+            setTimeout(function() {
+                startAutoRefresh();
+            }, 2000);
+        });
+        
+        // Función para ver eventos
+        async function viewEventos() {
+            try {
+                const response = await fetch('/api/eventos');
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayEventos(data.data);
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.error || 'Error al cargar eventos',
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error cargando eventos:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error de conexión al cargar eventos',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        // Función para mostrar eventos en tabla
+        function displayEventos(eventos) {
+            const eventosTableBody = document.getElementById('eventosTableBody');
+            eventosTableBody.innerHTML = '';
+            
+            eventos.forEach(evento => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="text-center">${evento.id}</td>
+                    <td>${evento.titulo}</td>
+                    <td>${evento.descripcion || '-'}</td>
+                    <td>${evento.fecha_evento ? new Date(evento.fecha_evento).toLocaleDateString() : '-'}</td>
+                    <td>${evento.lugar || '-'}</td>
+                    <td>${evento.tipo_evento || '-'}</td>
+                    <td class="text-center">
+                        <span class="badge ${evento.activo ? 'bg-success' : 'bg-danger'}">${evento.activo ? 'Activo' : 'Inactivo'}</span>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-info me-1" onclick="editEvento(${evento.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteEvento(${evento.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                eventosTableBody.appendChild(row);
+            });
+        }
+        
+        // Función para crear/editar evento
+        async function showEventoModal(eventoId = null) {
+            try {
+                // Cargar tipos de evento
+                const tiposResponse = await fetch('/api/eventos/tipos/all');
+                const tiposData = await tiposResponse.json();
+                
+                if (!tiposData.success) {
+                    throw new Error('Error al cargar tipos de evento');
+                }
+                
+                let evento = null;
+                if (eventoId) {
+                    const eventoResponse = await fetch(`/api/eventos/${eventoId}`);
+                    const eventoData = await eventoResponse.json();
+                    if (eventoData.success) {
+                        evento = eventoData.data;
+                    }
+                }
+                
+                const tiposOptions = tiposData.data.map(tipo => 
+                    `<option value="${tipo.id}" ${evento && evento.tipo_evento_id === tipo.id ? 'selected' : ''}>${tipo.nombre}</option>`
+                ).join('');
+                
+                Swal.fire({
+                    title: eventoId ? 'Editar Evento' : 'Nuevo Evento',
+                    html: `
+                        <form id="eventoForm">
+                            <div class="mb-3">
+                                <label for="titulo" class="form-label">Título*</label>
+                                <input type="text" class="form-control" id="titulo" name="titulo" value="${evento?.titulo || ''}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="descripcion" class="form-label">Descripción</label>
+                                <textarea class="form-control" id="descripcion" name="descripcion" rows="3">${evento?.descripcion || ''}</textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="fecha_evento" class="form-label">Fecha</label>
+                                        <input type="date" class="form-control" id="fecha_evento" name="fecha_evento" value="${evento?.fecha_evento ? evento.fecha_evento.split('T')[0] : ''}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="hora_evento" class="form-label">Hora</label>
+                                        <input type="time" class="form-control" id="hora_evento" name="hora_evento" value="${evento?.hora_evento || ''}">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="lugar" class="form-label">Lugar</label>
+                                <input type="text" class="form-control" id="lugar" name="lugar" value="${evento?.lugar || ''}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="tipo_evento_id" class="form-label">Tipo de Evento</label>
+                                <select class="form-control" id="tipo_evento_id" name="tipo_evento_id">
+                                    <option value="">Seleccionar tipo</option>
+                                    ${tiposOptions}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="activo" name="activo" ${evento?.activo !== false ? 'checked' : ''}>
+                                    <label class="form-check-label" for="activo">Activo</label>
+                                </div>
+                            </div>
+                        </form>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'Guardar',
+                    cancelButtonText: 'Cancelar',
+                    preConfirm: () => {
+                        const form = document.getElementById('eventoForm');
+                        const formData = new FormData(form);
+                        
+                        return {
+                            titulo: formData.get('titulo'),
+                            descripcion: formData.get('descripcion'),
+                            fecha_evento: formData.get('fecha_evento'),
+                            hora_evento: formData.get('hora_evento'),
+                            lugar: formData.get('lugar'),
+                            tipo_evento_id: formData.get('tipo_evento_id'),
+                            activo: formData.get('activo') === 'on'
+                        };
+                    }
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        await saveEvento(eventoId, result.value);
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Error en modal evento:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al cargar el formulario',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        // Función para guardar evento
+        async function saveEvento(eventoId, eventoData) {
+            try {
+                const url = eventoId ? `/api/eventos/${eventoId}` : '/api/eventos';
+                const method = eventoId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(eventoData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: eventoId ? 'Evento actualizado correctamente' : 'Evento creado correctamente',
+                        icon: 'success'
+                    });
+                    viewEventos(); // Recargar tabla
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.error || 'Error al guardar evento',
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error guardando evento:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error de conexión al guardar evento',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        // Función para editar evento
+        function editEvento(eventoId) {
+            showEventoModal(eventoId);
+        }
+        
+        // Función para eliminar evento
+        function deleteEvento(eventoId) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: 'Esta acción no se puede deshacer',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`/api/eventos/${eventoId}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Eliminado',
+                                text: 'Evento eliminado correctamente',
+                                icon: 'success'
+                            });
+                            viewEventos(); // Recargar tabla
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.error || 'Error al eliminar evento',
+                                icon: 'error'
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error eliminando evento:', error);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Error de conexión al eliminar evento',
+                            icon: 'error'
+                        });
+                    }
+                }
+            });
+        }
+        
+        // Función para ver documentos comunitarios
+        async function viewDocumentos() {
+            try {
+                const response = await fetch('/api/documentos_comunitarios');
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayDocumentos(data.data);
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.error || 'Error al cargar documentos',
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error cargando documentos:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error de conexión al cargar documentos',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        // Función para mostrar documentos en tabla
+        function displayDocumentos(documentos) {
+            const documentosTableBody = document.getElementById('documentosTableBody');
+            documentosTableBody.innerHTML = '';
+            
+            documentos.forEach(documento => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="text-center">${documento.id}</td>
+                    <td>${documento.titulo}</td>
+                    <td>${documento.descripcion || '-'}</td>
+                    <td>${documento.tipo_documento || '-'}</td>
+                    <td>${documento.evento_titulo || '-'}</td>
+                    <td class="text-center">
+                        ${documento.url_documento ? `<a href="${documento.url_documento}" target="_blank" class="btn btn-sm btn-primary"><i class="fas fa-external-link-alt"></i></a>` : '-'}
+                    </td>
+                    <td class="text-center">
+                        <span class="badge ${documento.activo ? 'bg-success' : 'bg-danger'}">${documento.activo ? 'Activo' : 'Inactivo'}</span>
+                    </td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-info me-1" onclick="editDocumento(${documento.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteDocumento(${documento.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                documentosTableBody.appendChild(row);
+            });
+        }
+        
+        // Función para crear/editar documento
+        async function showDocumentoModal(documentoId = null) {
+            try {
+                // Cargar tipos de documento
+                const tiposResponse = await fetch('/api/documentos_comunitarios/tipos');
+                const tiposData = await tiposResponse.json();
+                
+                // Cargar eventos disponibles
+                const eventosResponse = await fetch('/api/eventos');
+                const eventosData = await eventosResponse.json();
+                
+                if (!tiposData.success || !eventosData.success) {
+                    throw new Error('Error al cargar datos del formulario');
+                }
+                
+                let documento = null;
+                if (documentoId) {
+                    const documentoResponse = await fetch(`/api/documentos_comunitarios/${documentoId}`);
+                    const documentoData = await documentoResponse.json();
+                    if (documentoData.success) {
+                        documento = documentoData.data;
+                    }
+                }
+                
+                const tiposOptions = tiposData.data.map(tipo => 
+                    `<option value="${tipo.id}" ${documento && documento.tipo_documento_id === tipo.id ? 'selected' : ''}>${tipo.nombre}</option>`
+                ).join('');
+                
+                const eventosOptions = eventosData.data.map(evento => 
+                    `<option value="${evento.id}" ${documento && documento.evento_id === evento.id ? 'selected' : ''}>${evento.titulo}</option>`
+                ).join('');
+                
+                Swal.fire({
+                    title: documentoId ? 'Editar Documento' : 'Nuevo Documento',
+                    html: `
+                        <form id="documentoForm">
+                            <div class="mb-3">
+                                <label for="titulo" class="form-label">Título*</label>
+                                <input type="text" class="form-control" id="titulo" name="titulo" value="${documento?.titulo || ''}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="descripcion" class="form-label">Descripción</label>
+                                <textarea class="form-control" id="descripcion" name="descripcion" rows="3">${documento?.descripcion || ''}</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="tipo_documento_id" class="form-label">Tipo de Documento</label>
+                                <select class="form-control" id="tipo_documento_id" name="tipo_documento_id">
+                                    <option value="">Seleccionar tipo</option>
+                                    ${tiposOptions}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="evento_id" class="form-label">Evento Asociado</label>
+                                <select class="form-control" id="evento_id" name="evento_id">
+                                    <option value="">Seleccionar evento</option>
+                                    ${eventosOptions}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="url_documento" class="form-label">URL del Documento</label>
+                                <input type="url" class="form-control" id="url_documento" name="url_documento" value="${documento?.url_documento || ''}" placeholder="https://drive.google.com/...">
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="activo" name="activo" ${documento?.activo !== false ? 'checked' : ''}>
+                                    <label class="form-check-label" for="activo">Activo</label>
+                                </div>
+                            </div>
+                        </form>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'Guardar',
+                    cancelButtonText: 'Cancelar',
+                    preConfirm: () => {
+                        const form = document.getElementById('documentoForm');
+                        const formData = new FormData(form);
+                        
+                        return {
+                            nombre: formData.get('titulo'), // Mapear titulo a nombre
+                            descripcion: formData.get('descripcion'),
+                            tipo_documento_id: formData.get('tipo_documento_id'),
+                            evento_id: formData.get('evento_id'),
+                            link_drive: formData.get('url_documento'), // Mapear url_documento a link_drive
+                            visible: formData.get('activo') === 'on' // Mapear activo a visible
+                        };
+                    }
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        await saveDocumento(documentoId, result.value);
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Error en modal documento:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al cargar el formulario',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        // Función para guardar documento
+        async function saveDocumento(documentoId, documentoData) {
+            try {
+                const url = documentoId ? `/api/documentos_comunitarios/${documentoId}` : '/api/documentos_comunitarios';
+                const method = documentoId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(documentoData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: documentoId ? 'Documento actualizado correctamente' : 'Documento creado correctamente',
+                        icon: 'success'
+                    });
+                    viewDocumentos(); // Recargar tabla
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.error || 'Error al guardar documento',
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error guardando documento:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error de conexión al guardar documento',
+                    icon: 'error'
+                });
+            }
+        }
+        
+        // Función para editar documento
+        function editDocumento(documentoId) {
+            showDocumentoModal(documentoId);
+        }
+        
+        // Función para eliminar documento
+        function deleteDocumento(documentoId) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: 'Esta acción no se puede deshacer',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`/api/documentos_comunitarios/${documentoId}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Eliminado',
+                                text: 'Documento eliminado correctamente',
+                                icon: 'success'
+                            });
+                            viewDocumentos(); // Recargar tabla
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.error || 'Error al eliminar documento',
+                                icon: 'error'
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error eliminando documento:', error);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Error de conexión al eliminar documento',
+                            icon: 'error'
+                        });
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

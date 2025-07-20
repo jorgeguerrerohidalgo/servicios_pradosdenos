@@ -134,6 +134,20 @@
                     </div>
                     <div class="col-md-3">
                         <div class="stats-card">
+                            <div class="stats-number" id="totalPlazas">0</div>
+                            <div class="stats-label">Plazas Activas</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-number" id="guardiasActivos">0</div>
+                            <div class="stats-label">Guardias Activos</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="stats-card">
                             <div class="stats-number" id="totalInscripciones">0</div>
                             <div class="stats-label">Inscripciones</div>
                         </div>
@@ -142,6 +156,18 @@
                         <div class="stats-card">
                             <div class="stats-number" id="totalUsuarios">0</div>
                             <div class="stats-label">Usuarios</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-number" id="totalCheckins">0</div>
+                            <div class="stats-label">Total Checkins</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-number" id="totalAdmins">0</div>
+                            <div class="stats-label">Administradores</div>
                         </div>
                     </div>
                 </div>
@@ -158,6 +184,42 @@
                         <button class="management-btn" style="background: linear-gradient(135deg, #20b2aa, #48d1cc); color: white;" onclick="showSection('documentos')">
                             <i class="fas fa-file-alt me-2"></i>
                             Gestionar Documentos
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <button class="management-btn" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;" onclick="showSection('guardias')">
+                            <i class="fas fa-users me-2"></i>
+                            Gestionar Guardias
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <button class="management-btn" style="background: linear-gradient(135deg, #56ab2f, #a8e6cf); color: white;" onclick="showSection('plazas')">
+                            <i class="fas fa-map-marked-alt me-2"></i>
+                            Gestionar Plazas
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <button class="management-btn" style="background: linear-gradient(135deg, #f093fb, #f5576c); color: white;" onclick="showSection('reportes')">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Reportes y Estadísticas
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <button class="management-btn" style="background: linear-gradient(135deg, #4facfe, #00f2fe); color: white;" onclick="showSection('admins')">
+                            <i class="fas fa-user-cog me-2"></i>
+                            Administradores
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <button class="management-btn" style="background: linear-gradient(135deg, #ff6b6b, #feca57); color: white;" onclick="window.location.href='generar-tokens.html'">
+                            <i class="fas fa-key me-2"></i>
+                            Generar Tokens
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <button class="management-btn" style="background: linear-gradient(135deg, #5f27cd, #341f97); color: white;" onclick="window.location.href='qr-plazas.html'">
+                            <i class="fas fa-qrcode me-2"></i>
+                            Generar QR
                         </button>
                     </div>
                 </div>
@@ -281,6 +343,207 @@
                 </div>
             </div>
         </div>
+
+        <!-- Guardias Section -->
+        <div id="guardiasSection" class="section-hidden">
+            <div class="admin-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-users me-2"></i>Gestión de Guardias</h2>
+                    <div>
+                        <button class="btn btn-success me-2" onclick="showGuardiaForm()">
+                            <i class="fas fa-plus me-2"></i>Nuevo Guardia
+                        </button>
+                        <button class="btn btn-secondary" onclick="showSection('dashboard')">
+                            <i class="fas fa-arrow-left me-2"></i>Volver
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="table table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Teléfono</th>
+                                <th>Estado</th>
+                                <th>Código Validación</th>
+                                <th>Último Login</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="guardiasTableBody">
+                            <!-- Los guardias se cargarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Plazas Section -->
+        <div id="plazasSection" class="section-hidden">
+            <div class="admin-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-map-marked-alt me-2"></i>Gestión de Plazas</h2>
+                    <div>
+                        <button class="btn btn-success me-2" onclick="showPlazaForm()">
+                            <i class="fas fa-plus me-2"></i>Nueva Plaza
+                        </button>
+                        <button class="btn btn-secondary" onclick="showSection('dashboard')">
+                            <i class="fas fa-arrow-left me-2"></i>Volver
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="table table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Dirección</th>
+                                <th>Total Checkins</th>
+                                <th>Último Checkin</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="plazasTableBody">
+                            <!-- Las plazas se cargarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Administradores Section -->
+        <div id="adminsSection" class="section-hidden">
+            <div class="admin-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-user-cog me-2"></i>Gestión de Administradores</h2>
+                    <div>
+                        <button class="btn btn-success me-2" onclick="showAdminForm()">
+                            <i class="fas fa-plus me-2"></i>Nuevo Administrador
+                        </button>
+                        <button class="btn btn-secondary" onclick="showSection('dashboard')">
+                            <i class="fas fa-arrow-left me-2"></i>Volver
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="table table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Teléfono</th>
+                                <th>Estado</th>
+                                <th>Fecha Creación</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminsTableBody">
+                            <!-- Los administradores se cargarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reportes Section -->
+        <div id="reportesSection" class="section-hidden">
+            <div class="admin-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-chart-bar me-2"></i>Reportes y Estadísticas</h2>
+                    <button class="btn btn-secondary" onclick="showSection('dashboard')">
+                        <i class="fas fa-arrow-left me-2"></i>Volver
+                    </button>
+                </div>
+                
+                <!-- Filtros de Reporte -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <input type="date" class="form-control" id="fechaInicio" placeholder="Fecha Inicio">
+                            <label for="fechaInicio">Fecha Inicio</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <input type="date" class="form-control" id="fechaFin" placeholder="Fecha Fin">
+                            <label for="fechaFin">Fecha Fin</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-primary h-100" onclick="generateReport()">
+                            <i class="fas fa-chart-line me-2"></i>Generar Reporte
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Estadísticas Detalladas -->
+                <div class="row mb-4">
+                    <div class="col-md-2">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-primary" id="reportTotalCheckins">0</h5>
+                                <p class="card-text">Total Checkins</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-success" id="reportPlazasActivas">0</h5>
+                                <p class="card-text">Plazas con Actividad</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-warning" id="reportGuardiasActivos">0</h5>
+                                <p class="card-text">Guardias Activos</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-info" id="reportPromedioDiario">0</h5>
+                                <p class="card-text">Promedio Diario</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h5 class="card-title text-danger" id="reportEventosActivos">0</h5>
+                                <p class="card-text">Eventos Activos</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla de Reportes -->
+                <div class="table-container">
+                    <table class="table table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Plaza</th>
+                                <th>Guardia</th>
+                                <th>Hora Checkin</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportesTableBody">
+                            <!-- Los reportes se cargarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
@@ -296,6 +559,10 @@
             document.getElementById('dashboardSection').classList.add('section-hidden');
             document.getElementById('eventosSection').classList.add('section-hidden');
             document.getElementById('documentosSection').classList.add('section-hidden');
+            document.getElementById('guardiasSection').classList.add('section-hidden');
+            document.getElementById('plazasSection').classList.add('section-hidden');
+            document.getElementById('adminsSection').classList.add('section-hidden');
+            document.getElementById('reportesSection').classList.add('section-hidden');
         }
 
         function showSection(sectionName) {
@@ -304,7 +571,11 @@
             const sectionMap = {
                 'dashboard': 'dashboardSection',
                 'eventos': 'eventosSection',
-                'documentos': 'documentosSection'
+                'documentos': 'documentosSection',
+                'guardias': 'guardiasSection',
+                'plazas': 'plazasSection',
+                'admins': 'adminsSection',
+                'reportes': 'reportesSection'
             };
             
             const sectionId = sectionMap[sectionName];
@@ -319,6 +590,14 @@
             } else if (sectionName === 'eventos') {
                 loadTiposEvento();
                 loadEventos();
+            } else if (sectionName === 'guardias') {
+                loadGuardias();
+            } else if (sectionName === 'plazas') {
+                loadPlazas();
+            } else if (sectionName === 'admins') {
+                loadAdmins();
+            } else if (sectionName === 'reportes') {
+                loadReportes();
             } else if (sectionName === 'dashboard') {
                 loadDashboardStats();
             }
@@ -329,8 +608,11 @@
         // Cargar eventos
         async function loadEventos() {
             try {
+                const token = localStorage.getItem('adminToken');
+                if (!token) return;
+
                 const response = await fetch('/api/eventos/admin/all', {
-                    credentials: 'include'
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
 
                 if (response.ok) {
@@ -588,15 +870,16 @@
         // Guardar evento
         async function saveEvento(eventoId, data) {
             try {
+                const token = localStorage.getItem('adminToken');
                 const method = eventoId ? 'PUT' : 'POST';
                 const url = eventoId ? `/api/eventos/admin/${eventoId}` : '/api/eventos/admin';
 
                 const response = await fetch(url, {
                     method: method,
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
                     },
-                    credentials: 'include',
                     body: JSON.stringify(data)
                 });
 
@@ -647,9 +930,10 @@
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     try {
+                        const token = localStorage.getItem('adminToken');
                         const response = await fetch(`/api/eventos/admin/${eventoId}`, {
                             method: 'DELETE',
-                            credentials: 'include'
+                            headers: { 'Authorization': `Bearer ${token}` }
                         });
 
                         const data = await response.json();
@@ -683,8 +967,9 @@
         // Ver inscripciones de un evento
         async function viewInscripcionesEvento(eventoId) {
             try {
+                const token = localStorage.getItem('adminToken');
                 const response = await fetch(`/api/eventos/admin/${eventoId}/inscripciones`, {
-                    credentials: 'include'
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
 
                 if (response.ok) {
@@ -740,8 +1025,11 @@
         // Cargar documentos
         async function loadDocumentos() {
             try {
+                const token = localStorage.getItem('adminToken');
+                if (!token) return;
+
                 const response = await fetch('/api/documentos/admin/all', {
-                    credentials: 'include'
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
 
                 if (response.ok) {
@@ -977,15 +1265,16 @@
         // Guardar documento
         async function saveDocumento(documentoId, data) {
             try {
+                const token = localStorage.getItem('adminToken');
                 const method = documentoId ? 'PUT' : 'POST';
                 const url = documentoId ? `/api/documentos/admin/${documentoId}` : '/api/documentos/admin';
 
                 const response = await fetch(url, {
                     method: method,
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
                     },
-                    credentials: 'include',
                     body: JSON.stringify(data)
                 });
 
@@ -1036,9 +1325,10 @@
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     try {
+                        const token = localStorage.getItem('adminToken');
                         const response = await fetch(`/api/documentos/admin/${documentoId}`, {
                             method: 'DELETE',
-                            credentials: 'include'
+                            headers: { 'Authorization': `Bearer ${token}` }
                         });
 
                         const data = await response.json();
@@ -1072,8 +1362,9 @@
         // Ver descargas de un documento
         async function viewDescargasDocumento(documentoId) {
             try {
+                const token = localStorage.getItem('adminToken');
                 const response = await fetch(`/api/documentos/admin/${documentoId}/descargas`, {
-                    credentials: 'include'
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
 
                 if (response.ok) {
@@ -1122,15 +1413,1254 @@
             }
         }
 
+        // ==================== FUNCIONES DE GESTIÓN DE GUARDIAS ====================
+        
+        // Cargar guardias
+        async function loadGuardias() {
+            try {
+                const token = localStorage.getItem('adminToken');
+                if (!token) return;
+
+                const response = await fetch('/api/admin/guardias', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const guardias = data.data || [];
+                    renderGuardiasTable(guardias);
+                } else {
+                    console.error('Error al cargar guardias:', await response.text());
+                }
+            } catch (error) {
+                console.error('Error al cargar guardias:', error);
+            }
+        }
+
+        // Renderizar tabla de guardias
+        function renderGuardiasTable(guardias) {
+            const tbody = document.getElementById('guardiasTableBody');
+
+            if (guardias.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No hay guardias registrados</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = guardias.map(guardia => `
+                <tr>
+                    <td>${guardia.nombre} ${guardia.apellido_paterno || ''}</td>
+                    <td>${guardia.email}</td>
+                    <td>${guardia.telefono || 'N/A'}</td>
+                    <td>
+                        <span class="badge ${guardia.activo ? 'bg-success' : 'bg-secondary'}">
+                            ${guardia.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                    </td>
+                    <td>${guardia.codigo_validacion || 'N/A'}</td>
+                    <td>${guardia.ultimo_login ? new Date(guardia.ultimo_login).toLocaleDateString('es-CL') : 'Nunca'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info me-1" onclick="editGuardia(${guardia.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteGuardia(${guardia.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Mostrar formulario de guardia
+        async function showGuardiaForm(guardiaId = null) {
+            const isEdit = guardiaId !== null;
+            const title = isEdit ? 'Editar Guardia' : 'Nuevo Guardia';
+
+            let guardia = {
+                nombre: '',
+                apellido_paterno: '',
+                apellido_materno: '',
+                email: '',
+                telefono: '',
+                activo: true
+            };
+
+            if (isEdit && guardiaId) {
+                // Cargar datos del guardia para editar
+                try {
+                    const token = localStorage.getItem('adminToken');
+                    const response = await fetch(`/api/admin/guardias/${guardiaId}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        guardia = data.data;
+                    }
+                } catch (error) {
+                    console.error('Error al cargar guardia:', error);
+                }
+            }
+
+            const formHTML = `
+                <form id="guardiaForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nombre" class="form-label">Nombre *</label>
+                                <input type="text" class="form-control" name="nombre" value="${guardia.nombre}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="apellido_paterno" class="form-label">Apellido Paterno</label>
+                                <input type="text" class="form-control" name="apellido_paterno" value="${guardia.apellido_paterno || ''}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="apellido_materno" class="form-label">Apellido Materno</label>
+                                <input type="text" class="form-control" name="apellido_materno" value="${guardia.apellido_materno || ''}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email *</label>
+                                <input type="email" class="form-control" name="email" value="${guardia.email}" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="telefono" class="form-label">Teléfono</label>
+                                <input type="tel" class="form-control" name="telefono" value="${guardia.telefono || ''}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3 form-check mt-4">
+                                <input type="checkbox" class="form-check-input" name="activo" ${guardia.activo ? 'checked' : ''}>
+                                <label class="form-check-label" for="activo">Activo</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" onclick="Swal.close()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            `;
+
+            Swal.fire({
+                title: title,
+                html: formHTML,
+                width: '600px',
+                showConfirmButton: false,
+                showCancelButton: false,
+                allowOutsideClick: false
+            });
+
+            // Agregar evento de submit al formulario
+            document.getElementById('guardiaForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData.entries());
+
+                // Convertir checkbox
+                data.activo = formData.has('activo');
+
+                await saveGuardia(guardiaId, data);
+            });
+        }
+
+        // Guardar guardia
+        async function saveGuardia(guardiaId, data) {
+            try {
+                const token = localStorage.getItem('adminToken');
+                const method = guardiaId ? 'PUT' : 'POST';
+                const url = guardiaId ? `/api/admin/guardias/${guardiaId}` : '/api/admin/guardias';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: guardiaId ? 'Guardia actualizado correctamente' : 'Guardia creado correctamente',
+                        icon: 'success'
+                    });
+                    Swal.close();
+                    loadGuardias();
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: result.message || 'Error al guardar guardia',
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error al guardar guardia:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error de conexión al guardar guardia',
+                    icon: 'error'
+                });
+            }
+        }
+
+        // Editar guardia
+        function editGuardia(guardiaId) {
+            showGuardiaForm(guardiaId);
+        }
+
+        // Eliminar guardia
+        function deleteGuardia(guardiaId) {
+            Swal.fire({
+                title: '¿Eliminar guardia?',
+                text: 'Esta acción no se puede deshacer.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const token = localStorage.getItem('adminToken');
+                        const response = await fetch(`/api/admin/guardias/${guardiaId}`, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Eliminado',
+                                text: 'Guardia eliminado correctamente',
+                                icon: 'success'
+                            });
+                            loadGuardias();
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.message || 'Error al eliminar guardia',
+                                icon: 'error'
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error eliminando guardia:', error);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Error de conexión al eliminar guardia',
+                            icon: 'error'
+                        });
+                    }
+                }
+            });
+        }
+
+        // ==================== FUNCIONES DE GESTIÓN DE PLAZAS ====================
+        
+        // Cargar plazas
+        async function loadPlazas() {
+            try {
+                const token = localStorage.getItem('adminToken');
+                if (!token) return;
+
+                const response = await fetch('/api/admin/plazas', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const plazas = data.data || [];
+                    renderPlazasTable(plazas);
+                } else {
+                    console.error('Error al cargar plazas:', await response.text());
+                }
+            } catch (error) {
+                console.error('Error al cargar plazas:', error);
+            }
+        }
+
+        // Renderizar tabla de plazas
+        function renderPlazasTable(plazas) {
+            const tbody = document.getElementById('plazasTableBody');
+
+            if (plazas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No hay plazas registradas</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = plazas.map(plaza => `
+                <tr>
+                    <td>${plaza.nombre}</td>
+                    <td>${plaza.direccion}</td>
+                    <td>${plaza.total_checkins || 0}</td>
+                    <td>${plaza.ultimo_checkin ? new Date(plaza.ultimo_checkin).toLocaleDateString('es-CL') : 'Nunca'}</td>
+                    <td>
+                        <span class="badge ${plaza.activa ? 'bg-success' : 'bg-secondary'}">
+                            ${plaza.activa ? 'Activa' : 'Inactiva'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-info me-1" onclick="editPlaza(${plaza.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-success me-1" onclick="viewPlazaCheckins(${plaza.id})">
+                            <i class="fas fa-list"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deletePlaza(${plaza.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Mostrar formulario de plaza
+        async function showPlazaForm(plazaId = null) {
+            const isEdit = plazaId !== null;
+            const title = isEdit ? 'Editar Plaza' : 'Nueva Plaza';
+
+            let plaza = {
+                nombre: '',
+                direccion: '',
+                latitud: '',
+                longitud: '',
+                activa: true
+            };
+
+            if (isEdit && plazaId) {
+                // Cargar datos de la plaza para editar
+                try {
+                    const token = localStorage.getItem('adminToken');
+                    const response = await fetch(`/api/admin/plazas/${plazaId}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        plaza = data.data;
+                    }
+                } catch (error) {
+                    console.error('Error al cargar plaza:', error);
+                }
+            }
+
+            const formHTML = `
+                <form id="plazaForm">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="nombre" class="form-label">Nombre de la Plaza *</label>
+                                <input type="text" class="form-control" name="nombre" value="${plaza.nombre}" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="direccion" class="form-label">Dirección *</label>
+                        <textarea class="form-control" name="direccion" rows="2" required>${plaza.direccion}</textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="latitud" class="form-label">Latitud</label>
+                                <input type="number" step="any" class="form-control" name="latitud" value="${plaza.latitud || ''}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="longitud" class="form-label">Longitud</label>
+                                <input type="number" step="any" class="form-control" name="longitud" value="${plaza.longitud || ''}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" name="activa" ${plaza.activa ? 'checked' : ''}>
+                                <label class="form-check-label" for="activa">Plaza Activa</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" onclick="Swal.close()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            `;
+
+            Swal.fire({
+                title: title,
+                html: formHTML,
+                width: '600px',
+                showConfirmButton: false,
+                showCancelButton: false,
+                allowOutsideClick: false
+            });
+
+            // Agregar evento de submit al formulario
+            document.getElementById('plazaForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData.entries());
+
+                // Convertir checkbox
+                data.activa = formData.has('activa');
+
+                // Convertir coordenadas a números o null
+                data.latitud = data.latitud ? parseFloat(data.latitud) : null;
+                data.longitud = data.longitud ? parseFloat(data.longitud) : null;
+
+                await savePlaza(plazaId, data);
+            });
+        }
+
+        // Guardar plaza
+        async function savePlaza(plazaId, data) {
+            try {
+                const token = localStorage.getItem('adminToken');
+                const method = plazaId ? 'PUT' : 'POST';
+                const url = plazaId ? `/api/admin/plazas/${plazaId}` : '/api/admin/plazas';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: plazaId ? 'Plaza actualizada correctamente' : 'Plaza creada correctamente',
+                        icon: 'success'
+                    });
+                    Swal.close();
+                    loadPlazas();
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: result.message || 'Error al guardar plaza',
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error al guardar plaza:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error de conexión al guardar plaza',
+                    icon: 'error'
+                });
+            }
+        }
+
+        // Editar plaza
+        function editPlaza(plazaId) {
+            showPlazaForm(plazaId);
+        }
+
+        // Ver checkins de una plaza
+        async function viewPlazaCheckins(plazaId) {
+            try {
+                const token = localStorage.getItem('adminToken');
+                const response = await fetch(`/api/admin/plazas/${plazaId}/checkins`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const checkins = data.data;
+
+                    const tablaHTML = checkins.length > 0 ? `
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Hora</th>
+                                        <th>Guardia</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${checkins.map(checkin => `
+                                        <tr>
+                                            <td>${new Date(checkin.fecha_checkin).toLocaleDateString('es-CL')}</td>
+                                            <td>${new Date(checkin.fecha_checkin).toLocaleTimeString('es-CL')}</td>
+                                            <td>${checkin.guardia_nombre}</td>
+                                            <td><span class="badge bg-success">Completado</span></td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : '<div class="text-center p-4">No hay checkins registrados</div>';
+
+                    Swal.fire({
+                        title: 'Historial de Checkins',
+                        html: tablaHTML,
+                        width: '800px',
+                        confirmButtonText: 'Cerrar'
+                    });
+                }
+            } catch (error) {
+                console.error('Error al cargar checkins:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al cargar historial de checkins',
+                    icon: 'error'
+                });
+            }
+        }
+
+        // Eliminar plaza
+        function deletePlaza(plazaId) {
+            Swal.fire({
+                title: '¿Eliminar plaza?',
+                text: 'Esta acción no se puede deshacer.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const token = localStorage.getItem('adminToken');
+                        const response = await fetch(`/api/admin/plazas/${plazaId}`, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Eliminada',
+                                text: 'Plaza eliminada correctamente',
+                                icon: 'success'
+                            });
+                            loadPlazas();
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.message || 'Error al eliminar plaza',
+                                icon: 'error'
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error eliminando plaza:', error);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Error de conexión al eliminar plaza',
+                            icon: 'error'
+                        });
+                    }
+                }
+            });
+        }
+
+        // ==================== FUNCIONES DE GESTIÓN DE PLAZAS ====================
+        
+        // Cargar plazas
+        async function loadPlazas() {
+            try {
+                const token = localStorage.getItem('adminToken');
+                if (!token) return;
+
+                const response = await fetch('/api/admin/plazas', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const plazas = data.data || [];
+                    renderPlazasTable(plazas);
+                } else {
+                    console.error('Error al cargar plazas:', await response.text());
+                }
+            } catch (error) {
+                console.error('Error al cargar plazas:', error);
+            }
+        }
+
+        // Renderizar tabla de plazas
+        function renderPlazasTable(plazas) {
+            const tbody = document.getElementById('plazasTableBody');
+
+            if (plazas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No hay plazas registradas</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = plazas.map(plaza => `
+                <tr>
+                    <td>${plaza.nombre}</td>
+                    <td>${plaza.direccion}</td>
+                    <td>${plaza.total_checkins || 0}</td>
+                    <td>${plaza.ultimo_checkin ? new Date(plaza.ultimo_checkin).toLocaleDateString('es-CL') : 'Nunca'}</td>
+                    <td>
+                        <span class="badge ${plaza.activo ? 'bg-success' : 'bg-secondary'}">
+                            ${plaza.activo ? 'Activa' : 'Inactiva'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-info me-1" onclick="editPlaza(${plaza.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-success me-1" onclick="viewPlazaCheckins(${plaza.id})">
+                            <i class="fas fa-list"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deletePlaza(${plaza.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Mostrar formulario de plaza
+        async function showPlazaForm(plazaId = null) {
+            const isEdit = plazaId !== null;
+            const title = isEdit ? 'Editar Plaza' : 'Nueva Plaza';
+
+            let plaza = {
+                nombre: '',
+                direccion: '',
+                latitud: '',
+                longitud: '',
+                activo: true
+            };
+
+            if (isEdit && plazaId) {
+                try {
+                    const token = localStorage.getItem('adminToken');
+                    const response = await fetch(`/api/admin/plazas/${plazaId}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        plaza = data.data;
+                    }
+                } catch (error) {
+                    console.error('Error al cargar plaza:', error);
+                }
+            }
+
+            const formHTML = `
+                <form id="plazaForm">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="nombre" class="form-label">Nombre de la Plaza *</label>
+                                <input type="text" class="form-control" name="nombre" value="${plaza.nombre}" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="direccion" class="form-label">Dirección *</label>
+                                <input type="text" class="form-control" name="direccion" value="${plaza.direccion}" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="latitud" class="form-label">Latitud</label>
+                                <input type="number" step="any" class="form-control" name="latitud" value="${plaza.latitud || ''}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="longitud" class="form-label">Longitud</label>
+                                <input type="number" step="any" class="form-control" name="longitud" value="${plaza.longitud || ''}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" name="activo" ${plaza.activo ? 'checked' : ''}>
+                                <label class="form-check-label" for="activo">Activa</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" onclick="Swal.close()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            `;
+
+            Swal.fire({
+                title: title,
+                html: formHTML,
+                width: '600px',
+                showConfirmButton: false,
+                showCancelButton: false,
+                allowOutsideClick: false
+            });
+
+            document.getElementById('plazaForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData.entries());
+
+                data.activo = formData.has('activo');
+                data.latitud = data.latitud ? parseFloat(data.latitud) : null;
+                data.longitud = data.longitud ? parseFloat(data.longitud) : null;
+
+                await savePlaza(plazaId, data);
+            });
+        }
+
+        // Guardar plaza
+        async function savePlaza(plazaId, data) {
+            try {
+                const token = localStorage.getItem('adminToken');
+                const method = plazaId ? 'PUT' : 'POST';
+                const url = plazaId ? `/api/admin/plazas/${plazaId}` : '/api/admin/plazas';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: plazaId ? 'Plaza actualizada correctamente' : 'Plaza creada correctamente',
+                        icon: 'success'
+                    });
+                    Swal.close();
+                    loadPlazas();
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: result.message || 'Error al guardar plaza',
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error al guardar plaza:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error de conexión al guardar plaza',
+                    icon: 'error'
+                });
+            }
+        }
+
+        // Editar plaza
+        function editPlaza(plazaId) {
+            showPlazaForm(plazaId);
+        }
+
+        // Ver checkins de una plaza
+        async function viewPlazaCheckins(plazaId) {
+            try {
+                const token = localStorage.getItem('adminToken');
+                const response = await fetch(`/api/admin/plazas/${plazaId}/checkins`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const checkins = data.data;
+
+                    const tablaHTML = checkins.length > 0 ? `
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Hora</th>
+                                        <th>Guardia</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${checkins.map(checkin => `
+                                        <tr>
+                                            <td>${new Date(checkin.fecha_checkin).toLocaleDateString('es-CL')}</td>
+                                            <td>${new Date(checkin.fecha_checkin).toLocaleTimeString('es-CL')}</td>
+                                            <td>${checkin.guardia_nombre || 'N/A'}</td>
+                                            <td><span class="badge bg-success">Completado</span></td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : '<div class="text-center p-4">No hay checkins registrados</div>';
+
+                    Swal.fire({
+                        title: 'Historial de Checkins',
+                        html: tablaHTML,
+                        width: '800px',
+                        confirmButtonText: 'Cerrar'
+                    });
+                }
+            } catch (error) {
+                console.error('Error al cargar checkins:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al cargar historial de checkins',
+                    icon: 'error'
+                });
+            }
+        }
+
+        // Eliminar plaza
+        function deletePlaza(plazaId) {
+            Swal.fire({
+                title: '¿Eliminar plaza?',
+                text: 'Esta acción no se puede deshacer.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const token = localStorage.getItem('adminToken');
+                        const response = await fetch(`/api/admin/plazas/${plazaId}`, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Eliminada',
+                                text: 'Plaza eliminada correctamente',
+                                icon: 'success'
+                            });
+                            loadPlazas();
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.message || 'Error al eliminar plaza',
+                                icon: 'error'
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error eliminando plaza:', error);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Error de conexión al eliminar plaza',
+                            icon: 'error'
+                        });
+                    }
+                }
+            });
+        }
+
+        // ==================== FUNCIONES DE GESTIÓN DE ADMINISTRADORES ====================
+        
+        // Cargar administradores
+        async function loadAdmins() {
+            try {
+                const token = localStorage.getItem('adminToken');
+                if (!token) return;
+
+                const response = await fetch('/api/admin/administradores', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const admins = data.data || [];
+                    renderAdminsTable(admins);
+                } else {
+                    console.error('Error al cargar administradores:', await response.text());
+                }
+            } catch (error) {
+                console.error('Error al cargar administradores:', error);
+            }
+        }
+
+        // Renderizar tabla de administradores
+        function renderAdminsTable(admins) {
+            const tbody = document.getElementById('adminsTableBody');
+
+            if (admins.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No hay administradores registrados</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = admins.map(admin => `
+                <tr>
+                    <td>${admin.nombre} ${admin.apellido_paterno || ''}</td>
+                    <td>${admin.email}</td>
+                    <td>${admin.telefono || 'N/A'}</td>
+                    <td>
+                        <span class="badge ${admin.activo ? 'bg-success' : 'bg-secondary'}">
+                            ${admin.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                    </td>
+                    <td>${new Date(admin.created_at).toLocaleDateString('es-CL')}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info me-1" onclick="editAdmin(${admin.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteAdmin(${admin.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Mostrar formulario de administrador
+        async function showAdminForm(adminId = null) {
+            const isEdit = adminId !== null;
+            const title = isEdit ? 'Editar Administrador' : 'Nuevo Administrador';
+
+            let admin = {
+                nombre: '',
+                apellido_paterno: '',
+                apellido_materno: '',
+                email: '',
+                telefono: '',
+                activo: true
+            };
+
+            if (isEdit && adminId) {
+                try {
+                    const token = localStorage.getItem('adminToken');
+                    const response = await fetch(`/api/admin/administradores/${adminId}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        admin = data.data;
+                    }
+                } catch (error) {
+                    console.error('Error al cargar administrador:', error);
+                }
+            }
+
+            const formHTML = `
+                <form id="adminForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nombre" class="form-label">Nombre *</label>
+                                <input type="text" class="form-control" name="nombre" value="${admin.nombre}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="apellido_paterno" class="form-label">Apellido Paterno</label>
+                                <input type="text" class="form-control" name="apellido_paterno" value="${admin.apellido_paterno || ''}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="apellido_materno" class="form-label">Apellido Materno</label>
+                                <input type="text" class="form-control" name="apellido_materno" value="${admin.apellido_materno || ''}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email *</label>
+                                <input type="email" class="form-control" name="email" value="${admin.email}" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="telefono" class="form-label">Teléfono</label>
+                                <input type="tel" class="form-control" name="telefono" value="${admin.telefono || ''}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3 form-check mt-4">
+                                <input type="checkbox" class="form-check-input" name="activo" ${admin.activo ? 'checked' : ''}>
+                                <label class="form-check-label" for="activo">Activo</label>
+                            </div>
+                        </div>
+                    </div>
+                    ${!isEdit ? `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Contraseña *</label>
+                                <input type="password" class="form-control" name="password" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="password_confirm" class="form-label">Confirmar Contraseña *</label>
+                                <input type="password" class="form-control" name="password_confirm" required>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" onclick="Swal.close()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            `;
+
+            Swal.fire({
+                title: title,
+                html: formHTML,
+                width: '600px',
+                showConfirmButton: false,
+                showCancelButton: false,
+                allowOutsideClick: false
+            });
+
+            document.getElementById('adminForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData.entries());
+
+                if (!isEdit) {
+                    if (data.password !== data.password_confirm) {
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Las contraseñas no coinciden',
+                            icon: 'error'
+                        });
+                        return;
+                    }
+                    delete data.password_confirm;
+                }
+
+                data.activo = formData.has('activo');
+
+                await saveAdmin(adminId, data);
+            });
+        }
+
+        // Guardar administrador
+        async function saveAdmin(adminId, data) {
+            try {
+                const token = localStorage.getItem('adminToken');
+                const method = adminId ? 'PUT' : 'POST';
+                const url = adminId ? `/api/admin/administradores/${adminId}` : '/api/admin/administradores';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: adminId ? 'Administrador actualizado correctamente' : 'Administrador creado correctamente',
+                        icon: 'success'
+                    });
+                    Swal.close();
+                    loadAdmins();
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: result.message || 'Error al guardar administrador',
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error al guardar administrador:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error de conexión al guardar administrador',
+                    icon: 'error'
+                });
+            }
+        }
+
+        // Editar administrador
+        function editAdmin(adminId) {
+            showAdminForm(adminId);
+        }
+
+        // Eliminar administrador
+        function deleteAdmin(adminId) {
+            Swal.fire({
+                title: '¿Eliminar administrador?',
+                text: 'Esta acción no se puede deshacer.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const token = localStorage.getItem('adminToken');
+                        const response = await fetch(`/api/admin/administradores/${adminId}`, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Eliminado',
+                                text: 'Administrador eliminado correctamente',
+                                icon: 'success'
+                            });
+                            loadAdmins();
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.message || 'Error al eliminar administrador',
+                                icon: 'error'
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error eliminando administrador:', error);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Error de conexión al eliminar administrador',
+                            icon: 'error'
+                        });
+                    }
+                }
+            });
+        }
+
+        // ==================== FUNCIONES DE REPORTES ====================
+        
+        // Cargar reportes
+        async function loadReportes() {
+            try {
+                const token = localStorage.getItem('adminToken');
+                if (!token) return;
+
+                const response = await fetch('/api/admin/reportes', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const reportes = data.data || [];
+                    renderReportesTable(reportes);
+                    updateReportStats(data.stats || {});
+                } else {
+                    console.error('Error al cargar reportes:', await response.text());
+                }
+            } catch (error) {
+                console.error('Error al cargar reportes:', error);
+            }
+        }
+
+        // Renderizar tabla de reportes
+        function renderReportesTable(reportes) {
+            const tbody = document.getElementById('reportesTableBody');
+
+            if (reportes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No hay reportes disponibles</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = reportes.map(reporte => `
+                <tr>
+                    <td>${new Date(reporte.fecha_checkin).toLocaleDateString('es-CL')}</td>
+                    <td>${reporte.plaza_nombre}</td>
+                    <td>${reporte.guardia_nombre}</td>
+                    <td>${new Date(reporte.fecha_checkin).toLocaleTimeString('es-CL')}</td>
+                    <td><span class="badge bg-success">Completado</span></td>
+                </tr>
+            `).join('');
+        }
+
+        // Actualizar estadísticas de reportes
+        function updateReportStats(stats) {
+            document.getElementById('reportTotalCheckins').textContent = stats.totalCheckins || 0;
+            document.getElementById('reportPlazasActivas').textContent = stats.plazasActivas || 0;
+            document.getElementById('reportGuardiasActivos').textContent = stats.guardiasActivos || 0;
+            document.getElementById('reportPromedioDiario').textContent = stats.promedioDiario || 0;
+            document.getElementById('reportEventosActivos').textContent = stats.eventosActivos || 0;
+        }
+
+        // Generar reporte con filtros
+        async function generateReport() {
+            const fechaInicio = document.getElementById('fechaInicio').value;
+            const fechaFin = document.getElementById('fechaFin').value;
+
+            if (!fechaInicio || !fechaFin) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Debe seleccionar fecha de inicio y fin',
+                    icon: 'error'
+                });
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('adminToken');
+                const response = await fetch(`/api/admin/reportes?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    renderReportesTable(data.data || []);
+                    updateReportStats(data.stats || {});
+                } else {
+                    console.error('Error al generar reporte:', await response.text());
+                }
+            } catch (error) {
+                console.error('Error al generar reporte:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al generar reporte',
+                    icon: 'error'
+                });
+            }
+        }
+
         // ==================== FUNCIONES GENERALES ====================
         
         // Cargar estadísticas del dashboard
         async function loadDashboardStats() {
             try {
+                const token = localStorage.getItem('adminToken');
+                if (!token) return;
+
                 // Cargar estadísticas básicas
-                const [eventosRes, documentosRes] = await Promise.all([
-                    fetch('/api/eventos/admin/all', { credentials: 'include' }),
-                    fetch('/api/documentos/admin/all', { credentials: 'include' })
+                const [eventosRes, documentosRes, plazasRes, guardiasRes, adminsRes, checkinsRes] = await Promise.all([
+                    fetch('/api/eventos/admin/all', { headers: { 'Authorization': `Bearer ${token}` } }),
+                    fetch('/api/documentos/admin/all', { headers: { 'Authorization': `Bearer ${token}` } }),
+                    fetch('/api/admin/plazas', { headers: { 'Authorization': `Bearer ${token}` } }),
+                    fetch('/api/admin/guardias', { headers: { 'Authorization': `Bearer ${token}` } }),
+                    fetch('/api/admin/administradores', { headers: { 'Authorization': `Bearer ${token}` } }),
+                    fetch('/api/admin/reportes/stats', { headers: { 'Authorization': `Bearer ${token}` } })
                 ]);
 
                 if (eventosRes.ok) {
@@ -1142,6 +2672,32 @@
                     const documentosData = await documentosRes.json();
                     document.getElementById('totalDocumentos').textContent = documentosData.data?.length || 0;
                 }
+
+                if (plazasRes.ok) {
+                    const plazasData = await plazasRes.json();
+                    const plazasActivas = plazasData.data?.filter(p => p.activo).length || 0;
+                    document.getElementById('totalPlazas').textContent = plazasActivas;
+                }
+
+                if (guardiasRes.ok) {
+                    const guardiasData = await guardiasRes.json();
+                    const guardiasActivos = guardiasData.data?.filter(g => g.activo).length || 0;
+                    document.getElementById('guardiasActivos').textContent = guardiasActivos;
+                }
+
+                if (adminsRes.ok) {
+                    const adminsData = await adminsRes.json();
+                    document.getElementById('totalAdmins').textContent = adminsData.data?.length || 0;
+                }
+
+                if (checkinsRes.ok) {
+                    const checkinsData = await checkinsRes.json();
+                    document.getElementById('totalCheckins').textContent = checkinsData.totalCheckins || 0;
+                }
+
+                // Estas estadísticas pueden venir de otros endpoints según tu implementación
+                document.getElementById('totalInscripciones').textContent = '0'; // Placeholder
+                document.getElementById('totalUsuarios').textContent = '0'; // Placeholder
 
             } catch (error) {
                 console.error('Error cargando estadísticas:', error);
@@ -1157,16 +2713,9 @@
                 showCancelButton: true,
                 confirmButtonText: 'Sí, cerrar sesión',
                 cancelButtonText: 'Cancelar'
-            }).then(async (result) => {
+            }).then((result) => {
                 if (result.isConfirmed) {
-                    try {
-                        await fetch('/api/auth/logout', {
-                            method: 'POST',
-                            credentials: 'include'
-                        });
-                    } catch (error) {
-                        console.error('Error al cerrar sesión:', error);
-                    }
+                    localStorage.removeItem('adminToken');
                     window.location.href = '/admin-login.html';
                 }
             });
@@ -1175,24 +2724,15 @@
         // ==================== INICIALIZACIÓN ====================
         
         // Verificar autenticación al cargar la página
-        document.addEventListener('DOMContentLoaded', async function() {
-            try {
-                const response = await fetch('/api/auth/check', {
-                    credentials: 'include'
-                });
-                const result = await response.json();
-                
-                if (!result.isAuthenticated || !result.guardia || result.guardia.tipo !== 'admin') {
-                    window.location.href = '/admin-login.html';
-                    return;
-                }
-
-                // Cargar dashboard inicial
-                loadDashboardStats();
-            } catch (error) {
-                console.error('Error verificando autenticación:', error);
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('adminToken');
+            if (!token) {
                 window.location.href = '/admin-login.html';
+                return;
             }
+
+            // Cargar dashboard inicial
+            loadDashboardStats();
         });
     </script>
 </body>

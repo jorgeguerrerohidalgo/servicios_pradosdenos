@@ -121,7 +121,12 @@
         const result = await response.json();
         
         if (response.ok) {
-          // Login exitoso - redirigir según el tipo de usuario
+          // Login exitoso - guardar token si existe
+          if (result.token) {
+            localStorage.setItem('adminToken', result.token);
+          }
+          
+          // Redirigir según el tipo de usuario
           if (result.guardia && result.guardia.tipo === 'admin') {
             window.location.href = '/admin-panel.html';
           } else {

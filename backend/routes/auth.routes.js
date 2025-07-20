@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const db = require('../utils/db');
 const { 
   loginLimiter, 
@@ -218,6 +219,16 @@ router.post('/login',
         loginTime: new Date().toISOString(),
         ip: ip
       };
+
+      // Generar JWT token para admins
+      let token = null;
+      if (userType === 'admin') {
+        token = jwt.sign(
+          { userId: foundUser.id, email: foundUser.email, tipo: userType },
+          process.env.JWT_SECRET || 'default-secret-key',
+          { expiresIn: '8h' }
+        );
+      }
       
       // Forzar guardado de sesión
       req.session.save((err) => {
@@ -237,7 +248,7 @@ router.post('/login',
         
         console.log(`✅ LOGIN: Usuario ${foundUser.email} (${userType}) autenticado exitosamente desde IP ${ip}`);
         
-        res.json({ 
+        const response = { 
           message: 'Login exitoso',
           guardia: {
             id: foundUser.id,
@@ -245,7 +256,14 @@ router.post('/login',
             email: foundUser.email,
             tipo: userType
           }
-        });
+        };
+
+        // Agregar token si es admin
+        if (token) {
+          response.token = token;
+        }
+        
+        res.json(response);
       });
       
     } catch (error) {
