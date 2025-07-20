@@ -611,16 +611,16 @@
                 const token = localStorage.getItem('adminToken');
                 if (!token) return;
 
-                const response = await fetch('/api/eventos/admin/all', {
+                const eventosResponse = await fetch('/api/eventos/admin/all', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
+                if (eventosResponse.ok) {
+                    const data = await eventosResponse.json();
                     eventosGlobal = data.data;
                     renderEventosTable();
                 } else {
-                    console.error('Error al cargar eventos:', await response.text());
+                    console.error('Error al cargar eventos:', await eventosResponse.text());
                 }
             } catch (error) {
                 console.error('Error al cargar eventos:', error);
@@ -630,11 +630,10 @@
         // Cargar tipos de evento
         async function loadTiposEvento() {
             try {
-                const response = await fetch('/api/eventos/tipos');
-                if (response.ok) {
-                    const data = await response.json();
+                const tiposEventoResponse = await fetch('/api/eventos/tipos');
+                if (tiposEventoResponse.ok) {
+                    const data = await tiposEventoResponse.json();
                     tiposEventoGlobal = data.data;
-                    
                     // Llenar select de filtro
                     const filterSelect = document.getElementById('filterTipoEvento');
                     filterSelect.innerHTML = '<option value="">Todos los tipos</option>';
