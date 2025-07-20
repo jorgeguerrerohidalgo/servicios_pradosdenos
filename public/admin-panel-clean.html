@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Los Prados de Nos</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar-admin {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .container-main {
+            padding: 30px 0;
+        }
+        
+        .admin-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stats-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .management-section {
+            margin-bottom: 40px;
+        }
+        
+        .management-btn {
+            width: 100%;
+            height: 80px;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .management-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .section-hidden {
+            display: none;
+        }
+        
+        .table-container {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-admin">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-shield-alt me-2"></i>
+                Panel de Administración
+            </a>
+            <div class="navbar-nav ms-auto">
+                <button class="btn btn-outline-danger" onclick="logout()">
+                    <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container container-main">
+        <!-- Dashboard Section -->
+        <div id="dashboardSection">
+            <div class="admin-card">
+                <h2 class="mb-4">
+                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                </h2>
+                
+                <!-- Stats Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-number" id="totalEventos">0</div>
+                            <div class="stats-label">Eventos Activos</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-number" id="totalDocumentos">0</div>
+                            <div class="stats-label">Documentos</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-number" id="totalInscripciones">0</div>
+                            <div class="stats-label">Inscripciones</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stats-number" id="totalUsuarios">0</div>
+                            <div class="stats-label">Usuarios</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Management Buttons -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <button class="management-btn" style="background: linear-gradient(135deg, #ff6347, #ff8c69); color: white;" onclick="showSection('eventos')">
+                            <i class="fas fa-calendar-alt me-2"></i>
+                            Gestionar Eventos
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <button class="management-btn" style="background: linear-gradient(135deg, #20b2aa, #48d1cc); color: white;" onclick="showSection('documentos')">
+                            <i class="fas fa-file-alt me-2"></i>
+                            Gestionar Documentos
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Eventos Section -->
+        <div id="eventosSection" class="section-hidden">
+            <div class="admin-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-calendar-alt me-2"></i>Gestión de Eventos</h2>
+                    <div>
+                        <button class="btn btn-primary me-2" onclick="showEventoForm()">
+                            <i class="fas fa-plus me-2"></i>Nuevo Evento
+                        </button>
+                        <button class="btn btn-secondary" onclick="showSection('dashboard')">
+                            <i class="fas fa-arrow-left me-2"></i>Volver
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Filtros -->
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <select class="form-select" id="filterTipoEvento" onchange="renderEventosTable()">
+                            <option value="">Todos los tipos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select" id="filterEstadoEvento" onchange="renderEventosTable()">
+                            <option value="">Todos los estados</option>
+                            <option value="true">Visible</option>
+                            <option value="false">Oculto</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select" id="filterPeriodoEvento" onchange="renderEventosTable()">
+                            <option value="">Todos los períodos</option>
+                            <option value="proximos">Próximos</option>
+                            <option value="pasados">Pasados</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Tabla de Eventos -->
+                <div class="table-container">
+                    <table class="table table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Título</th>
+                                <th>Tipo</th>
+                                <th>Fecha</th>
+                                <th>Estado</th>
+                                <th>Inscripciones</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="eventosTableBody">
+                            <!-- Los eventos se cargarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Documentos Section -->
+        <div id="documentosSection" class="section-hidden">
+            <div class="admin-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-file-alt me-2"></i>Gestión de Documentos</h2>
+                    <div>
+                        <button class="btn btn-primary me-2" onclick="showDocumentoForm()">
+                            <i class="fas fa-plus me-2"></i>Nuevo Documento
+                        </button>
+                        <button class="btn btn-secondary" onclick="showSection('dashboard')">
+                            <i class="fas fa-arrow-left me-2"></i>Volver
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Filtros -->
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <select class="form-select" id="filterTipoDocumento" onchange="renderDocumentosTable()">
+                            <option value="">Todos los tipos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select" id="filterEstadoDocumento" onchange="renderDocumentosTable()">
+                            <option value="">Todos los estados</option>
+                            <option value="true">Visible</option>
+                            <option value="false">Oculto</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select" id="filterDestacadoDocumento" onchange="renderDocumentosTable()">
+                            <option value="">Todos</option>
+                            <option value="true">Destacados</option>
+                            <option value="false">No destacados</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Tabla de Documentos -->
+                <div class="table-container">
+                    <table class="table table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Tipo</th>
+                                <th>Fecha Publicación</th>
+                                <th>Estado</th>
+                                <th>Descargas</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="documentosTableBody">
+                            <!-- Los documentos se cargarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ==================== VARIABLES GLOBALES ====================
+        let tiposEventoGlobal = [];
+        let eventosGlobal = [];
+        let tiposDocumentoGlobal = [];
+        let documentosGlobal = [];
+
+        // ==================== FUNCIONES DE NAVEGACIÓN ====================
+        function hideAllSections() {
+            document.getElementById('dashboardSection').classList.add('section-hidden');
+            document.getElementById('eventosSection').classList.add('section-hidden');
+            document.getElementById('documentosSection').classList.add('section-hidden');
+        }
+
+        function showSection(sectionName) {
+            hideAllSections();
+            
+            const sectionMap = {
+                'dashboard': 'dashboardSection',
+                'eventos': 'eventosSection',
+                'documentos': 'documentosSection'
+            };
+            
+            const sectionId = sectionMap[sectionName];
+            if (sectionId) {
+                document.getElementById(sectionId).classList.remove('section-hidden');
+            }
+            
+            // Cargar datos específicos según la sección
+            if (sectionName === 'documentos') {
+                loadTiposDocumento();
+                loadDocumentos();
+            } else if (sectionName === 'eventos') {
+                loadTiposEvento();
+                loadEventos();
+            } else if (sectionName === 'dashboard') {
+                loadDashboardStats();
+            }
+        }
+
+        // ==================== FUNCIONES DE GESTIÓN DE EVENTOS ====================
+        
+        // Cargar eventos
+        async function loadEventos() {
+            try {
+                const token = localStorage.getItem('adminToken');
+                if (!token) return;
+
+                const response = await fetch('/api/eventos/admin/all', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    eventosGlobal = data.data;
+                    renderEventosTable();
+                } else {
+                    console.error('Error al cargar eventos:', await response.text());
+                }
+            } catch (error) {
+                console.error('Error al cargar eventos:', error);
+            }
+        }
+
+        // Cargar tipos de evento
+        async function loadTiposEvento() {
+            try {
+                const response = await fetch('/api/eventos/tipos');
+                if (response.ok) {
+                    const data = await response.json();
+                    tiposEventoGlobal = data.data;
+                    
+                    // Llenar select de filtro
+                    const filterSelect = document.getElementById('filterTipoEvento');
+                    filterSelect.innerHTML = '<option value="">Todos los tipos</option>';
+                    data.data.forEach(tipo => {
+                        filterSelect.innerHTML += `<option value="${tipo.id}">${tipo.nombre}</option>`;
+                    });
+                }
+            } catch (error) {
+                console.error('Error al cargar tipos de evento:', error);
+            }
+        }
+
+        // Renderizar tabla de eventos
+        function renderEventosTable() {
+            const tbody = document.getElementById('eventosTableBody');
+            const filterTipo = document.getElementById('filterTipoEvento')?.value;
+            const filterEstado = document.getElementById('filterEstadoEvento')?.value;
+            const filterPeriodo = document.getElementById('filterPeriodoEvento')?.value;
+
+            let filteredEvents = eventosGlobal;
+
+            // Aplicar filtros
+            if (filterTipo) {
+                filteredEvents = filteredEvents.filter(evento => evento.tipo_evento_id == filterTipo);
+            }
+
+            if (filterEstado !== '') {
+                filteredEvents = filteredEvents.filter(evento => evento.visible.toString() === filterEstado);
+            }
+
+            if (filterPeriodo === 'proximos') {
+                filteredEvents = filteredEvents.filter(evento => new Date(evento.fecha_inicio) >= new Date());
+            } else if (filterPeriodo === 'pasados') {
+                filteredEvents = filteredEvents.filter(evento => new Date(evento.fecha_inicio) < new Date());
+            }
+
+            if (filteredEvents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No hay eventos para mostrar</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filteredEvents.map(evento => `
+                <tr>
+                    <td>
+                        ${evento.titulo}
+                        ${evento.destacado ? '<span class="badge bg-warning ms-2">Destacado</span>' : ''}
+                    </td>
+                    <td>${evento.tipo_nombre || 'Sin tipo'}</td>
+                    <td>${new Date(evento.fecha_inicio).toLocaleDateString('es-CL')}</td>
+                    <td>
+                        <span class="badge ${evento.visible ? 'bg-success' : 'bg-secondary'}">
+                            ${evento.visible ? 'Visible' : 'Oculto'}
+                        </span>
+                    </td>
+                    <td>
+                        ${evento.inscripciones_confirmadas || 0}
+                        ${evento.max_participantes ? ` / ${evento.max_participantes}` : ''}
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-info me-1" onclick="editEvento(${evento.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-success me-1" onclick="viewInscripcionesEvento(${evento.id})">
+                            <i class="fas fa-users"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteEvento(${evento.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Mostrar formulario de evento
+        async function showEventoForm(eventoId = null) {
+            const isEdit = eventoId !== null;
+            const title = isEdit ? 'Editar Evento' : 'Nuevo Evento';
+
+            let evento = {
+                titulo: '',
+                descripcion: '',
+                ubicacion: '',
+                fecha_inicio: '',
+                fecha_fin: '',
+                tipo_evento_id: '',
+                link_google_cal: '',
+                link_reunion: '',
+                visible: true,
+                destacado: false,
+                max_participantes: '',
+                requiere_inscripcion: false
+            };
+
+            if (isEdit && eventoId) {
+                const eventFind = eventosGlobal.find(e => e.id === eventoId);
+                if (eventFind) {
+                    evento = { ...eventFind };
+                    // Formatear fechas para datetime-local
+                    if (evento.fecha_inicio) {
+                        evento.fecha_inicio = new Date(evento.fecha_inicio).toISOString().slice(0, 16);
+                    }
+                    if (evento.fecha_fin) {
+                        evento.fecha_fin = new Date(evento.fecha_fin).toISOString().slice(0, 16);
+                    }
+                }
+            }
+
+            const tiposOptions = tiposEventoGlobal.map(tipo => 
+                `<option value="${tipo.id}" ${evento.tipo_evento_id == tipo.id ? 'selected' : ''}>${tipo.nombre}</option>`
+            ).join('');
+
+            const formHTML = `
+                <form id="eventoForm">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="titulo" class="form-label">Título del Evento *</label>
+                                <input type="text" class="form-control" name="titulo" value="${evento.titulo}" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="tipo_evento_id" class="form-label">Tipo de Evento *</label>
+                                <select class="form-select" name="tipo_evento_id" required>
+                                    <option value="">Seleccionar...</option>
+                                    ${tiposOptions}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="ubicacion" class="form-label">Ubicación</label>
+                                <input type="text" class="form-control" name="ubicacion" value="${evento.ubicacion}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="descripcion" class="form-label">Descripción</label>
+                        <textarea class="form-control" name="descripcion" rows="3">${evento.descripcion}</textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="max_participantes" class="form-label">Máximo Participantes</label>
+                                <input type="number" class="form-control" name="max_participantes" value="${evento.max_participantes || ''}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fecha_inicio" class="form-label">Fecha y Hora de Inicio *</label>
+                                <input type="datetime-local" class="form-control" name="fecha_inicio" value="${evento.fecha_inicio}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fecha_fin" class="form-label">Fecha y Hora de Fin *</label>
+                                <input type="datetime-local" class="form-control" name="fecha_fin" value="${evento.fecha_fin}" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="link_google_cal" class="form-label">Link Google Calendar</label>
+                                <input type="url" class="form-control" name="link_google_cal" value="${evento.link_google_cal}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="link_reunion" class="form-label">Link de Reunión</label>
+                                <input type="url" class="form-control" name="link_reunion" value="${evento.link_reunion}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" name="visible" ${evento.visible ? 'checked' : ''}>
+                                <label class="form-check-label" for="visible">Visible</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" name="destacado" ${evento.destacado ? 'checked' : ''}>
+                                <label class="form-check-label" for="destacado">Destacado</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" name="requiere_inscripcion" ${evento.requiere_inscripcion ? 'checked' : ''}>
+                                <label class="form-check-label" for="requiere_inscripcion">Requiere Inscripción</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" onclick="Swal.close()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            `;
+
+            Swal.fire({
+                title: title,
+                html: formHTML,
+                width: '800px',
+                showConfirmButton: false,
+                showCancelButton: false,
+                allowOutsideClick: false
+            });
+
+            // Agregar evento de submit al formulario
+            document.getElementById('eventoForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData.entries());
+
+                // Convertir checkboxes
+                data.visible = formData.has('visible');
+                data.destacado = formData.has('destacado');
+                data.requiere_inscripcion = formData.has('requiere_inscripcion');
+
+                // Convertir máximo participantes a número o null
+                data.max_participantes = data.max_participantes ? parseInt(data.max_participantes) : null;
+
+                await saveEvento(eventoId, data);
+            });
+        }
+
+        // Guardar evento
+        async function saveEvento(eventoId, data) {
+            try {
+                const token = localStorage.getItem('adminToken');
+                const method = eventoId ? 'PUT' : 'POST';
+                const url = eventoId ? `/api/eventos/admin/${eventoId}` : '/api/eventos/admin';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: eventoId ? 'Evento actualizado correctamente' : 'Evento creado correctamente',
+                        icon: 'success'
+                    });
+                    Swal.close();
+                    loadEventos();
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: result.message || 'Error al guardar evento',
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error al guardar evento:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error de conexión al guardar evento',
+                    icon: 'error'
+                });
+            }
+        }
+
+        // Editar evento
+        function editEvento(eventoId) {
+            showEventoForm(eventoId);
+        }
+
+        // Eliminar evento
+        function deleteEvento(eventoId) {
+            const evento = eventosGlobal.find(e => e.id === eventoId);
+            if (!evento) return;
+
+            Swal.fire({
+                title: '¿Eliminar evento?',
+                text: `Se eliminará el evento "${evento.titulo}". Esta acción no se puede deshacer.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const token = localStorage.getItem('adminToken');
+                        const response = await fetch(`/api/eventos/admin/${eventoId}`, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Eliminado',
+                                text: 'Evento eliminado correctamente',
+                                icon: 'success'
+                            });
+                            loadEventos();
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.message || 'Error al eliminar evento',
+                                icon: 'error'
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error eliminando evento:', error);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Error de conexión al eliminar evento',
+                            icon: 'error'
+                        });
+                    }
+                }
+            });
+        }
+
+        // Ver inscripciones de un evento
+        async function viewInscripcionesEvento(eventoId) {
+            try {
+                const token = localStorage.getItem('adminToken');
+                const response = await fetch(`/api/eventos/admin/${eventoId}/inscripciones`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const inscripciones = data.data;
+
+                    const tablaHTML = inscripciones.length > 0 ? `
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Email</th>
+                                        <th>Teléfono</th>
+                                        <th>Estado</th>
+                                        <th>Fecha Inscripción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${inscripciones.map(insc => `
+                                        <tr>
+                                            <td>${insc.nombre} ${insc.apellido_paterno}</td>
+                                            <td>${insc.email}</td>
+                                            <td>${insc.telefono || 'N/A'}</td>
+                                            <td><span class="badge bg-success">${insc.estado}</span></td>
+                                            <td>${new Date(insc.created_at).toLocaleDateString('es-CL')}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : '<div class="text-center p-4">No hay inscripciones registradas</div>';
+
+                    Swal.fire({
+                        title: 'Inscripciones del Evento',
+                        html: tablaHTML,
+                        width: '800px',
+                        confirmButtonText: 'Cerrar'
+                    });
+                }
+            } catch (error) {
+                console.error('Error al cargar inscripciones:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al cargar inscripciones del evento',
+                    icon: 'error'
+                });
+            }
+        }
+
+        // ==================== FUNCIONES DE GESTIÓN DE DOCUMENTOS ====================
+        
+        // Cargar documentos
+        async function loadDocumentos() {
+            try {
+                const token = localStorage.getItem('adminToken');
+                if (!token) return;
+
+                const response = await fetch('/api/documentos/admin/all', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    documentosGlobal = data.data;
+                    renderDocumentosTable();
+                } else {
+                    console.error('Error al cargar documentos:', await response.text());
+                }
+            } catch (error) {
+                console.error('Error al cargar documentos:', error);
+            }
+        }
+
+        // Cargar tipos de documento
+        async function loadTiposDocumento() {
+            try {
+                const response = await fetch('/api/documentos/tipos');
+                if (response.ok) {
+                    const data = await response.json();
+                    tiposDocumentoGlobal = data.data;
+                    
+                    // Llenar select de filtro
+                    const filterSelect = document.getElementById('filterTipoDocumento');
+                    filterSelect.innerHTML = '<option value="">Todos los tipos</option>';
+                    data.data.forEach(tipo => {
+                        filterSelect.innerHTML += `<option value="${tipo.id}">${tipo.nombre}</option>`;
+                    });
+                }
+            } catch (error) {
+                console.error('Error al cargar tipos de documento:', error);
+            }
+        }
+
+        // Renderizar tabla de documentos
+        function renderDocumentosTable() {
+            const tbody = document.getElementById('documentosTableBody');
+            const filterTipo = document.getElementById('filterTipoDocumento')?.value;
+            const filterEstado = document.getElementById('filterEstadoDocumento')?.value;
+            const filterDestacado = document.getElementById('filterDestacadoDocumento')?.value;
+
+            let filteredDocs = documentosGlobal;
+
+            // Aplicar filtros
+            if (filterTipo) {
+                filteredDocs = filteredDocs.filter(doc => doc.tipo_documento_id == filterTipo);
+            }
+
+            if (filterEstado !== '') {
+                filteredDocs = filteredDocs.filter(doc => doc.visible.toString() === filterEstado);
+            }
+
+            if (filterDestacado !== '') {
+                filteredDocs = filteredDocs.filter(doc => doc.destacado.toString() === filterDestacado);
+            }
+
+            if (filteredDocs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No hay documentos para mostrar</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filteredDocs.map(doc => `
+                <tr>
+                    <td>
+                        ${doc.nombre}
+                        ${doc.destacado ? '<span class="badge bg-warning ms-2">Destacado</span>' : ''}
+                    </td>
+                    <td>${doc.tipo_nombre || 'Sin tipo'}</td>
+                    <td>${new Date(doc.fecha_publicacion).toLocaleDateString('es-CL')}</td>
+                    <td>
+                        <span class="badge ${doc.visible ? 'bg-success' : 'bg-secondary'}">
+                            ${doc.visible ? 'Visible' : 'Oculto'}
+                        </span>
+                    </td>
+                    <td>${doc.total_descargas || 0}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info me-1" onclick="editDocumento(${doc.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-success me-1" onclick="viewDescargasDocumento(${doc.id})">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteDocumento(${doc.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Mostrar formulario de documento
+        async function showDocumentoForm(documentoId = null) {
+            const isEdit = documentoId !== null;
+            const title = isEdit ? 'Editar Documento' : 'Nuevo Documento';
+
+            let documento = {
+                nombre: '',
+                descripcion: '',
+                tipo_documento_id: '',
+                link_drive: '',
+                nombre_archivo: '',
+                tamaño_archivo: '',
+                fecha_publicacion: new Date().toISOString().split('T')[0],
+                fecha_vencimiento: '',
+                visible: true,
+                destacado: false,
+                requiere_autenticacion: false
+            };
+
+            if (isEdit && documentoId) {
+                const docFind = documentosGlobal.find(d => d.id === documentoId);
+                if (docFind) {
+                    documento = { ...docFind };
+                    documento.fecha_publicacion = documento.fecha_publicacion.split('T')[0];
+                    documento.fecha_vencimiento = documento.fecha_vencimiento ? documento.fecha_vencimiento.split('T')[0] : '';
+                }
+            }
+
+            const tiposOptions = tiposDocumentoGlobal.map(tipo => 
+                `<option value="${tipo.id}" ${documento.tipo_documento_id == tipo.id ? 'selected' : ''}>${tipo.nombre}</option>`
+            ).join('');
+
+            const formHTML = `
+                <form id="documentoForm">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="nombre" class="form-label">Nombre del Documento *</label>
+                                <input type="text" class="form-control" name="nombre" value="${documento.nombre}" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="tipo_documento_id" class="form-label">Tipo de Documento *</label>
+                                <select class="form-select" name="tipo_documento_id" required>
+                                    <option value="">Seleccionar...</option>
+                                    ${tiposOptions}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nombre_archivo" class="form-label">Nombre del Archivo</label>
+                                <input type="text" class="form-control" name="nombre_archivo" value="${documento.nombre_archivo}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="descripcion" class="form-label">Descripción</label>
+                        <textarea class="form-control" name="descripcion" rows="3">${documento.descripcion}</textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="link_drive" class="form-label">Link de Google Drive *</label>
+                                <input type="url" class="form-control" name="link_drive" value="${documento.link_drive}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="tamaño_archivo" class="form-label">Tamaño (bytes)</label>
+                                <input type="number" class="form-control" name="tamaño_archivo" value="${documento.tamaño_archivo || ''}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fecha_publicacion" class="form-label">Fecha de Publicación *</label>
+                                <input type="date" class="form-control" name="fecha_publicacion" value="${documento.fecha_publicacion}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fecha_vencimiento" class="form-label">Fecha de Vencimiento</label>
+                                <input type="date" class="form-control" name="fecha_vencimiento" value="${documento.fecha_vencimiento}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" name="visible" ${documento.visible ? 'checked' : ''}>
+                                <label class="form-check-label" for="visible">Visible</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" name="destacado" ${documento.destacado ? 'checked' : ''}>
+                                <label class="form-check-label" for="destacado">Destacado</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" name="requiere_autenticacion" ${documento.requiere_autenticacion ? 'checked' : ''}>
+                                <label class="form-check-label" for="requiere_autenticacion">Requiere Autenticación</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary me-2" onclick="Swal.close()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            `;
+
+            Swal.fire({
+                title: title,
+                html: formHTML,
+                width: '800px',
+                showConfirmButton: false,
+                showCancelButton: false,
+                allowOutsideClick: false
+            });
+
+            // Agregar evento de submit al formulario
+            document.getElementById('documentoForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData.entries());
+
+                // Convertir checkboxes
+                data.visible = formData.has('visible');
+                data.destacado = formData.has('destacado');
+                data.requiere_autenticacion = formData.has('requiere_autenticacion');
+
+                await saveDocumento(documentoId, data);
+            });
+        }
+
+        // Guardar documento
+        async function saveDocumento(documentoId, data) {
+            try {
+                const token = localStorage.getItem('adminToken');
+                const method = documentoId ? 'PUT' : 'POST';
+                const url = documentoId ? `/api/documentos/admin/${documentoId}` : '/api/documentos/admin';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    Swal.fire({
+                        title: 'Éxito',
+                        text: documentoId ? 'Documento actualizado correctamente' : 'Documento creado correctamente',
+                        icon: 'success'
+                    });
+                    Swal.close();
+                    loadDocumentos();
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: result.message || 'Error al guardar documento',
+                        icon: 'error'
+                    });
+                }
+            } catch (error) {
+                console.error('Error al guardar documento:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error de conexión al guardar documento',
+                    icon: 'error'
+                });
+            }
+        }
+
+        // Editar documento
+        function editDocumento(documentoId) {
+            showDocumentoForm(documentoId);
+        }
+
+        // Eliminar documento
+        function deleteDocumento(documentoId) {
+            const documento = documentosGlobal.find(d => d.id === documentoId);
+            if (!documento) return;
+
+            Swal.fire({
+                title: '¿Eliminar documento?',
+                text: `Se eliminará el documento "${documento.nombre}". Esta acción no se puede deshacer.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const token = localStorage.getItem('adminToken');
+                        const response = await fetch(`/api/documentos/admin/${documentoId}`, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Eliminado',
+                                text: 'Documento eliminado correctamente',
+                                icon: 'success'
+                            });
+                            loadDocumentos();
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.message || 'Error al eliminar documento',
+                                icon: 'error'
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error eliminando documento:', error);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Error de conexión al eliminar documento',
+                            icon: 'error'
+                        });
+                    }
+                }
+            });
+        }
+
+        // Ver descargas de un documento
+        async function viewDescargasDocumento(documentoId) {
+            try {
+                const token = localStorage.getItem('adminToken');
+                const response = await fetch(`/api/documentos/admin/${documentoId}/descargas`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const descargas = data.data;
+
+                    const tablaHTML = descargas.length > 0 ? `
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Email</th>
+                                        <th>Nombre</th>
+                                        <th>Fecha</th>
+                                        <th>IP</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${descargas.map(desc => `
+                                        <tr>
+                                            <td>${desc.email_descarga || 'N/A'}</td>
+                                            <td>${desc.nombre_descarga || 'N/A'}</td>
+                                            <td>${new Date(desc.created_at).toLocaleDateString('es-CL')}</td>
+                                            <td>${desc.ip_address || 'N/A'}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    ` : '<div class="text-center p-4">No hay descargas registradas</div>';
+
+                    Swal.fire({
+                        title: 'Historial de Descargas',
+                        html: tablaHTML,
+                        width: '700px',
+                        confirmButtonText: 'Cerrar'
+                    });
+                }
+            } catch (error) {
+                console.error('Error al cargar descargas:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al cargar historial de descargas',
+                    icon: 'error'
+                });
+            }
+        }
+
+        // ==================== FUNCIONES GENERALES ====================
+        
+        // Cargar estadísticas del dashboard
+        async function loadDashboardStats() {
+            try {
+                const token = localStorage.getItem('adminToken');
+                if (!token) return;
+
+                // Cargar estadísticas básicas
+                const [eventosRes, documentosRes] = await Promise.all([
+                    fetch('/api/eventos/admin/all', { headers: { 'Authorization': `Bearer ${token}` } }),
+                    fetch('/api/documentos/admin/all', { headers: { 'Authorization': `Bearer ${token}` } })
+                ]);
+
+                if (eventosRes.ok) {
+                    const eventosData = await eventosRes.json();
+                    document.getElementById('totalEventos').textContent = eventosData.data?.length || 0;
+                }
+
+                if (documentosRes.ok) {
+                    const documentosData = await documentosRes.json();
+                    document.getElementById('totalDocumentos').textContent = documentosData.data?.length || 0;
+                }
+
+            } catch (error) {
+                console.error('Error cargando estadísticas:', error);
+            }
+        }
+
+        // Cerrar sesión
+        function logout() {
+            Swal.fire({
+                title: '¿Cerrar sesión?',
+                text: 'Se cerrará la sesión de administrador',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, cerrar sesión',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem('adminToken');
+                    window.location.href = '/login.html';
+                }
+            });
+        }
+
+        // ==================== INICIALIZACIÓN ====================
+        
+        // Verificar autenticación al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('adminToken');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Cargar dashboard inicial
+            loadDashboardStats();
+        });
+    </script>
+</body>
+</html>
