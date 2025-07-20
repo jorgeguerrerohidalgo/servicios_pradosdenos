@@ -329,11 +329,8 @@
         // Cargar eventos
         async function loadEventos() {
             try {
-                const token = localStorage.getItem('adminToken');
-                if (!token) return;
-
                 const response = await fetch('/api/eventos/admin/all', {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    credentials: 'include'
                 });
 
                 if (response.ok) {
@@ -591,16 +588,15 @@
         // Guardar evento
         async function saveEvento(eventoId, data) {
             try {
-                const token = localStorage.getItem('adminToken');
                 const method = eventoId ? 'PUT' : 'POST';
                 const url = eventoId ? `/api/eventos/admin/${eventoId}` : '/api/eventos/admin';
 
                 const response = await fetch(url, {
                     method: method,
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                        'Content-Type': 'application/json'
                     },
+                    credentials: 'include',
                     body: JSON.stringify(data)
                 });
 
@@ -651,10 +647,9 @@
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     try {
-                        const token = localStorage.getItem('adminToken');
                         const response = await fetch(`/api/eventos/admin/${eventoId}`, {
                             method: 'DELETE',
-                            headers: { 'Authorization': `Bearer ${token}` }
+                            credentials: 'include'
                         });
 
                         const data = await response.json();
@@ -688,9 +683,8 @@
         // Ver inscripciones de un evento
         async function viewInscripcionesEvento(eventoId) {
             try {
-                const token = localStorage.getItem('adminToken');
                 const response = await fetch(`/api/eventos/admin/${eventoId}/inscripciones`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    credentials: 'include'
                 });
 
                 if (response.ok) {
@@ -746,11 +740,8 @@
         // Cargar documentos
         async function loadDocumentos() {
             try {
-                const token = localStorage.getItem('adminToken');
-                if (!token) return;
-
                 const response = await fetch('/api/documentos/admin/all', {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    credentials: 'include'
                 });
 
                 if (response.ok) {
@@ -986,16 +977,15 @@
         // Guardar documento
         async function saveDocumento(documentoId, data) {
             try {
-                const token = localStorage.getItem('adminToken');
                 const method = documentoId ? 'PUT' : 'POST';
                 const url = documentoId ? `/api/documentos/admin/${documentoId}` : '/api/documentos/admin';
 
                 const response = await fetch(url, {
                     method: method,
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                        'Content-Type': 'application/json'
                     },
+                    credentials: 'include',
                     body: JSON.stringify(data)
                 });
 
@@ -1046,10 +1036,9 @@
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     try {
-                        const token = localStorage.getItem('adminToken');
                         const response = await fetch(`/api/documentos/admin/${documentoId}`, {
                             method: 'DELETE',
-                            headers: { 'Authorization': `Bearer ${token}` }
+                            credentials: 'include'
                         });
 
                         const data = await response.json();
@@ -1083,9 +1072,8 @@
         // Ver descargas de un documento
         async function viewDescargasDocumento(documentoId) {
             try {
-                const token = localStorage.getItem('adminToken');
                 const response = await fetch(`/api/documentos/admin/${documentoId}/descargas`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    credentials: 'include'
                 });
 
                 if (response.ok) {
@@ -1139,13 +1127,10 @@
         // Cargar estadísticas del dashboard
         async function loadDashboardStats() {
             try {
-                const token = localStorage.getItem('adminToken');
-                if (!token) return;
-
                 // Cargar estadísticas básicas
                 const [eventosRes, documentosRes] = await Promise.all([
-                    fetch('/api/eventos/admin/all', { headers: { 'Authorization': `Bearer ${token}` } }),
-                    fetch('/api/documentos/admin/all', { headers: { 'Authorization': `Bearer ${token}` } })
+                    fetch('/api/eventos/admin/all', { credentials: 'include' }),
+                    fetch('/api/documentos/admin/all', { credentials: 'include' })
                 ]);
 
                 if (eventosRes.ok) {
@@ -1172,10 +1157,17 @@
                 showCancelButton: true,
                 confirmButtonText: 'Sí, cerrar sesión',
                 cancelButtonText: 'Cancelar'
-            }).then((result) => {
+            }).then(async (result) => {
                 if (result.isConfirmed) {
-                    localStorage.removeItem('adminToken');
-                    window.location.href = '/login.html';
+                    try {
+                        await fetch('/api/auth/logout', {
+                            method: 'POST',
+                            credentials: 'include'
+                        });
+                    } catch (error) {
+                        console.error('Error al cerrar sesión:', error);
+                    }
+                    window.location.href = '/admin-login.html';
                 }
             });
         }
@@ -1183,15 +1175,24 @@
         // ==================== INICIALIZACIÓN ====================
         
         // Verificar autenticación al cargar la página
-        document.addEventListener('DOMContentLoaded', function() {
-            const token = localStorage.getItem('adminToken');
-            if (!token) {
-                window.location.href = '/login.html';
-                return;
-            }
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                const response = await fetch('/api/auth/check', {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                
+                if (!result.isAuthenticated || !result.guardia || result.guardia.tipo !== 'admin') {
+                    window.location.href = '/admin-login.html';
+                    return;
+                }
 
-            // Cargar dashboard inicial
-            loadDashboardStats();
+                // Cargar dashboard inicial
+                loadDashboardStats();
+            } catch (error) {
+                console.error('Error verificando autenticación:', error);
+                window.location.href = '/admin-login.html';
+            }
         });
     </script>
 </body>
