@@ -1,0 +1,459 @@
+const express = require('express');
+const router = express.Router();
+const pool = require('../utils/db');
+const { authenticateToken, requireAdmin } = require('../middleware/auth');
+
+// ==================== EVENTOS VECINALES ====================
+
+// GET /api/eventos - Obtener todos los eventos (público)
+router.get('/', async (req, res) => {
+    try {
+        const { tipo, destacado, visible = 'true', proximos } = req.query;
+        
+        let query = `
+            SELECT 
+                e.id,
+                e.titulo,
+                e.descripcion,
+                e.ubicacion,
+                e.fecha_inicio,
+                e.fecha_fin,
+                e.link_google_cal,
+                e.link_reunion,
+                e.visible,
+                e.destacado,
+                e.max_participantes,
+                e.requiere_inscripcion,
+                e.created_at,
+                e.updated_at,
+                te.nombre as tipo_nombre,
+                te.icono as tipo_icono,
+                te.color as tipo_color,
+                au.nombre as creado_por_nombre,
+                (SELECT COUNT(*) FROM inscripciones_eventos WHERE evento_id = e.id AND estado = 'confirmado') as inscripciones_confirmadas
+            FROM eventos_vecinales e
+            LEFT JOIN tipo_evento te ON e.tipo_evento_id = te.id
+            LEFT JOIN admin_users au ON e.creado_por = au.id
+            WHERE e.visible = $1
+        `;
+        
+        const params = [visible === 'true'];
+        let paramCount = 1;
+        
+        if (tipo) {
+            paramCount++;
+            query += ` AND e.tipo_evento_id = $${paramCount}`;
+            params.push(tipo);
+        }
+        
+        if (destacado !== undefined) {
+            paramCount++;
+            query += ` AND e.destacado = $${paramCount}`;
+            params.push(destacado === 'true');
+        }
+        
+        if (proximos === 'true') {
+            paramCount++;
+            query += ` AND e.fecha_inicio >= NOW()`;
+        }
+        
+        // Ordenar por destacado primero, luego por fecha de inicio
+        query += ' ORDER BY e.destacado DESC, e.fecha_inicio ASC';
+        
+        const result = await pool.query(query, params);
+        
+        res.json({
+            success: true,
+            data: result.rows
+        });
+    } catch (error) {
+        console.error('Error al obtener eventos:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+});
+
+// GET /api/eventos/tipos - Obtener tipos de evento
+router.get('/tipos', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT id, nombre, descripcion, icono, color, orden
+            FROM tipo_evento 
+            WHERE activo = true 
+            ORDER BY orden, nombre
+        `);
+        
+        res.json({
+            success: true,
+            data: result.rows
+        });
+    } catch (error) {
+        console.error('Error al obtener tipos de evento:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+});
+
+// GET /api/eventos/:id - Obtener evento específico
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const result = await pool.query(`
+            SELECT 
+                e.*,
+                te.nombre as tipo_nombre,
+                te.icono as tipo_icono,
+                te.color as tipo_color,
+                au.nombre as creado_por_nombre,
+                (SELECT COUNT(*) FROM inscripciones_eventos WHERE evento_id = e.id AND estado = 'confirmado') as inscripciones_confirmadas
+            FROM eventos_vecinales e
+            LEFT JOIN tipo_evento te ON e.tipo_evento_id = te.id
+            LEFT JOIN admin_users au ON e.creado_por = au.id
+            WHERE e.id = $1 AND e.visible = true
+        `, [id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Evento no encontrado'
+            });
+        }
+        
+        res.json({
+            success: true,
+            data: result.rows[0]
+        });
+    } catch (error) {
+        console.error('Error al obtener evento:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+});
+
+// POST /api/eventos/inscribir/:id - Inscribirse a un evento (requiere autenticación)
+router.post('/inscribir/:id', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { comentarios } = req.body;
+        
+        // Verificar que el evento existe y requiere inscripción
+        const eventoResult = await pool.query(
+            'SELECT id, requiere_inscripcion, max_participantes FROM eventos_vecinales WHERE id = $1 AND visible = true',
+            [id]
+        );
+        
+        if (eventoResult.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Evento no encontrado'
+            });
+        }
+        
+        const evento = eventoResult.rows[0];
+        
+        if (!evento.requiere_inscripcion) {
+            return res.status(400).json({
+                success: false,
+                message: 'Este evento no requiere inscripción'
+            });
+        }
+        
+        // Verificar si ya está inscrito
+        const inscripcionExistente = await pool.query(
+            'SELECT id FROM inscripciones_eventos WHERE evento_id = $1 AND admin_user_id = $2',
+            [id, req.user.id]
+        );
+        
+        if (inscripcionExistente.rows.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Ya está inscrito en este evento'
+            });
+        }
+        
+        // Verificar límite de participantes
+        if (evento.max_participantes) {
+            const inscripcionesActuales = await pool.query(
+                'SELECT COUNT(*) as total FROM inscripciones_eventos WHERE evento_id = $1 AND estado = $2',
+                [id, 'confirmado']
+            );
+            
+            if (parseInt(inscripcionesActuales.rows[0].total) >= evento.max_participantes) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'El evento ha alcanzado el límite máximo de participantes'
+                });
+            }
+        }
+        
+        // Crear inscripción
+        const result = await pool.query(`
+            INSERT INTO inscripciones_eventos 
+            (evento_id, admin_user_id, comentarios, estado)
+            VALUES ($1, $2, $3, 'confirmado')
+            RETURNING *
+        `, [id, req.user.id, comentarios]);
+        
+        res.status(201).json({
+            success: true,
+            message: 'Inscripción realizada exitosamente',
+            data: result.rows[0]
+        });
+    } catch (error) {
+        console.error('Error al inscribirse en evento:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+});
+
+// DELETE /api/eventos/desinscribir/:id - Cancelar inscripción a evento
+router.delete('/desinscribir/:id', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const result = await pool.query(
+            'DELETE FROM inscripciones_eventos WHERE evento_id = $1 AND admin_user_id = $2 RETURNING *',
+            [id, req.user.id]
+        );
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No se encontró la inscripción'
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Inscripción cancelada exitosamente'
+        });
+    } catch (error) {
+        console.error('Error al cancelar inscripción:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+});
+
+// ==================== RUTAS ADMINISTRATIVAS ====================
+
+// GET /api/eventos/admin/all - Obtener todos los eventos (admin)
+router.get('/admin/all', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT 
+                e.id,
+                e.titulo,
+                e.descripcion,
+                e.ubicacion,
+                e.fecha_inicio,
+                e.fecha_fin,
+                e.link_google_cal,
+                e.link_reunion,
+                e.visible,
+                e.destacado,
+                e.max_participantes,
+                e.requiere_inscripcion,
+                e.created_at,
+                e.updated_at,
+                te.nombre as tipo_nombre,
+                te.icono as tipo_icono,
+                te.color as tipo_color,
+                au.nombre as creado_por_nombre,
+                (SELECT COUNT(*) FROM inscripciones_eventos WHERE evento_id = e.id AND estado = 'confirmado') as inscripciones_confirmadas
+            FROM eventos_vecinales e
+            LEFT JOIN tipo_evento te ON e.tipo_evento_id = te.id
+            LEFT JOIN admin_users au ON e.creado_por = au.id
+            ORDER BY e.created_at DESC
+        `);
+        
+        res.json({
+            success: true,
+            data: result.rows
+        });
+    } catch (error) {
+        console.error('Error al obtener eventos (admin):', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+});
+
+// POST /api/eventos/admin - Crear evento (admin)
+router.post('/admin', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const {
+            titulo,
+            descripcion,
+            ubicacion,
+            fecha_inicio,
+            fecha_fin,
+            tipo_evento_id,
+            link_google_cal,
+            link_reunion,
+            visible,
+            destacado,
+            max_participantes,
+            requiere_inscripcion
+        } = req.body;
+        
+        const result = await pool.query(`
+            INSERT INTO eventos_vecinales 
+            (titulo, descripcion, ubicacion, fecha_inicio, fecha_fin, 
+             tipo_evento_id, link_google_cal, link_reunion, visible, 
+             destacado, max_participantes, requiere_inscripcion, creado_por)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+            RETURNING *
+        `, [
+            titulo, descripcion, ubicacion, fecha_inicio, fecha_fin,
+            tipo_evento_id, link_google_cal, link_reunion, visible,
+            destacado, max_participantes, requiere_inscripcion, req.user.id
+        ]);
+        
+        res.status(201).json({
+            success: true,
+            message: 'Evento creado exitosamente',
+            data: result.rows[0]
+        });
+    } catch (error) {
+        console.error('Error al crear evento:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+});
+
+// PUT /api/eventos/admin/:id - Actualizar evento (admin)
+router.put('/admin/:id', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const {
+            titulo,
+            descripcion,
+            ubicacion,
+            fecha_inicio,
+            fecha_fin,
+            tipo_evento_id,
+            link_google_cal,
+            link_reunion,
+            visible,
+            destacado,
+            max_participantes,
+            requiere_inscripcion
+        } = req.body;
+        
+        const result = await pool.query(`
+            UPDATE eventos_vecinales 
+            SET titulo = $1, descripcion = $2, ubicacion = $3, 
+                fecha_inicio = $4, fecha_fin = $5, tipo_evento_id = $6,
+                link_google_cal = $7, link_reunion = $8, visible = $9,
+                destacado = $10, max_participantes = $11, 
+                requiere_inscripcion = $12, modificado_por = $13, updated_at = NOW()
+            WHERE id = $14
+            RETURNING *
+        `, [
+            titulo, descripcion, ubicacion, fecha_inicio, fecha_fin,
+            tipo_evento_id, link_google_cal, link_reunion, visible,
+            destacado, max_participantes, requiere_inscripcion, req.user.id, id
+        ]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Evento no encontrado'
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Evento actualizado exitosamente',
+            data: result.rows[0]
+        });
+    } catch (error) {
+        console.error('Error al actualizar evento:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+});
+
+// DELETE /api/eventos/admin/:id - Eliminar evento (admin)
+router.delete('/admin/:id', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const result = await pool.query(
+            'DELETE FROM eventos_vecinales WHERE id = $1 RETURNING *',
+            [id]
+        );
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Evento no encontrado'
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Evento eliminado exitosamente'
+        });
+    } catch (error) {
+        console.error('Error al eliminar evento:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+});
+
+// GET /api/eventos/admin/:id/inscripciones - Obtener inscripciones de un evento
+router.get('/admin/:id/inscripciones', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const result = await pool.query(`
+            SELECT 
+                i.id,
+                i.estado,
+                i.comentarios,
+                i.created_at,
+                i.updated_at,
+                au.nombre,
+                au.apellido_paterno,
+                au.apellido_materno,
+                au.email,
+                au.telefono
+            FROM inscripciones_eventos i
+            LEFT JOIN admin_users au ON i.admin_user_id = au.id
+            WHERE i.evento_id = $1 
+            ORDER BY i.created_at DESC
+        `, [id]);
+        
+        res.json({
+            success: true,
+            data: result.rows
+        });
+    } catch (error) {
+        console.error('Error al obtener inscripciones:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+});
+
+module.exports = router;
