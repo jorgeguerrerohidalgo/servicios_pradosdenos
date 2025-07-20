@@ -2724,15 +2724,40 @@
         // ==================== INICIALIZACIÓN ====================
         
         // Verificar autenticación al cargar la página
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             const token = localStorage.getItem('adminToken');
             if (!token) {
                 window.location.href = '/admin-login.html';
                 return;
             }
 
-            // Cargar dashboard inicial
-            loadDashboardStats();
+            // Verificar que el token sea válido probando una API que requiere autenticación
+            try {
+                const response = await fetch('/api/eventos/admin/all', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.status === 401) {
+                    // Token inválido o expirado
+                    console.log('Token inválido, redirigiendo al login');
+                    localStorage.removeItem('adminToken');
+                    window.location.href = '/admin-login.html';
+                    return;
+                }
+
+                if (!response.ok) {
+                    console.error('Error de servidor:', response.status);
+                    // Otros errores de servidor - mantener en la página pero mostrar error
+                }
+
+                // Token parece válido, cargar dashboard
+                loadDashboardStats();
+
+            } catch (error) {
+                console.error('Error verificando token:', error);
+                // En caso de error de conexión, permitir acceso pero mostrar error
+                loadDashboardStats();
+            }
         });
     </script>
 </body>

@@ -124,12 +124,17 @@
           // Login exitoso - guardar token si existe
           if (result.token) {
             localStorage.setItem('adminToken', result.token);
+            console.log('Token guardado:', result.token);
+          } else {
+            console.warn('No se recibió token en la respuesta:', result);
           }
           
           // Redirigir según el tipo de usuario
           if (result.guardia && result.guardia.tipo === 'admin') {
+            console.log('Redirigiendo a admin panel');
             window.location.href = '/admin-panel.html';
           } else {
+            console.log('Redirigiendo a guardia checkin');
             window.location.href = '/guardia-checkin.html';
           }
         } else {
