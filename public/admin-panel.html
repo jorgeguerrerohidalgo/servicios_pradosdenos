@@ -290,15 +290,19 @@
                                     </button>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <button class="management-btn" style="background: linear-gradient(135deg, #28a745, #20c997); color: white;" onclick="viewEventos()">
+                                    <!-- Desactivado temporalmente durante limpieza -->
+                                    <button class="management-btn" style="background: linear-gradient(135deg, #6c757d, #495057); color: white; opacity: 0.6;" disabled>
                                         <i class="fas fa-calendar-alt"></i><br>
                                         Gestionar Eventos
+                                        <small style="display: block; font-size: 0.8em; margin-top: 5px;">En desarrollo</small>
                                     </button>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <button class="management-btn" style="background: linear-gradient(135deg, #6f42c1, #e83e8c); color: white;" onclick="viewDocumentos()">
+                                    <!-- Desactivado temporalmente durante limpieza -->
+                                    <button class="management-btn" style="background: linear-gradient(135deg, #6c757d, #495057); color: white; opacity: 0.6;" disabled>
                                         <i class="fas fa-file-alt"></i><br>
                                         Gestionar Documentos
+                                        <small style="display: block; font-size: 0.8em; margin-top: 5px;">En desarrollo</small>
                                     </button>
                                 </div>
                             </div>
@@ -533,41 +537,18 @@
         </div>
     </div>
 
-    <!-- Sección de Eventos -->
+    <!-- ===== SECCIONES TEMPORALMENTE DESACTIVADAS DURANTE LIMPIEZA =====
+    
     <div id="eventosSection" class="section-hidden">
         <div class="container-fluid">
             <div class="row">
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <h3><i class="fas fa-calendar-alt"></i> Gestión de Eventos</h3>
-                            <button class="btn btn-primary" onclick="showEventForm()">
-                                <i class="fas fa-plus"></i> Nuevo Evento
-                            </button>
+                            <h3><i class="fas fa-calendar-alt"></i> Gestión de Eventos - En Desarrollo</h3>
                         </div>
                         <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Título</th>
-                                            <th>Fecha Inicio</th>
-                                            <th>Fecha Fin</th>
-                                            <th>Ubicación</th>
-                                            <th>Tipo</th>
-                                            <th>Estado</th>
-                                            <th>Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="eventosTableBody">
-                                        <tr>
-                                            <td colspan="7" class="text-center">
-                                                Cargando eventos...
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                            <p class="text-center text-muted">Esta funcionalidad está siendo rediseñada</p>
                         </div>
                     </div>
                 </div>
@@ -575,46 +556,24 @@
         </div>
     </div>
 
-    <!-- Sección de Documentos -->
     <div id="documentosSection" class="section-hidden">
         <div class="container-fluid">
             <div class="row">
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <h3><i class="fas fa-file-alt"></i> Gestión de Documentos</h3>
-                            <button class="btn btn-primary" onclick="showDocumentForm()">
-                                <i class="fas fa-plus"></i> Nuevo Documento
-                            </button>
+                            <h3><i class="fas fa-file-alt"></i> Gestión de Documentos - En Desarrollo</h3>
                         </div>
                         <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Nombre</th>
-                                            <th>Tipo</th>
-                                            <th>Fecha Publicación</th>
-                                            <th>Evento Asociado</th>
-                                            <th>Estado</th>
-                                            <th>Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="documentosTableBody">
-                                        <tr>
-                                            <td colspan="6" class="text-center">
-                                                Cargando documentos...
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                            <p class="text-center text-muted">Esta funcionalidad está siendo rediseñada</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    
+    ===== FIN SECCIONES DESACTIVADAS ===== -->
 
     <!-- Modal para Formularios -->
     <div class="modal fade" id="formModal" tabindex="-1">
@@ -2005,89 +1964,52 @@
             generateReport();
         }
 
-        // ==================== EVENTOS ====================
+        // ==================== DOCUMENTOS ====================
         
-        function viewEventos() {
+        function viewDocumentos() {
             hideAllSections();
-            document.getElementById('eventosSection').classList.remove('section-hidden');
-            loadEventos();
+            document.getElementById('documentosSection').classList.remove('section-hidden');
+            loadDocumentos();
         }
 
-        let eventosData = [];
-        let tiposEvento = [];
-
-        async function loadEventos() {
+        async function loadDocumentos() {
             try {
-                // Cargar eventos y tipos de evento en paralelo
-                const [eventosResponse, tiposResponse] = await Promise.all([
-                    fetch('/api/eventos'),
-                    fetch('/api/eventos/tipos/all')
+                // Cargar documentos y tipos en paralelo
+                const [documentosResponse, tiposResponse] = await Promise.all([
+                    fetch('/api/documentos'),
+                    fetch('/api/documentos/tipos')
                 ]);
 
-                const eventosResult = await eventosResponse.json();
+                const documentosResult = await documentosResponse.json();
                 const tiposResult = await tiposResponse.json();
 
-                if (eventosResult.success) {
-                    eventosData = eventosResult.data;
-                    renderEventosTable();
+                if (documentosResult.success) {
+                    documentosData = documentosResult.data;
+                    renderDocumentosTable();
                 }
 
                 if (tiposResult.success) {
-                    tiposEvento = tiposResult.data;
+                    tiposDocumento = tiposResult.data;
                 }
             } catch (error) {
-                console.error('Error cargando eventos:', error);
-                document.getElementById('eventosTableBody').innerHTML = 
-                    '<tr><td colspan="7" class="text-center text-danger">Error cargando eventos</td></tr>';
+                console.error('Error cargando documentos:', error);
+                document.getElementById('documentosTableBody').innerHTML = 
+                    '<tr><td colspan="6" class="text-center text-danger">Error cargando documentos</td></tr>';
             }
         }
 
-        function renderEventosTable() {
-            const tbody = document.getElementById('eventosTableBody');
-            
-            if (eventosData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No hay eventos registrados</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = eventosData.map(evento => {
-                const fechaInicio = new Date(evento.fecha_inicio).toLocaleDateString();
-                const fechaFin = evento.fecha_fin ? new Date(evento.fecha_fin).toLocaleDateString() : 'N/A';
-                const tipoEvento = tiposEvento.find(t => t.id === evento.tipo_evento_id)?.nombre || 'N/A';
-                const estado = evento.visible ? 
-                    '<span class="badge bg-success">Visible</span>' : 
-                    '<span class="badge bg-secondary">Oculto</span>';
-
-                return `
-                    <tr>
-                        <td>${evento.titulo}</td>
-                        <td>${fechaInicio}</td>
-                        <td>${fechaFin}</td>
-                        <td>${evento.ubicacion || 'N/A'}</td>
-                        <td>${tipoEvento}</td>
-                        <td>${estado}</td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-primary" onclick="editEvento(${evento.id})">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="deleteEvento(${evento.id})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                            <a href="${evento.link_google_cal}" target="_blank" class="btn btn-sm btn-outline-info">
-                                <i class="fas fa-calendar-plus"></i>
-                            </a>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
+        // ==================== DOCUMENTOS ====================
+        
+        function viewDocumentos() {
+            hideAllSections();
+            document.getElementById('documentosSection').classList.remove('section-hidden');
+            loadDocumentos();
         }
 
-        function showEventForm(eventoId = null) {
-            const isEdit = eventoId !== null;
-            const evento = isEdit ? eventosData.find(e => e.id === eventoId) : null;
-            
-            const modalTitle = isEdit ? 'Editar Evento' : 'Nuevo Evento';
-            const submitText = isEdit ? 'Actualizar' : 'Crear';
+        let documentosData = [];
+        let tiposDocumento = [];
+
+        async function loadDocumentos() {
             
             const form = `
                 <form id="eventoForm">
@@ -2778,12 +2700,101 @@
                 startAutoRefresh();
             }, 2000);
         });
+
+        // ==================== FUNCIONES DE UTILIDAD ====================
         
-        // Función para ver eventos
-        async function viewEventos() {
+        function formatearFecha(fecha) {
+            return fecha.toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        async function logout() {
             try {
-                const response = await fetch('/api/eventos');
-                const data = await response.json();
+                const response = await fetch('/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    localStorage.clear();
+                    window.location.href = 'admin-login.html';
+                }
+            } catch (error) {
+                console.error('Error durante logout:', error);
+                localStorage.clear();
+                window.location.href = 'admin-login.html';
+            }
+        }
+        
+        // Auto-refresh del dashboard cada 5 minutos
+        let autoRefreshInterval;
+        
+        function startAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+            
+            autoRefreshInterval = setInterval(() => {
+                if (document.getElementById('dashboardSection') && 
+                    !document.getElementById('dashboardSection').classList.contains('section-hidden')) {
+                    loadDashboard();
+                }
+            }, 300000); // 5 minutos
+        }
+        
+        // Funcionalidad de ordenamiento de tablas
+        let currentSort = { column: null, direction: 'asc' };
+        
+        function initTableSorting() {
+            const headers = document.querySelectorAll('th[data-sort]');
+            headers.forEach(header => {
+                header.addEventListener('click', () => {
+                    const column = header.getAttribute('data-sort');
+                    sortTable(column);
+                });
+                header.style.cursor = 'pointer';
+            });
+        }
+        
+        function sortTable(column) {
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'asc';
+            }
+            
+            // Aplicar ordenamiento según la tabla activa
+            if (!document.getElementById('guardiasSection').classList.contains('section-hidden')) {
+                // Lógica de ordenamiento para guardias
+                guardias.sort((a, b) => {
+                    let valueA = a[column];
+                    let valueB = b[column];
+                    
+                    if (typeof valueA === 'string') {
+                        valueA = valueA.toLowerCase();
+                        valueB = valueB.toLowerCase();
+                    }
+                    
+                    if (currentSort.direction === 'asc') {
+                        return valueA > valueB ? 1 : -1;
+                    } else {
+                        return valueA < valueB ? 1 : -1;
+                    }
+                });
+                renderGuardiasTable();
+            }
+            // Agregar lógica similar para otras tablas...
+        }
+
+    </script>
+</body>
+</html>
                 
                 if (data.success) {
                     displayEventos(data.data);

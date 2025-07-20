@@ -135,14 +135,6 @@ try {
   const initRoutes = require('./routes/init.routes');
   console.log('✅ init.routes importado');
   
-  console.log('📦 Importando eventos.routes...');
-  const eventosRoutes = require('./routes/eventos.routes');
-  console.log('✅ eventos.routes importado');
-  
-  console.log('📦 Importando documentos_comunitarios.routes...');
-  const documentosRoutes = require('./routes/documentos-simple.routes');
-  console.log('✅ documentos_comunitarios.routes importado (usando versión simple temporal)');
-  
   console.log('✅ Todas las rutas importadas correctamente');
 
   // Configurar rutas EN EL ORDEN CORRECTO
@@ -152,8 +144,6 @@ try {
   app.use('/api/checkins', publicRoutes); // Para /api/checkins/public
   app.use('/api/admin', adminRoutes);
   app.use('/api/init', initRoutes);
-  app.use('/api/eventos', eventosRoutes);
-  app.use('/api/documentos_comunitarios', documentosRoutes);
   app.use('/api', publicRoutes); // Para /api/plazas - DEBE IR AL FINAL
 
   console.log('✅ Rutas configuradas:');
@@ -162,8 +152,6 @@ try {
   console.log('  - /api/checkins (public.routes.js)');
   console.log('  - /api/admin (admin.routes.js)');
   console.log('  - /api/init (init.routes.js)');
-  console.log('  - /api/eventos (eventos.routes.js)');
-  console.log('  - /api/documentos_comunitarios (documentos_comunitarios.routes.js)');
   console.log('  - /api (public.routes.js) - CATCH-ALL al final');
 
   console.log('✅ Rutas configuradas correctamente');
@@ -193,8 +181,6 @@ try {
     app.use('/api', publicRoutes); // DEBE IR AL FINAL para no interceptar otras rutas
     
     console.log('✅ Rutas básicas configuradas como fallback');
-    console.log('⚠️  RUTAS DE EVENTOS Y DOCUMENTOS NO DISPONIBLES');
-    console.log('⚠️  Para habilitar eventos/documentos, corregir el error arriba');
   } catch (fallbackError) {
     console.error('❌ Error crítico cargando rutas básicas:', fallbackError.message);
     console.error('❌ El servidor no puede continuar sin rutas básicas');
