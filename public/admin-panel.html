@@ -2725,22 +2725,32 @@
         
         // Verificar autenticación al cargar la página
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Inicializando admin panel...');
+            console.log('=== INICIANDO ADMIN PANEL ===');
+            console.log('URL actual:', window.location.href);
+            console.log('localStorage disponible:', typeof(Storage) !== "undefined");
             
             const token = localStorage.getItem('adminToken');
-            console.log('Token encontrado:', token ? 'Sí' : 'No');
+            console.log('Token encontrado:', token ? `Sí (${token.substring(0, 20)}...)` : 'No');
+            console.log('Longitud del token:', token ? token.length : 0);
             
             if (!token) {
-                console.log('No hay token, redirigiendo al login');
-                window.location.href = '/admin-login.html';
+                console.log('❌ No hay token, redirigiendo al login en 1 segundo...');
+                setTimeout(() => {
+                    window.location.href = '/admin-login.html';
+                }, 1000);
                 return;
             }
 
-            console.log('Token existe, cargando dashboard...');
+            console.log('✅ Token existe, cargando dashboard...');
             
             // Por ahora, cargar dashboard sin verificación del servidor
             // para evitar el loop
-            loadDashboardStats();
+            try {
+                loadDashboardStats();
+                console.log('Dashboard cargado exitosamente');
+            } catch (error) {
+                console.error('Error cargando dashboard:', error);
+            }
         });
     </script>
 </body>
