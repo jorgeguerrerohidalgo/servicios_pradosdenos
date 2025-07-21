@@ -125,13 +125,13 @@ router.post('/login',
       );
       
       console.log('🔍 ADMIN_USERS SEARCH RESULT:', {
-        found: adminResult.length > 0,
-        count: adminResult.length,
+        found: adminResult.rows.length > 0,
+        count: adminResult.rows.length,
         query: 'SELECT *, password_hash as password FROM admin_users WHERE email = $1 AND activo = true',
         params: [email]
       });
       
-      if (adminResult.length === 0) {
+      if (adminResult.rows.length === 0) {
         console.log('❌ ADMIN USER NOT FOUND');
         await logSecurityEvent(ip, 'LOGIN_FAILED', {
           email,
@@ -143,7 +143,7 @@ router.post('/login',
         return res.status(401).json({ error: 'Credenciales inválidas' });
       }
       
-      const foundUser = adminResult[0];
+      const foundUser = adminResult.rows[0];
       const userType = 'admin';
       console.log('✅ ADMIN USER FOUND:', {
         id: foundUser.id,

@@ -17,14 +17,20 @@ router.post('/login', async (req, res) => {
         console.log('🔍 Searching for user:', loginField);
         
         // Buscar en admin_users primero
+        console.log('🔍 Query: SELECT * FROM admin_users WHERE email = $1 AND activo = true');
+        console.log('🔍 Params:', [loginField]);
         let result = await db.query('SELECT * FROM admin_users WHERE email = $1 AND activo = true', [loginField]);
+        console.log('🔍 Admin_users result:', { rowCount: result.rows.length, rows: result.rows });
         let userType = 'admin';
         let passwordField = 'password_hash';
         
         if (result.rows.length === 0) {
             // Buscar en guardias
             console.log('🔍 User not found in admin_users, trying guardias...');
+            console.log('🔍 Query: SELECT * FROM guardias WHERE email = $1 AND activo = true');
+            console.log('🔍 Params:', [loginField]);
             result = await db.query('SELECT * FROM guardias WHERE email = $1 AND activo = true', [loginField]);
+            console.log('🔍 Guardias result:', { rowCount: result.rows.length, rows: result.rows });
             userType = 'guardia';
             passwordField = 'password';
         }
@@ -39,20 +45,35 @@ router.post('/login', async (req, res) => {
         
         // Verificar contraseña
         const storedPassword = user[passwordField];
+        console.log('🔍 Password verification:', {
+            passwordField: passwordField,
+            hasStoredPassword: !!storedPassword,
+            storedPasswordType: typeof storedPassword,
+            storedPasswordLength: storedPassword ? storedPassword.length : 0,
+            receivedPasswordLength: password.length
+        });
         let passwordMatch = false;
         
         if (storedPassword) {
             // Intentar bcrypt primero
             try {
+                console.log('🔍 Trying bcrypt comparison...');
                 passwordMatch = await bcrypt.compare(password, storedPassword);
+                console.log('🔍 Bcrypt result:', passwordMatch);
                 if (!passwordMatch) {
                     // Si bcrypt falla, intentar comparación directa
+                    console.log('🔍 Trying direct comparison...');
                     passwordMatch = (storedPassword === password);
+                    console.log('🔍 Direct comparison result:', passwordMatch);
                 }
             } catch (error) {
+                console.log('🔍 Bcrypt failed, trying direct comparison...', error.message);
                 // Si bcrypt falla, usar comparación directa
                 passwordMatch = (storedPassword === password);
+                console.log('🔍 Direct comparison result:', passwordMatch);
             }
+        } else {
+            console.log('❌ No stored password found');
         }
         
         if (!passwordMatch) {
