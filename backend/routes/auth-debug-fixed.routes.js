@@ -75,7 +75,7 @@ router.post('/login', async (req, res) => {
                         console.log('✅ PASSWORD MATCH (bcrypt)');
                     } else {
                         console.log('❌ PASSWORD MISMATCH (both plain and bcrypt failed)');
-                        console.log('🔍 Expected (first 10 chars):', foundUser.password.substring(0, 10));
+                        console.log('🔍 Expected (first 10 chars):', foundUser.password ? foundUser.password.substring(0, 10) : 'null');
                         console.log('🔍 Received:', password);
                     }
                 } catch (bcryptError) {
@@ -89,7 +89,7 @@ router.post('/login', async (req, res) => {
         
         if (passwordMatch) {
             // Crear sesión
-            const userName = userType === 'guardia' ? foundUser.nombre : `${foundUser.nombre} ${foundUser.apellido_paterno}`;
+            const userName = userType === 'guardia' ? foundUser.nombre : `${foundUser.nombre || ''} ${foundUser.apellido_paterno || ''}`.trim();
             
             req.session.guardia = {
                 id: foundUser.id,
