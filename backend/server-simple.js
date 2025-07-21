@@ -49,7 +49,7 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 try {
   console.log('📦 Cargando rutas básicas...');
   
-  const authRoutes = require('./routes/auth-debug-fixed.routes');
+  const authRoutes = require('./routes/auth-simple-working.routes');
   const checkinRoutes = require('./routes/checkin.routes');
   const publicRoutes = require('./routes/public.routes');
   const adminRoutes = require('./routes/admin.routes');

@@ -35,7 +35,7 @@ router.post('/login', async (req, res) => {
         let userType = 'admin';
         
         try {
-            userResult = await db.query('SELECT *, password_hash as password FROM admin_users WHERE email = $1 AND activo = true', [loginField]);
+            userResult = await db.query('SELECT *, password_hash as password FROM admin_users WHERE email = $1 AND (activo = true OR activo = \'true\')', [loginField]);
             console.log('🔍 Admin query result:', { success: true, rowCount: userResult?.rows?.length || 0 });
         } catch (dbError) {
             console.error('❌ Database error in admin_users query:', dbError.message);
@@ -45,7 +45,7 @@ router.post('/login', async (req, res) => {
         if (!userResult || !userResult.rows || userResult.rows.length === 0) {
             console.log('🔍 Not found in admin_users, searching in guardias...');
             try {
-                userResult = await db.query('SELECT *, password as password FROM guardias WHERE email = $1 AND activo = true', [loginField]);
+                userResult = await db.query('SELECT *, password as password FROM guardias WHERE email = $1 AND (activo = true OR activo = \'true\')', [loginField]);
                 userType = 'guardia';
                 console.log('🔍 Guardia query result:', { success: true, rowCount: userResult?.rows?.length || 0 });
             } catch (dbError) {

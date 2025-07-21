@@ -115,9 +115,9 @@ try {
   console.log('📦 Importando rutas...');
   
   // Verificar que los archivos existen antes de importar
-  console.log('📦 Importando auth-debug-fixed.routes...');
-  const authRoutes = require('./routes/auth-debug-fixed.routes');
-  console.log('✅ auth-debug-fixed.routes importado');
+  console.log('📦 Importando auth-simple-working.routes...');
+  const authRoutes = require('./routes/auth-simple-working.routes');
+  console.log('✅ auth-simple-working.routes importado');
   
   console.log('📦 Importando checkin.routes...');
   const checkinRoutes = require('./routes/checkin.routes');
@@ -157,7 +157,7 @@ try {
   app.use('/api', publicRoutes); // Para /api/plazas - DEBE IR AL FINAL
 
   console.log('✅ Rutas configuradas:');
-  console.log('  - /api/auth (auth-debug-fixed.routes.js)');
+  console.log('  - /api/auth (auth-simple-working.routes.js)');
   console.log('  - /api/checkin (checkin.routes.js)');
   console.log('  - /api/checkins (public.routes.js)');
   console.log('  - /api/admin (admin.routes.js)');
