@@ -303,6 +303,38 @@
     </div>
 
     <script>
+        // ==================== UTILIDADES DE AUTENTICACIÓN ====================
+        
+        // Función universal para hacer requests autenticados con sesiones
+        async function authenticatedFetch(url, options = {}) {
+            const defaultOptions = {
+                method: 'GET',
+                credentials: 'include', // Importante para sesiones
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            };
+            
+            const finalOptions = { ...defaultOptions, ...options };
+            
+            try {
+                const response = await fetch(url, finalOptions);
+                
+                // Si recibimos 401, la sesión expiró
+                if (response.status === 401) {
+                    console.log('🔒 Sesión expirada, redirigiendo al login...');
+                    window.location.href = '/admin-login.html';
+                    return null;
+                }
+                
+                return response;
+            } catch (error) {
+                console.error('Error en request autenticado:', error);
+                throw error;
+            }
+        }
+
         // ==================== VARIABLES GLOBALES ====================
         let tiposEventoGlobal = [];
         let eventosGlobal = [];
@@ -403,12 +435,8 @@
 
         async function loadEventos() {
             try {
-                const token = localStorage.getItem('adminToken');
-                if (!token) return;
-
-                const response = await fetch('/api/eventos/admin/all', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                const response = await authenticatedFetch('/api/eventos/admin/all');
+                if (!response) return; // Sesión expirada, ya redirigió
 
                 if (response.ok) {
                     const data = await response.json();
