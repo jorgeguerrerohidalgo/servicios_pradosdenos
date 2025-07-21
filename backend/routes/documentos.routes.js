@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../utils/db');
-const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { requireAuth, requireAdmin, requireAuthAdmin } = require('../middleware/sessionAuth');
 
 // ==================== DOCUMENTOS COMUNITARIOS ====================
 
@@ -173,7 +173,7 @@ router.post('/download/:id', async (req, res) => {
 // ==================== RUTAS ADMINISTRATIVAS ====================
 
 // GET /api/documentos/admin/all - Obtener todos los documentos (admin)
-router.get('/admin/all', authenticateToken, async (req, res) => {
+router.get('/admin/all', requireAuthAdmin, async (req, res) => {
     try {
         const result = await pool.query(`
             SELECT 

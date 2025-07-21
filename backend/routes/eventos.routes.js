@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../utils/db');
-const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { query } = require('../utils/db');
+const { requireAuth, requireAdmin, requireAuthAdmin } = require('../middleware/sessionAuth');
 
 // ==================== EVENTOS VECINALES ====================
 
@@ -248,7 +248,7 @@ router.delete('/desinscribir/:id', authenticateToken, requireAdmin, async (req, 
 // ==================== RUTAS ADMINISTRATIVAS ====================
 
 // GET /api/eventos/admin/all - Obtener todos los eventos (admin)
-router.get('/admin/all', authenticateToken, async (req, res) => {
+router.get('/admin/all', requireAuthAdmin, async (req, res) => {
     try {
         const result = await pool.query(`
             SELECT 
