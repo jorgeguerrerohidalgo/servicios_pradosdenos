@@ -29,7 +29,7 @@ const authenticateToken = async (req, res, next) => {
         const adminResult = await db.query(`
             SELECT id, nombre, apellido_paterno, apellido_materno, email, activo, plaza_id
             FROM admin_users 
-            WHERE id = $1 AND activo = TRUE
+            WHERE id = $1 AND (activo = TRUE OR activo = 'true')
         `, [decoded.userId]);
 
         console.log('🔍 Admin query result:', adminResult.rows.length > 0 ? 'User found' : 'User not found');
