@@ -138,7 +138,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/eventos/inscribir/:id - Inscribirse a un evento (requiere autenticación)
-router.post('/inscribir/:id', authenticateToken, requireAdmin, async (req, res) => {
+router.post('/inscribir/:id', requireAuthAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const { comentarios } = req.body;
@@ -216,7 +216,7 @@ router.post('/inscribir/:id', authenticateToken, requireAdmin, async (req, res) 
 });
 
 // DELETE /api/eventos/desinscribir/:id - Cancelar inscripción a evento
-router.delete('/desinscribir/:id', authenticateToken, requireAdmin, async (req, res) => {
+router.delete('/desinscribir/:id', requireAuthAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         
@@ -291,7 +291,7 @@ router.get('/admin/all', requireAuthAdmin, async (req, res) => {
 });
 
 // POST /api/eventos/admin - Crear evento (admin)
-router.post('/admin', authenticateToken, requireAdmin, async (req, res) => {
+router.post('/admin', requireAuthAdmin, async (req, res) => {
     try {
         const {
             titulo,
@@ -336,7 +336,7 @@ router.post('/admin', authenticateToken, requireAdmin, async (req, res) => {
 });
 
 // PUT /api/eventos/admin/:id - Actualizar evento (admin)
-router.put('/admin/:id', authenticateToken, requireAdmin, async (req, res) => {
+router.put('/admin/:id', requireAuthAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const {
@@ -391,7 +391,7 @@ router.put('/admin/:id', authenticateToken, requireAdmin, async (req, res) => {
 });
 
 // DELETE /api/eventos/admin/:id - Eliminar evento (admin)
-router.delete('/admin/:id', authenticateToken, requireAdmin, async (req, res) => {
+router.delete('/admin/:id', requireAuthAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         
@@ -421,7 +421,7 @@ router.delete('/admin/:id', authenticateToken, requireAdmin, async (req, res) =>
 });
 
 // GET /api/eventos/admin/:id/inscripciones - Obtener inscripciones de un evento
-router.get('/admin/:id/inscripciones', authenticateToken, requireAdmin, async (req, res) => {
+router.get('/admin/:id/inscripciones', requireAuthAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         

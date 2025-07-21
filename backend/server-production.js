@@ -181,7 +181,7 @@ try {
   // Cargar rutas básicas como fallback
   try {
     console.log('🔄 Cargando rutas básicas como fallback...');
-    const authRoutes = require('./routes/auth.routes');
+    const authRoutes = require('./routes/auth-simple-working.routes');
     const checkinRoutes = require('./routes/checkin.routes');
     const publicRoutes = require('./routes/public.routes');
     const adminRoutes = require('./routes/admin.routes');

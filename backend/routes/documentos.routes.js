@@ -215,7 +215,7 @@ router.get('/admin/all', requireAuthAdmin, async (req, res) => {
 });
 
 // POST /api/documentos/admin - Crear documento (admin)
-router.post('/admin', authenticateToken, requireAdmin, async (req, res) => {
+router.post('/admin', requireAuthAdmin, async (req, res) => {
     try {
         const {
             nombre,
@@ -259,7 +259,7 @@ router.post('/admin', authenticateToken, requireAdmin, async (req, res) => {
 });
 
 // PUT /api/documentos/admin/:id - Actualizar documento (admin)
-router.put('/admin/:id', authenticateToken, requireAdmin, async (req, res) => {
+router.put('/admin/:id', requireAuthAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const {
@@ -313,7 +313,7 @@ router.put('/admin/:id', authenticateToken, requireAdmin, async (req, res) => {
 });
 
 // DELETE /api/documentos/admin/:id - Eliminar documento (admin)
-router.delete('/admin/:id', authenticateToken, requireAdmin, async (req, res) => {
+router.delete('/admin/:id', requireAuthAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         
@@ -343,7 +343,7 @@ router.delete('/admin/:id', authenticateToken, requireAdmin, async (req, res) =>
 });
 
 // GET /api/documentos/admin/:id/descargas - Obtener estadísticas de descarga
-router.get('/admin/:id/descargas', authenticateToken, requireAdmin, async (req, res) => {
+router.get('/admin/:id/descargas', requireAuthAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         
