@@ -6,16 +6,24 @@ const db = require('../utils/db');
  */
 const authenticateToken = async (req, res, next) => {
     try {
-        const token = req.header('Authorization')?.replace('Bearer ', '');
+        const authHeader = req.header('Authorization');
+        console.log('🔍 Auth header received:', authHeader ? authHeader.substring(0, 50) + '...' : 'None');
+        
+        const token = authHeader?.replace('Bearer ', '');
         
         if (!token) {
+            console.log('❌ No token provided');
             return res.status(401).json({ 
                 success: false, 
                 message: 'Token de acceso requerido' 
             });
         }
 
+        console.log('🔍 Token extracted:', token.substring(0, 50) + '...');
+        console.log('🔍 JWT_SECRET configured:', !!process.env.JWT_SECRET);
+
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        console.log('✅ Token decoded successfully:', { userId: decoded.userId, email: decoded.email });
         
         // Verificar que el admin existe y está activo
         const adminResult = await db.query(`
@@ -24,7 +32,10 @@ const authenticateToken = async (req, res, next) => {
             WHERE id = $1 AND activo = TRUE
         `, [decoded.userId]);
 
+        console.log('🔍 Admin query result:', adminResult.rows.length > 0 ? 'User found' : 'User not found');
+
         if (adminResult.rows.length === 0) {
+            console.log('❌ Admin user not found or inactive');
             return res.status(401).json({ 
                 success: false, 
                 message: 'Usuario administrativo no encontrado o inactivo' 

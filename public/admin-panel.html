@@ -1130,6 +1130,21 @@
             if (token) {
                 console.log('🔍 Token completo (primeros 50 chars):', token.substring(0, 50) + '...');
                 console.log('🔍 Token length:', token.length);
+                
+                // Verificar si es un token temporal inválido
+                if (token.startsWith('temp_admin_token_')) {
+                    console.log('❌ Token temporal detectado, requiere login real');
+                    localStorage.removeItem('adminToken');
+                    Swal.fire({
+                        title: 'Token Temporal Detectado',
+                        text: 'Debe iniciar sesión nuevamente para obtener credenciales válidas',
+                        icon: 'warning',
+                        confirmButtonText: 'Ir al Login'
+                    }).then(() => {
+                        window.location.href = '/admin-login.html';
+                    });
+                    return;
+                }
             }
             
             if (!token) {
@@ -1218,6 +1233,37 @@
                 return true;
             } else {
                 console.log('❌ Algunos tests fallaron. Revisar funcionalidad.');
+                return false;
+            }
+        };
+
+        // Función para verificar token
+        window.testToken = async function() {
+            const token = localStorage.getItem('adminToken');
+            if (!token) {
+                console.log('❌ No hay token para testear');
+                return false;
+            }
+            
+            console.log('🧪 Testing token validity...');
+            try {
+                const response = await fetch('/api/admin/guardias', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                console.log('🔍 Response status:', response.status);
+                const data = await response.text();
+                console.log('🔍 Response data:', data);
+                
+                if (response.ok) {
+                    console.log('✅ Token es válido');
+                    return true;
+                } else {
+                    console.log('❌ Token inválido:', data);
+                    return false;
+                }
+            } catch (error) {
+                console.log('❌ Error testing token:', error);
                 return false;
             }
         };

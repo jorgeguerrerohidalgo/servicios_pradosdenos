@@ -127,15 +127,14 @@
         if (response.ok) {
           console.log('Login exitoso, procesando respuesta...');
           
-          // Login exitoso - guardar token si existe, o crear uno temporal
+          // Login exitoso - SOLO guardar token si existe del servidor
           if (result.token) {
             localStorage.setItem('adminToken', result.token);
-            console.log('Token del servidor guardado:', result.token);
+            console.log('✅ Token JWT del servidor guardado:', result.token.substring(0, 50) + '...');
           } else {
-            // Si no hay token del servidor, crear uno temporal para testing
-            const tempToken = 'temp_admin_token_' + Date.now();
-            localStorage.setItem('adminToken', tempToken);
-            console.log('Token temporal creado:', tempToken);
+            console.log('❌ No se recibió token del servidor:', result);
+            alert('Error: No se recibió token de autenticación del servidor');
+            return;
           }
           
           // Verificar que se guardó correctamente
