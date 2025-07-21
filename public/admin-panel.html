@@ -567,17 +567,15 @@
 
         async function loadDocumentos() {
             try {
-                const token = localStorage.getItem('adminToken');
-                if (!token) return;
-
-                const response = await fetch('/api/documentos/admin/all', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                console.log('📄 Cargando documentos con sesiones...');
+                const response = await authenticatedFetch('/api/documentos/admin/all');
+                if (!response) return; // Sesión expirada, ya redirigió
 
                 if (response.ok) {
                     const data = await response.json();
                     documentosGlobal = data.data || [];
                     renderDocumentosTable();
+                    console.log('✅ Documentos cargados:', documentosGlobal.length);
                 } else {
                     console.error('Error al cargar documentos:', await response.text());
                 }
@@ -684,17 +682,15 @@
         // ==================== FUNCIONES DE GUARDIAS ====================
         async function loadGuardias() {
             try {
-                const token = localStorage.getItem('adminToken');
-                if (!token) return;
-
-                const response = await fetch('/api/admin/guardias', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                console.log('👥 Cargando guardias con sesiones...');
+                const response = await authenticatedFetch('/api/admin/guardias');
+                if (!response) return; // Sesión expirada, ya redirigió
 
                 if (response.ok) {
                     const data = await response.json();
                     guardiasGlobal = data.guardias || [];
                     renderGuardiasTable();
+                    console.log('✅ Guardias cargados:', guardiasGlobal.length);
                 } else {
                     console.error('Error al cargar guardias:', await response.text());
                 }
@@ -790,17 +786,15 @@
         // ==================== FUNCIONES DE PLAZAS ====================
         async function loadPlazas() {
             try {
-                const token = localStorage.getItem('adminToken');
-                if (!token) return;
-
-                const response = await fetch('/api/admin/plazas', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                console.log('🗺️ Cargando plazas con sesiones...');
+                const response = await authenticatedFetch('/api/admin/plazas');
+                if (!response) return; // Sesión expirada, ya redirigió
 
                 if (response.ok) {
                     const data = await response.json();
                     plazasGlobal = data.plazas || [];
                     renderPlazasTable();
+                    console.log('✅ Plazas cargadas:', plazasGlobal.length);
                 } else {
                     console.error('Error al cargar plazas:', await response.text());
                 }
@@ -907,17 +901,15 @@
         // ==================== FUNCIONES DE ADMINISTRADORES ====================
         async function loadAdmins() {
             try {
-                const token = localStorage.getItem('adminToken');
-                if (!token) return;
-
-                const response = await fetch('/api/admin/admins', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                console.log('👑 Cargando administradores con sesiones...');
+                const response = await authenticatedFetch('/api/admin/admins');
+                if (!response) return; // Sesión expirada, ya redirigió
 
                 if (response.ok) {
                     const data = await response.json();
                     adminsGlobal = data.admins || [];
                     renderAdminsTable();
+                    console.log('✅ Administradores cargados:', adminsGlobal.length);
                 } else {
                     console.error('Error al cargar administradores:', await response.text());
                 }
@@ -1028,16 +1020,14 @@
         // ==================== FUNCIONES DE REPORTES ====================
         async function loadReportes() {
             try {
-                const token = localStorage.getItem('adminToken');
-                if (!token) return;
-
-                const response = await fetch('/api/admin/reports/recent', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
+                console.log('📊 Cargando reportes con sesiones...');
+                const response = await authenticatedFetch('/api/admin/reports/recent');
+                if (!response) return; // Sesión expirada, ya redirigió
 
                 if (response.ok) {
                     const data = await response.json();
                     renderReportesTable(data.reports || []);
+                    console.log('✅ Reportes cargados:', data.reports?.length || 0);
                 } else {
                     console.error('Error al cargar reportes:', await response.text());
                 }
@@ -1085,42 +1075,38 @@
         async function loadDashboardStats() {
             console.log('📊 Cargando estadísticas del dashboard...');
             try {
-                const token = localStorage.getItem('adminToken');
-                if (!token) {
-                    console.log('❌ No hay token para cargar estadísticas');
-                    return;
-                }
+                console.log('🔄 Usando autenticación por sesiones...');
 
-                // Cargar estadísticas básicas
+                // Cargar estadísticas básicas con sesiones
                 const [eventosRes, documentosRes, plazasRes, guardiasRes] = await Promise.all([
-                    fetch('/api/eventos/admin/all', { headers: { 'Authorization': `Bearer ${token}` } }),
-                    fetch('/api/documentos/admin/all', { headers: { 'Authorization': `Bearer ${token}` } }),
-                    fetch('/api/admin/plazas', { headers: { 'Authorization': `Bearer ${token}` } }),
-                    fetch('/api/admin/guardias', { headers: { 'Authorization': `Bearer ${token}` } })
+                    authenticatedFetch('/api/eventos/admin/all'),
+                    authenticatedFetch('/api/documentos/admin/all'),
+                    authenticatedFetch('/api/admin/plazas'),
+                    authenticatedFetch('/api/admin/guardias')
                 ]);
 
-                if (eventosRes.ok) {
+                if (eventosRes && eventosRes.ok) {
                     const eventosData = await eventosRes.json();
                     const total = eventosData.data?.length || 0;
                     document.getElementById('totalEventos').textContent = total;
                     console.log('✅ Eventos cargados:', total);
                 }
 
-                if (documentosRes.ok) {
+                if (documentosRes && documentosRes.ok) {
                     const documentosData = await documentosRes.json();
                     const total = documentosData.data?.length || 0;
                     document.getElementById('totalDocumentos').textContent = total;
                     console.log('✅ Documentos cargados:', total);
                 }
 
-                if (plazasRes.ok) {
+                if (plazasRes && plazasRes.ok) {
                     const plazasData = await plazasRes.json();
                     const plazasActivas = plazasData.data?.filter(p => p.activo).length || 0;
                     document.getElementById('totalPlazas').textContent = plazasActivas;
                     console.log('✅ Plazas activas:', plazasActivas);
                 }
 
-                if (guardiasRes.ok) {
+                if (guardiasRes && guardiasRes.ok) {
                     const guardiasData = await guardiasRes.json();
                     const guardiasActivos = guardiasData.data?.filter(g => g.activo).length || 0;
                     document.getElementById('guardiasActivos').textContent = guardiasActivos;
@@ -1132,20 +1118,47 @@
             }
         }
 
-        function logout() {
-            Swal.fire({
-                title: '¿Cerrar sesión?',
-                text: 'Se cerrará la sesión de administrador',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Sí, cerrar sesión',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
+        async function logout() {
+            try {
+                console.log('🚪 Cerrando sesión...');
+                
+                const result = await Swal.fire({
+                    title: '¿Cerrar sesión?',
+                    text: 'Se cerrará la sesión de administrador',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, cerrar sesión',
+                    cancelButtonText: 'Cancelar'
+                });
+                
                 if (result.isConfirmed) {
-                    localStorage.removeItem('adminToken');
-                    window.location.href = '/admin-login.html';
+                    // Cerrar sesión en el servidor
+                    const response = await fetch('/api/auth/logout', {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+                    
+                    if (response.ok) {
+                        console.log('✅ Sesión cerrada correctamente');
+                        Swal.fire({
+                            title: 'Sesión Cerrada',
+                            text: 'Ha cerrado sesión exitosamente',
+                            icon: 'success',
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.href = '/admin-login.html';
+                        });
+                    } else {
+                        console.log('⚠️ Error al cerrar sesión, redirigiendo de todas formas');
+                        window.location.href = '/admin-login.html';
+                    }
                 }
-            });
+            } catch (error) {
+                console.error('Error al cerrar sesión:', error);
+                // Forzar redirección aunque haya error
+                window.location.href = '/admin-login.html';
+            }
         }
 
         // ==================== INICIALIZACIÓN ====================
@@ -1282,33 +1295,28 @@
             }
         };
 
-        // Función para verificar token
-        window.testToken = async function() {
-            const token = localStorage.getItem('adminToken');
-            if (!token) {
-                console.log('❌ No hay token para testear');
-                return false;
-            }
-            
-            console.log('🧪 Testing token validity...');
+        // Función para verificar sesión
+        window.testSession = async function() {
+            console.log('🧪 Testing session validity...');
             try {
-                const response = await fetch('/api/admin/guardias', {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                const response = await fetch('/api/auth/check', {
+                    method: 'GET',
+                    credentials: 'include'
                 });
                 
                 console.log('🔍 Response status:', response.status);
-                const data = await response.text();
+                const data = await response.json();
                 console.log('🔍 Response data:', data);
                 
-                if (response.ok) {
-                    console.log('✅ Token es válido');
+                if (response.ok && data.isAuthenticated) {
+                    console.log('✅ Sesión es válida');
                     return true;
                 } else {
-                    console.log('❌ Token inválido:', data);
+                    console.log('❌ Sesión inválida:', data);
                     return false;
                 }
             } catch (error) {
-                console.log('❌ Error testing token:', error);
+                console.log('❌ Error testing session:', error);
                 return false;
             }
         };
