@@ -133,43 +133,29 @@
         if (response.ok) {
           console.log('Login exitoso, procesando respuesta...');
           
-          // Login exitoso - SOLO guardar token si existe del servidor
-          if (result.token) {
-            localStorage.setItem('adminToken', result.token);
-            console.log('✅ Token JWT del servidor guardado:', result.token.substring(0, 50) + '...');
-          } else {
-            console.log('❌ No se recibió token del servidor. Objeto completo:', JSON.stringify(result, null, 2));
-            alert('Error: No se recibió token de autenticación del servidor');
-            return;
-          }
-          
-          // Verificar que se guardó correctamente
-          const tokenGuardado = localStorage.getItem('adminToken');
-          console.log('Token verificado en localStorage:', tokenGuardado ? 'Existe' : 'No existe');
-          
-          // Redirigir según el tipo de usuario
-          if (result.guardia && result.guardia.tipo === 'admin') {
-            console.log('Usuario es admin, redirigiendo...');
-            // Pequeño delay para evitar conflictos
-            setTimeout(() => {
+          // Sistema basado en SESIONES - no necesitamos token
+          if (result.message && result.guardia) {
+            console.log('✅ Login exitoso con sesión:', {
+              usuario: result.guardia.nombre,
+              email: result.guardia.email,
+              tipo: result.guardia.tipo
+            });
+            
+            // Opcional: guardar datos del usuario en localStorage para UI
+            localStorage.setItem('currentUser', JSON.stringify(result.guardia));
+            
+            // Redirigir según el tipo de usuario
+            if (result.guardia.tipo === 'admin') {
+              console.log('Redirigiendo a panel de administración...');
               window.location.href = '/admin-panel.html';
-            }, 100);
-          } else if (result.guardia) {
-            console.log('Usuario admin detectado:', result.guardia);
-            setTimeout(() => {
-              window.location.href = '/admin-panel.html';
-            }, 100);
-          } else {
-            console.log('No se detectó admin en respuesta, verificando token...');
-            if (result.token) {
-              console.log('Token presente, asumiendo admin válido');
-              setTimeout(() => {
-                window.location.href = '/admin-panel.html';
-              }, 100);
             } else {
-              console.log('Error: Sin token ni datos de admin');
-              alert('Error en la respuesta del servidor');
+              console.log('Redirigiendo a panel de guardia...');
+              window.location.href = '/guardia-panel.html';
             }
+          } else {
+            console.log('❌ Respuesta inesperada del servidor:', JSON.stringify(result, null, 2));
+            alert('Error: Respuesta inesperada del servidor');
+            return;
           }
         } else {
           // Error de login
