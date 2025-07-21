@@ -109,7 +109,7 @@
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
         
-        const response = await fetch(`${getApiUrl()}/api/auth/login`, {
+        const response = await fetch(`${getApiUrl()}/api/auth/admin-login`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json'
@@ -127,7 +127,7 @@
         console.log('  - result.token existe:', 'token' in result);
         console.log('  - result.token valor:', result.token);
         console.log('  - result.message:', result.message);
-        console.log('  - result.guardia:', result.guardia);
+        console.log('  - result.admin:', result.admin);
         console.log('  - Todas las propiedades:', Object.keys(result));
         
         if (response.ok) {
@@ -148,22 +148,28 @@
           console.log('Token verificado en localStorage:', tokenGuardado ? 'Existe' : 'No existe');
           
           // Redirigir según el tipo de usuario
-          if (result.guardia && result.guardia.tipo === 'admin') {
+          if (result.admin && result.admin.type === 'admin') {
             console.log('Usuario es admin, redirigiendo...');
             // Pequeño delay para evitar conflictos
             setTimeout(() => {
               window.location.href = '/admin-panel.html';
             }, 100);
-          } else if (result.guardia) {
-            console.log('Usuario no es admin:', result.guardia);
-            setTimeout(() => {
-              window.location.href = '/guardia-checkin.html';
-            }, 100);
-          } else {
-            console.log('No se detectó tipo de usuario, asumiendo admin para testing');
+          } else if (result.admin) {
+            console.log('Usuario admin detectado:', result.admin);
             setTimeout(() => {
               window.location.href = '/admin-panel.html';
             }, 100);
+          } else {
+            console.log('No se detectó admin en respuesta, verificando token...');
+            if (result.token) {
+              console.log('Token presente, asumiendo admin válido');
+              setTimeout(() => {
+                window.location.href = '/admin-panel.html';
+              }, 100);
+            } else {
+              console.log('Error: Sin token ni datos de admin');
+              alert('Error en la respuesta del servidor');
+            }
           }
         } else {
           // Error de login
