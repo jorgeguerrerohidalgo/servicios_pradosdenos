@@ -115,20 +115,27 @@ router.post('/login',
     const userAgent = req.get('User-Agent');
     
     try {
-      // Primero buscar en guardias
-      let user = await db.query('SELECT * FROM guardias WHERE email = $1 AND activo = true', [email]);
-      let userType = 'guardia';
+      // BUSCAR SOLO EN ADMIN_USERS para admin-login
+      console.log('🔍 ADMIN LOGIN: Searching ONLY in admin_users table...');
+      console.log('🔍 EMAIL:', email);
       
-      // Si no se encuentra, buscar en admin_users
-      if (user.length === 0) {
-        user = await db.query('SELECT *, password_hash as password FROM admin_users WHERE email = $1', [email]);
-        userType = 'admin';
-      }
+      const adminResult = await db.query(
+        'SELECT *, password_hash as password FROM admin_users WHERE email = $1 AND activo = true', 
+        [email]
+      );
       
-      if (user.length === 0) {
+      console.log('🔍 ADMIN_USERS SEARCH RESULT:', {
+        found: adminResult.length > 0,
+        count: adminResult.length,
+        query: 'SELECT *, password_hash as password FROM admin_users WHERE email = $1 AND activo = true',
+        params: [email]
+      });
+      
+      if (adminResult.length === 0) {
+        console.log('❌ ADMIN USER NOT FOUND');
         await logSecurityEvent(ip, 'LOGIN_FAILED', {
           email,
-          reason: 'USER_NOT_FOUND',
+          reason: 'ADMIN_USER_NOT_FOUND',
           userAgent,
           timestamp: new Date().toISOString()
         });
@@ -136,24 +143,22 @@ router.post('/login',
         return res.status(401).json({ error: 'Credenciales inválidas' });
       }
       
-      const foundUser = user[0];
-      
-      // Verificar si el usuario está activo (solo para guardias)
-      if (userType === 'guardia' && !foundUser.activo) {
-        await logSecurityEvent(ip, 'LOGIN_FAILED', {
-          email,
-          reason: 'USER_INACTIVE',
-          userId: foundUser.id,
-          userAgent
-        });
-        
-        return res.status(401).json({ error: 'Usuario inactivo' });
-      }
+      const foundUser = adminResult[0];
+      const userType = 'admin';
+      console.log('✅ ADMIN USER FOUND:', {
+        id: foundUser.id,
+        email: foundUser.email,
+        type: userType,
+        hasPassword: !!foundUser.password,
+        passwordInDB: foundUser.password ? foundUser.password.substring(0, 10) + '...' : 'NULL'
+      });
       
       // Verificar contraseña
+      console.log('🔍 Step 3: Verifying password...');
       let isValidPassword = false;
       
       if (!foundUser.password) {
+        console.log('❌ No password set for admin user');
         await logSecurityEvent(ip, 'LOGIN_FAILED', {
           email,
           reason: 'NO_PASSWORD_SET',
@@ -166,30 +171,29 @@ router.post('/login',
       
       if (foundUser.password.startsWith('$2b$')) {
         // Contraseña hasheada
+        console.log('🔍 Trying bcrypt comparison...');
         isValidPassword = await bcrypt.compare(password, foundUser.password);
       } else {
         // Contraseña en texto plano - MIGRAR AUTOMÁTICAMENTE
+        console.log('🔍 Trying plain text comparison...');
         isValidPassword = password === foundUser.password;
         
         if (isValidPassword) {
           // Hash automático de contraseña en texto plano
           const hashedPassword = await hashPassword(password);
-          
-          if (userType === 'guardia') {
-            await db.query('UPDATE guardias SET password = $1 WHERE id = $2', [hashedPassword, foundUser.id]);
-          } else {
-            await db.query('UPDATE admin_users SET password_hash = $1 WHERE id = $2', [hashedPassword, foundUser.id]);
-          }
+          await db.query('UPDATE admin_users SET password_hash = $1 WHERE id = $2', [hashedPassword, foundUser.id]);
           
           await logSecurityEvent(ip, 'PASSWORD_MIGRATED', {
             userId: foundUser.id,
-            userType,
+            userType: 'admin',
             userAgent
           });
           
-          console.log(`🔒 SECURITY: Contraseña migrada automáticamente para usuario ${foundUser.id} (${userType})`);
+          console.log(`🔒 SECURITY: Contraseña migrada automáticamente para admin ${foundUser.id}`);
         }
       }
+      
+      console.log('🔍 Password verification result:', isValidPassword ? 'VALID' : 'INVALID');
       
       if (!isValidPassword) {
         await logSecurityEvent(ip, 'LOGIN_FAILED', {
@@ -202,15 +206,14 @@ router.post('/login',
         return res.status(401).json({ error: 'Credenciales inválidas' });
       }
       
-      // Actualizar último login
-      if (userType === 'guardia') {
-        await db.query('UPDATE guardias SET last_login = CURRENT_TIMESTAMP WHERE id = $1', [foundUser.id]);
-      }
+      // Actualizar último login para admin
+      console.log('🔍 Step 4: Updating last login...');
+      // No actualizamos last_login para admin_users ya que no tiene esa columna
       
-      // Crear sesión segura (simplificada)
-      const userName = userType === 'guardia' ? foundUser.nombre : `${foundUser.nombre} ${foundUser.apellido_paterno}`;
+      // Crear sesión segura para ADMIN
+      const userName = `${foundUser.nombre} ${foundUser.apellido_paterno}`;
       
-      // Crear sesión sin regeneración para evitar problemas
+      console.log('🔍 Step 5: Creating session...');
       req.session.guardia = {
         id: foundUser.id,
         nombre: userName,
@@ -220,15 +223,17 @@ router.post('/login',
         ip: ip
       };
 
-      // Generar JWT token para admins
-      let token = null;
-      if (userType === 'admin') {
-        token = jwt.sign(
-          { userId: foundUser.id, email: foundUser.email, tipo: userType },
-          process.env.JWT_SECRET || 'default-secret-key',
-          { expiresIn: '8h' }
-        );
-      }
+      // Generar JWT token SIEMPRE para admin
+      console.log('🔍 Step 6: Generating JWT token for admin...');
+      const token = jwt.sign(
+        { userId: foundUser.id, email: foundUser.email, tipo: userType },
+        process.env.JWT_SECRET || 'default-secret-key',
+        { expiresIn: '8h' }
+      );
+      
+      console.log('✅ JWT token generated successfully');
+      console.log('🔍 Token preview:', token.substring(0, 50) + '...');
+      console.log('🔍 JWT_SECRET configured:', !!process.env.JWT_SECRET);
       
       // Forzar guardado de sesión
       req.session.save((err) => {
@@ -258,10 +263,15 @@ router.post('/login',
           }
         };
 
-        // Agregar token si es admin
-        if (token) {
-          response.token = token;
-        }
+        // Agregar token SIEMPRE para admin
+        console.log('🔍 Step 7: Adding token to response...');
+        console.log('✅ Adding token to response for admin user');
+        response.token = token;
+        
+        console.log('🔍 Response final:', { 
+          ...response, 
+          token: response.token ? response.token.substring(0, 50) + '...' : 'NO_TOKEN'
+        });
         
         res.json(response);
       });
