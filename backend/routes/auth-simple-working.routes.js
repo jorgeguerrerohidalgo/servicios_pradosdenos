@@ -29,7 +29,7 @@ router.post('/login', async (req, res) => {
         }
         
         // Buscar en admin_users primero
-        let result;
+        let userRows;
         let userType = 'admin';
         let passwordField = 'password_hash';
         
@@ -39,25 +39,25 @@ router.post('/login', async (req, res) => {
             console.log('🔍 Admin_users query successful - rows type:', typeof rows, 'length:', rows?.length);
             console.log('🔍 Admin_users result count:', rows?.length || 0);
             
-            // La función db.query ya devuelve rows directamente, no un objeto result
-            result = { rows: rows || [] };
+            // db.query ya devuelve rows directamente
+            userRows = rows || [];
             
             // Filtrar por activo después de obtener resultados
-            if (result.rows && result.rows.length > 0) {
-                const filteredRows = result.rows.filter(row => {
+            if (userRows && userRows.length > 0) {
+                const filteredRows = userRows.filter(row => {
                     const isActive = row.activo === true || row.activo === 'true' || row.activo === 1;
                     console.log(`🔍 User ${row.email} - activo: ${row.activo} (${typeof row.activo}) - isActive: ${isActive}`);
                     return isActive;
                 });
-                result.rows = filteredRows;
-                console.log('🔍 Admin_users active users count:', result.rows.length);
+                userRows = filteredRows;
+                console.log('🔍 Admin_users active users count:', userRows.length);
             }
         } catch (dbError) {
             console.error('❌ Database error in admin_users query:', dbError.message);
             throw new Error(`Database error: ${dbError.message}`);
         }
         
-        if (!result || !result.rows || result.rows.length === 0) {
+        if (!userRows || userRows.length === 0) {
             // Buscar en guardias
             console.log('🔍 User not found in admin_users, trying guardias...');
             try {
@@ -68,18 +68,18 @@ router.post('/login', async (req, res) => {
                 console.log('🔍 Guardias query successful - rows type:', typeof rows, 'length:', rows?.length);
                 console.log('🔍 Guardias result count:', rows?.length || 0);
                 
-                // La función db.query ya devuelve rows directamente
-                result = { rows: rows || [] };
+                // db.query ya devuelve rows directamente
+                userRows = rows || [];
                 
                 // Filtrar por activo después de obtener resultados
-                if (result.rows && result.rows.length > 0) {
-                    const filteredRows = result.rows.filter(row => {
+                if (userRows && userRows.length > 0) {
+                    const filteredRows = userRows.filter(row => {
                         const isActive = row.activo === true || row.activo === 'true' || row.activo === 1;
                         console.log(`🔍 Guardia ${row.email} - activo: ${row.activo} (${typeof row.activo}) - isActive: ${isActive}`);
                         return isActive;
                     });
-                    result.rows = filteredRows;
-                    console.log('🔍 Guardias active users count:', result.rows.length);
+                    userRows = filteredRows;
+                    console.log('🔍 Guardias active users count:', userRows.length);
                 }
             } catch (dbError) {
                 console.error('❌ Database error in guardias query:', dbError.message);
@@ -87,17 +87,16 @@ router.post('/login', async (req, res) => {
             }
         }
         
-        if (!result || !result.rows || result.rows.length === 0) {
+        if (!userRows || userRows.length === 0) {
             console.log('❌ User not found in any table for:', loginField);
             console.log('🔍 Final result status:', { 
-                hasResult: !!result, 
-                hasRows: !!(result && result.rows), 
-                rowCount: result?.rows?.length || 0 
+                hasUserRows: !!userRows, 
+                rowCount: userRows?.length || 0 
             });
             return res.status(401).json({ error: 'Credenciales inválidas' });
         }
         
-        const user = result.rows[0];
+        const user = userRows[0];
         console.log('✅ User found:', { 
             id: user.id, 
             email: user.email, 
