@@ -207,6 +207,86 @@ router.get('/debug-users/:email', async (req, res) => {
     }
 });
 
+// Ruta para probar login paso a paso
+router.post('/test-login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        console.log('🧪 TEST LOGIN - Email:', email);
+        
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email y contraseña requeridos' });
+        }
+        
+        // Step 1: Buscar usuario
+        const result = await db.query('SELECT * FROM admin_users WHERE email = $1', [email]);
+        console.log('🧪 Step 1 - Query result:', result.rows.length);
+        
+        if (result.rows.length === 0) {
+            return res.json({
+                step: 1,
+                success: false,
+                message: 'Usuario no encontrado',
+                email: email
+            });
+        }
+        
+        const user = result.rows[0];
+        console.log('🧪 Step 2 - User found:', { 
+            id: user.id, 
+            email: user.email, 
+            activo: user.activo,
+            activoType: typeof user.activo 
+        });
+        
+        // Step 2: Verificar activo
+        const isActive = user.activo === true || user.activo === 'true' || user.activo === 1;
+        console.log('🧪 Step 3 - Active check:', isActive);
+        
+        if (!isActive) {
+            return res.json({
+                step: 2,
+                success: false,
+                message: 'Usuario inactivo',
+                activo: user.activo,
+                activoType: typeof user.activo
+            });
+        }
+        
+        // Step 3: Verificar password
+        const storedHash = user.password_hash;
+        console.log('🧪 Step 4 - Has password hash:', !!storedHash);
+        
+        if (!storedHash) {
+            return res.json({
+                step: 3,
+                success: false,
+                message: 'No hay hash de contraseña almacenado'
+            });
+        }
+        
+        const passwordMatch = await bcrypt.compare(password, storedHash);
+        console.log('🧪 Step 5 - Password match:', passwordMatch);
+        
+        return res.json({
+            step: 4,
+            success: passwordMatch,
+            message: passwordMatch ? 'Login exitoso' : 'Contraseña incorrecta',
+            userDetails: {
+                id: user.id,
+                email: user.email,
+                activo: user.activo,
+                activoType: typeof user.activo,
+                hasPassword: !!storedHash,
+                passwordMatch: passwordMatch
+            }
+        });
+        
+    } catch (error) {
+        console.error('🧪 Test login error:', error);
+        return res.status(500).json({ error: error.message });
+    }
+});
+
 // Ruta para verificar sesión
 router.get('/check', (req, res) => {
     try {
