@@ -17,23 +17,76 @@ router.post('/login', async (req, res) => {
         
         console.log('🔍 Searching for user:', loginField);
         
-        // Buscar en admin_users primero
-        let result = await db.query('SELECT * FROM admin_users WHERE email = $1 AND (activo = true OR activo = \'true\')', [loginField]);
-        let userType = 'admin';
-        let passwordField = 'password_hash';
-        console.log('🔍 Admin_users result count:', result.rows.length);
-        
-        if (result.rows.length === 0) {
-            // Buscar en guardias
-            console.log('🔍 User not found in admin_users, trying guardias...');
-            result = await db.query('SELECT * FROM guardias WHERE email = $1 AND (activo = true OR activo = \'true\')', [loginField]);
-            userType = 'guardia';
-            passwordField = 'password';
-            console.log('🔍 Guardias result count:', result.rows.length);
+        // Test de conexión a DB antes de hacer queries
+        try {
+            console.log('🔍 Testing database connection...');
+            const testResult = await db.query('SELECT 1 as test');
+            console.log('✅ Database connection OK:', testResult?.rows?.[0]?.test === 1);
+        } catch (testError) {
+            console.error('❌ Database connection failed:', testError.message);
+            throw new Error(`Database connection failed: ${testError.message}`);
         }
         
-        if (result.rows.length === 0) {
+        // Buscar en admin_users primero
+        let result;
+        let userType = 'admin';
+        let passwordField = 'password_hash';
+        
+        try {
+            console.log('🔍 Executing admin_users query...');
+            result = await db.query('SELECT * FROM admin_users WHERE email = $1', [loginField]);
+            console.log('🔍 Admin_users query successful:', result ? 'OK' : 'FAILED');
+            console.log('🔍 Admin_users result count:', result?.rows?.length || 0);
+            
+            // Filtrar por activo después de obtener resultados
+            if (result && result.rows && result.rows.length > 0) {
+                const filteredRows = result.rows.filter(row => {
+                    const isActive = row.activo === true || row.activo === 'true' || row.activo === 1;
+                    console.log(`🔍 User ${row.email} - activo: ${row.activo} (${typeof row.activo}) - isActive: ${isActive}`);
+                    return isActive;
+                });
+                result.rows = filteredRows;
+                console.log('🔍 Admin_users active users count:', result.rows.length);
+            }
+        } catch (dbError) {
+            console.error('❌ Database error in admin_users query:', dbError.message);
+            throw new Error(`Database error: ${dbError.message}`);
+        }
+        
+        if (!result || !result.rows || result.rows.length === 0) {
+            // Buscar en guardias
+            console.log('🔍 User not found in admin_users, trying guardias...');
+            try {
+                console.log('🔍 Executing guardias query...');
+                result = await db.query('SELECT * FROM guardias WHERE email = $1', [loginField]);
+                userType = 'guardia';
+                passwordField = 'password';
+                console.log('🔍 Guardias query successful:', result ? 'OK' : 'FAILED');
+                console.log('🔍 Guardias result count:', result?.rows?.length || 0);
+                
+                // Filtrar por activo después de obtener resultados
+                if (result && result.rows && result.rows.length > 0) {
+                    const filteredRows = result.rows.filter(row => {
+                        const isActive = row.activo === true || row.activo === 'true' || row.activo === 1;
+                        console.log(`🔍 Guardia ${row.email} - activo: ${row.activo} (${typeof row.activo}) - isActive: ${isActive}`);
+                        return isActive;
+                    });
+                    result.rows = filteredRows;
+                    console.log('🔍 Guardias active users count:', result.rows.length);
+                }
+            } catch (dbError) {
+                console.error('❌ Database error in guardias query:', dbError.message);
+                throw new Error(`Database error: ${dbError.message}`);
+            }
+        }
+        
+        if (!result || !result.rows || result.rows.length === 0) {
             console.log('❌ User not found in any table for:', loginField);
+            console.log('🔍 Final result status:', { 
+                hasResult: !!result, 
+                hasRows: !!(result && result.rows), 
+                rowCount: result?.rows?.length || 0 
+            });
             return res.status(401).json({ error: 'Credenciales inválidas' });
         }
         
