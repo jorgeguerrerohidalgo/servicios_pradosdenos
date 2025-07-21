@@ -31,23 +31,37 @@ router.post('/login', async (req, res) => {
         
         // Buscar primero en admin_users, luego en guardias
         console.log('🔍 Searching in admin_users first...');
-        let userResult = await db.query('SELECT *, password_hash as password FROM admin_users WHERE email = $1 AND activo = true', [loginField]);
+        let userResult;
         let userType = 'admin';
         
-        if (userResult.rows.length === 0) {
+        try {
+            userResult = await db.query('SELECT *, password_hash as password FROM admin_users WHERE email = $1 AND activo = true', [loginField]);
+            console.log('🔍 Admin query result:', { success: true, rowCount: userResult?.rows?.length || 0 });
+        } catch (dbError) {
+            console.error('❌ Database error in admin_users query:', dbError.message);
+            throw dbError;
+        }
+        
+        if (!userResult || !userResult.rows || userResult.rows.length === 0) {
             console.log('🔍 Not found in admin_users, searching in guardias...');
-            userResult = await db.query('SELECT *, password as password FROM guardias WHERE email = $1 AND activo = true', [loginField]);
-            userType = 'guardia';
+            try {
+                userResult = await db.query('SELECT *, password as password FROM guardias WHERE email = $1 AND activo = true', [loginField]);
+                userType = 'guardia';
+                console.log('🔍 Guardia query result:', { success: true, rowCount: userResult?.rows?.length || 0 });
+            } catch (dbError) {
+                console.error('❌ Database error in guardias query:', dbError.message);
+                throw dbError;
+            }
         }
         
         console.log('🔍 USER SEARCH RESULT:', { 
-            found: userResult.rows.length > 0, 
-            count: userResult.rows.length,
+            found: userResult?.rows?.length > 0, 
+            count: userResult?.rows?.length || 0,
             userType: userType,
             table: userType === 'admin' ? 'admin_users' : 'guardias'
         });
         
-        if (userResult.rows.length === 0) {
+        if (!userResult || !userResult.rows || userResult.rows.length === 0) {
             console.log('❌ USER NOT FOUND in both tables:', loginField);
             return res.status(401).json({ error: 'Credenciales inválidas' });
         }
