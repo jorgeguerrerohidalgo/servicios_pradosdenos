@@ -1121,23 +1121,38 @@
         }
 
         // ==================== INICIALIZACIÓN ====================
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             console.log('🚀 === INICIANDO ADMIN PANEL COMPLETAMENTE REFACTORIZADO ===');
             
-            const token = localStorage.getItem('adminToken');
-            console.log('🔑 Token encontrado:', token ? 'Sí ✅' : 'No ❌');
-            
-            if (token) {
-                console.log('🔍 Token completo (primeros 50 chars):', token.substring(0, 50) + '...');
-                console.log('🔍 Token length:', token.length);
+            // Sistema basado en SESIONES - verificar con servidor
+            try {
+                console.log('� Verificando sesión con servidor...');
+                const response = await fetch('/api/auth/check', {
+                    method: 'GET',
+                    credentials: 'include' // Importante para sesiones
+                });
                 
-                // Verificar si es un token temporal inválido
-                if (token.startsWith('temp_admin_token_')) {
-                    console.log('❌ Token temporal detectado, requiere login real');
-                    localStorage.removeItem('adminToken');
+                const sessionData = await response.json();
+                console.log('� Verificación de sesión:', sessionData);
+                
+                if (sessionData.isAuthenticated && sessionData.guardia) {
+                    console.log('✅ Sesión válida encontrada:', {
+                        usuario: sessionData.guardia.nombre,
+                        email: sessionData.guardia.email,
+                        tipo: sessionData.guardia.tipo
+                    });
+                    
+                    // Guardar datos del usuario para la UI
+                    window.currentUser = sessionData.guardia;
+                    
+                    // Continuar con la inicialización del panel
+                    initializeAdminPanel();
+                    
+                } else {
+                    console.log('❌ No hay sesión válida, redirigiendo al login...');
                     Swal.fire({
-                        title: 'Token Temporal Detectado',
-                        text: 'Debe iniciar sesión nuevamente para obtener credenciales válidas',
+                        title: 'Sesión Expirada',
+                        text: 'Debe iniciar sesión nuevamente',
                         icon: 'warning',
                         confirmButtonText: 'Ir al Login'
                     }).then(() => {
@@ -1145,22 +1160,24 @@
                     });
                     return;
                 }
-            }
-            
-            if (!token) {
-                console.log('❌ No hay token válido, redirigiendo al login...');
+                
+            } catch (error) {
+                console.error('❌ Error verificando sesión:', error);
                 Swal.fire({
-                    title: 'Sesión Expirada',
-                    text: 'Debe iniciar sesión nuevamente',
-                    icon: 'warning',
+                    title: 'Error de Conexión',
+                    text: 'No se pudo verificar la sesión. Redirigiendo al login.',
+                    icon: 'error',
                     confirmButtonText: 'Ir al Login'
                 }).then(() => {
                     window.location.href = '/admin-login.html';
                 });
                 return;
             }
+        });
 
-            console.log('✅ Token válido encontrado, iniciando panel...');
+        // Función para inicializar el panel después de verificar sesión
+        function initializeAdminPanel() {
+            console.log('✅ Sesión válida, iniciando panel...');
             
             // Test de funciones críticas
             console.log('🧪 Verificando funciones disponibles:');
@@ -1182,12 +1199,12 @@
             // Mostrar confirmación al usuario
             Swal.fire({
                 title: '¡Bienvenido!',
-                text: 'Panel de administración cargado correctamente',
+                text: `Panel de administración cargado correctamente. Bienvenido ${window.currentUser?.nombre || 'Usuario'}`,
                 icon: 'success',
                 timer: 2000,
                 showConfirmButton: false
             });
-        });
+        }
 
         // ==================== FUNCIÓN DE TESTING ====================
         window.testAdminPanel = function() {
