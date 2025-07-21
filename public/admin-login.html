@@ -120,9 +120,15 @@
         
         const result = await response.json();
         
-        console.log('Respuesta completa del servidor:', result);
+        console.log('Respuesta completa del servidor:', JSON.stringify(result, null, 2));
         console.log('Response status:', response.status);
         console.log('Response ok:', response.ok);
+        console.log('🔍 Verificando propiedades del objeto:');
+        console.log('  - result.token existe:', 'token' in result);
+        console.log('  - result.token valor:', result.token);
+        console.log('  - result.message:', result.message);
+        console.log('  - result.guardia:', result.guardia);
+        console.log('  - Todas las propiedades:', Object.keys(result));
         
         if (response.ok) {
           console.log('Login exitoso, procesando respuesta...');
@@ -132,7 +138,7 @@
             localStorage.setItem('adminToken', result.token);
             console.log('✅ Token JWT del servidor guardado:', result.token.substring(0, 50) + '...');
           } else {
-            console.log('❌ No se recibió token del servidor:', result);
+            console.log('❌ No se recibió token del servidor. Objeto completo:', JSON.stringify(result, null, 2));
             alert('Error: No se recibió token de autenticación del servidor');
             return;
           }

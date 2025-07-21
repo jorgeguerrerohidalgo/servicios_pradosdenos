@@ -38,7 +38,7 @@ const adminRoutes = require('./routes/admin.routes');
 
 // Importar nuevas rutas - EVENTOS Y DOCUMENTOS SIMPLIFICADOS
 const eventosRoutes = require('./routes/eventos.routes');
-const documentosRoutes = require('./routes/documentos_comunitarios.routes');
+const documentosRoutes = require('./routes/documentos.routes');
 const initRoutes = require('./routes/init.routes');
 
 // Variables de entorno para producción

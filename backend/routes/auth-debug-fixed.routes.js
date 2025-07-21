@@ -2,14 +2,15 @@ const express = require('express');
 const router = express.Router();
 const db = require('../utils/db');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
-// Ruta de login que maneja tanto bcrypt como texto plano
+// Ruta de login SOLO para admin_users (para admin-login)
 router.post('/login', async (req, res) => {
     try {
         const { email, username, password } = req.body;
         const loginField = email || username;
         
-        console.log('🔍 LOGIN ATTEMPT:', { 
+        console.log('🔍 ADMIN LOGIN ATTEMPT:', { 
             email, 
             username,
             loginField,
@@ -25,33 +26,20 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ error: 'Email/Username y contraseña son requeridos' });
         }
         
-        console.log('🔍 SEARCHING FOR USER:', loginField);
+        console.log('🔍 SEARCHING FOR ADMIN USER ONLY:', loginField);
         console.log('🔍 DATABASE URL configured:', !!process.env.DATABASE_URL);
         
-        // Buscar en guardias
-        console.log('🔍 Step 1: Searching in guardias table...');
-        let user = await db.query('SELECT * FROM guardias WHERE email = $1 AND activo = true', [loginField]);
-        let userType = 'guardia';
+        // Buscar SOLO en admin_users (no en guardias)
+        console.log('🔍 Searching ONLY in admin_users table...');
+        const user = await db.query('SELECT *, password_hash as password FROM admin_users WHERE email = $1 AND activo = true', [loginField]);
+        const userType = 'admin';
         
-        console.log('🔍 GUARDIAS SEARCH RESULT:', { 
+        console.log('🔍 ADMIN_USERS SEARCH RESULT:', { 
             found: user.length > 0, 
             count: user.length,
-            query: 'SELECT * FROM guardias WHERE email = $1 AND activo = true',
+            query: 'SELECT *, password_hash as password FROM admin_users WHERE email = $1 AND activo = true',
             params: [loginField]
         });
-        
-        // Si no se encuentra, buscar en admin_users
-        if (user.length === 0) {
-            console.log('🔍 Step 2: Searching in admin_users table...');
-            user = await db.query('SELECT *, password_hash as password FROM admin_users WHERE email = $1 AND activo = true', [loginField]);
-            userType = 'admin';
-            console.log('🔍 ADMIN_USERS SEARCH RESULT:', { 
-                found: user.length > 0, 
-                count: user.length,
-                query: 'SELECT *, password_hash as password FROM admin_users WHERE email = $1 AND activo = true',
-                params: [loginField]
-            });
-        }
         
         if (user.length === 0) {
             console.log('❌ USER NOT FOUND:', loginField);
@@ -149,6 +137,92 @@ router.post('/login', async (req, res) => {
             timestamp: new Date().toISOString(),
             details: error.message,
             code: error.code
+        });
+    }
+});
+
+// Ruta para admin-login con JWT
+router.post('/admin-login', async (req, res) => {
+    try {
+        console.log('🔐 ADMIN-LOGIN REQUEST:', {
+            body: req.body,
+            timestamp: new Date().toISOString(),
+            ip: req.ip
+        });
+
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            console.log('❌ ADMIN LOGIN: Faltan credenciales');
+            return res.status(400).json({ error: 'Email y contraseña son requeridos' });
+        }
+
+        // Solo buscar en admin_users para admin-login
+        console.log('🔍 Buscando en admin_users para email:', email);
+        
+        const query = 'SELECT * FROM admin_users WHERE email = $1';
+        const result = await db.query(query, [email]);
+
+        if (result.rows.length === 0) {
+            console.log('❌ ADMIN USER NOT FOUND:', email);
+            return res.status(401).json({ error: 'Credenciales inválidas' });
+        }
+
+        const adminUser = result.rows[0];
+        console.log('✅ ADMIN USER FOUND:', { 
+            id: adminUser.id, 
+            email: adminUser.email,
+            hasPassword: !!adminUser.password 
+        });
+
+        // Verificar contraseña
+        const isValidPassword = await bcrypt.compare(password, adminUser.password);
+        console.log('🔑 PASSWORD CHECK:', { valid: isValidPassword });
+
+        if (!isValidPassword) {
+            console.log('❌ ADMIN PASSWORD MISMATCH for user:', adminUser.id);
+            return res.status(401).json({ error: 'Credenciales inválidas' });
+        }
+
+        // Generar token JWT para admin
+        const tokenPayload = {
+            id: adminUser.id,
+            email: adminUser.email,
+            type: 'admin'
+        };
+
+        console.log('🔐 Generando JWT token para admin:', tokenPayload);
+        
+        const token = jwt.sign(
+            tokenPayload,
+            process.env.JWT_SECRET || 'fallback-secret-key',
+            { expiresIn: '24h' }
+        );
+
+        console.log('✅ ADMIN LOGIN SUCCESS:', { 
+            userId: adminUser.id,
+            tokenGenerated: !!token,
+            tokenLength: token.length
+        });
+
+        return res.json({ 
+            message: 'Login de administrador exitoso',
+            token: token,
+            admin: {
+                id: adminUser.id,
+                email: adminUser.email,
+                type: 'admin'
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ ADMIN-LOGIN ERROR:', error.message);
+        console.error('❌ ERROR STACK:', error.stack);
+        
+        res.status(500).json({ 
+            error: 'Error interno del servidor',
+            timestamp: new Date().toISOString(),
+            details: error.message
         });
     }
 });
