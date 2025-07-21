@@ -26,24 +26,29 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ error: 'Email/Username y contraseña son requeridos' });
         }
         
-        console.log('🔍 SEARCHING FOR ADMIN USER ONLY:', loginField);
+        console.log('🔍 SEARCHING FOR USER:', loginField);
         console.log('🔍 DATABASE URL configured:', !!process.env.DATABASE_URL);
         
-        // Buscar SOLO en admin_users (no en guardias)
-        console.log('🔍 Searching ONLY in admin_users table...');
-        const userResult = await db.query('SELECT *, password_hash as password FROM admin_users WHERE email = $1 AND activo = true', [loginField]);
-        const userType = 'admin';
+        // Buscar primero en admin_users, luego en guardias
+        console.log('🔍 Searching in admin_users first...');
+        let userResult = await db.query('SELECT *, password_hash as password FROM admin_users WHERE email = $1 AND activo = true', [loginField]);
+        let userType = 'admin';
         
-        console.log('🔍 ADMIN_USERS SEARCH RESULT:', { 
+        if (userResult.rows.length === 0) {
+            console.log('🔍 Not found in admin_users, searching in guardias...');
+            userResult = await db.query('SELECT *, password as password FROM guardias WHERE email = $1 AND activo = true', [loginField]);
+            userType = 'guardia';
+        }
+        
+        console.log('🔍 USER SEARCH RESULT:', { 
             found: userResult.rows.length > 0, 
             count: userResult.rows.length,
-            query: 'SELECT *, password_hash as password FROM admin_users WHERE email = $1 AND activo = true',
-            params: [loginField]
+            userType: userType,
+            table: userType === 'admin' ? 'admin_users' : 'guardias'
         });
         
         if (userResult.rows.length === 0) {
-            console.log('❌ USER NOT FOUND:', loginField);
-            console.log('🔍 Attempted tables: guardias, admin_users');
+            console.log('❌ USER NOT FOUND in both tables:', loginField);
             return res.status(401).json({ error: 'Credenciales inválidas' });
         }
         
