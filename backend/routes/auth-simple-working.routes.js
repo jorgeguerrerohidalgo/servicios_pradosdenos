@@ -21,7 +21,8 @@ router.post('/login', async (req, res) => {
         try {
             console.log('🔍 Testing database connection...');
             const testResult = await db.query('SELECT 1 as test');
-            console.log('✅ Database connection OK:', testResult?.rows?.[0]?.test === 1);
+            console.log('✅ Database connection OK:', testResult?.[0]?.test === 1);
+            console.log('🔍 Test result type:', typeof testResult, 'length:', testResult?.length);
         } catch (testError) {
             console.error('❌ Database connection failed:', testError.message);
             throw new Error(`Database connection failed: ${testError.message}`);
@@ -34,12 +35,15 @@ router.post('/login', async (req, res) => {
         
         try {
             console.log('🔍 Executing admin_users query...');
-            result = await db.query('SELECT * FROM admin_users WHERE email = $1', [loginField]);
-            console.log('🔍 Admin_users query successful:', result ? 'OK' : 'FAILED');
-            console.log('🔍 Admin_users result count:', result?.rows?.length || 0);
+            const rows = await db.query('SELECT * FROM admin_users WHERE email = $1', [loginField]);
+            console.log('🔍 Admin_users query successful - rows type:', typeof rows, 'length:', rows?.length);
+            console.log('🔍 Admin_users result count:', rows?.length || 0);
+            
+            // La función db.query ya devuelve rows directamente, no un objeto result
+            result = { rows: rows || [] };
             
             // Filtrar por activo después de obtener resultados
-            if (result && result.rows && result.rows.length > 0) {
+            if (result.rows && result.rows.length > 0) {
                 const filteredRows = result.rows.filter(row => {
                     const isActive = row.activo === true || row.activo === 'true' || row.activo === 1;
                     console.log(`🔍 User ${row.email} - activo: ${row.activo} (${typeof row.activo}) - isActive: ${isActive}`);
@@ -58,14 +62,17 @@ router.post('/login', async (req, res) => {
             console.log('🔍 User not found in admin_users, trying guardias...');
             try {
                 console.log('🔍 Executing guardias query...');
-                result = await db.query('SELECT * FROM guardias WHERE email = $1', [loginField]);
+                const rows = await db.query('SELECT * FROM guardias WHERE email = $1', [loginField]);
                 userType = 'guardia';
                 passwordField = 'password';
-                console.log('🔍 Guardias query successful:', result ? 'OK' : 'FAILED');
-                console.log('🔍 Guardias result count:', result?.rows?.length || 0);
+                console.log('🔍 Guardias query successful - rows type:', typeof rows, 'length:', rows?.length);
+                console.log('🔍 Guardias result count:', rows?.length || 0);
+                
+                // La función db.query ya devuelve rows directamente
+                result = { rows: rows || [] };
                 
                 // Filtrar por activo después de obtener resultados
-                if (result && result.rows && result.rows.length > 0) {
+                if (result.rows && result.rows.length > 0) {
                     const filteredRows = result.rows.filter(row => {
                         const isActive = row.activo === true || row.activo === 'true' || row.activo === 1;
                         console.log(`🔍 Guardia ${row.email} - activo: ${row.activo} (${typeof row.activo}) - isActive: ${isActive}`);
@@ -189,16 +196,16 @@ router.get('/debug-users/:email', async (req, res) => {
         res.json({
             searchEmail: email,
             exactMatches: {
-                admin_users: adminExact.rows,
-                guardias: guardiaExact.rows
+                admin_users: adminExact || [],
+                guardias: guardiaExact || []
             },
             similarMatches: {
-                admin_users: adminSimilar.rows,
-                guardias: guardiaSimilar.rows
+                admin_users: adminSimilar || [],
+                guardias: guardiaSimilar || []
             },
             totals: {
-                admin_users: adminTotal.rows[0].count,
-                guardias: guardiaTotal.rows[0].count
+                admin_users: adminTotal?.[0]?.count || 0,
+                guardias: guardiaTotal?.[0]?.count || 0
             }
         });
     } catch (error) {
@@ -218,10 +225,10 @@ router.post('/test-login', async (req, res) => {
         }
         
         // Step 1: Buscar usuario
-        const result = await db.query('SELECT * FROM admin_users WHERE email = $1', [email]);
-        console.log('🧪 Step 1 - Query result:', result.rows.length);
+        const rows = await db.query('SELECT * FROM admin_users WHERE email = $1', [email]);
+        console.log('🧪 Step 1 - Query result:', rows?.length || 0);
         
-        if (result.rows.length === 0) {
+        if (!rows || rows.length === 0) {
             return res.json({
                 step: 1,
                 success: false,
@@ -230,7 +237,7 @@ router.post('/test-login', async (req, res) => {
             });
         }
         
-        const user = result.rows[0];
+        const user = rows[0];
         console.log('🧪 Step 2 - User found:', { 
             id: user.id, 
             email: user.email, 
