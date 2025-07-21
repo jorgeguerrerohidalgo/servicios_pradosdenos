@@ -2,8 +2,9 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const { query } = require('../utils/db');
+const { authenticateToken } = require('../middleware/auth');
 
-// Middleware para verificar que el usuario es administrador
+// Middleware para verificar que el usuario es administrador (mantenemos para compatibilidad con sesiones)
 const requireAdmin = (req, res, next) => {
   if (!req.session.guardia || req.session.guardia.tipo !== 'admin') {
     return res.status(403).json({ success: false, message: 'Acceso denegado' });
@@ -14,7 +15,7 @@ const requireAdmin = (req, res, next) => {
 // ==================== GESTIÓN DE GUARDIAS ====================
 
 // Obtener todos los guardias
-router.get('/guardias', requireAdmin, async (req, res) => {
+router.get('/guardias', authenticateToken, async (req, res) => {
   try {
     const guardias = await query(`
       SELECT 
@@ -214,7 +215,7 @@ router.post('/guardias/:id/regenerate-code', requireAdmin, async (req, res) => {
 // ==================== GESTIÓN DE PLAZAS ====================
 
 // Obtener todas las plazas
-router.get('/plazas', requireAdmin, async (req, res) => {
+router.get('/plazas', authenticateToken, async (req, res) => {
   try {
     const plazas = await query(`
       SELECT 
@@ -340,7 +341,7 @@ router.delete('/plazas/:id', requireAdmin, async (req, res) => {
 // ==================== GESTIÓN DE ADMINISTRADORES ====================
 
 // Obtener todos los administradores
-router.get('/admins', requireAdmin, async (req, res) => {
+router.get('/admins', authenticateToken, async (req, res) => {
   try {
     const admins = await query(`
       SELECT 
@@ -565,7 +566,7 @@ router.get('/reports/activity', requireAdmin, async (req, res) => {
 });
 
 // Reporte de checkins recientes
-router.get('/reports/recent', requireAdmin, async (req, res) => {
+router.get('/reports/recent', authenticateToken, async (req, res) => {
   try {
     const limite = parseInt(req.query.limit) || 50;
     

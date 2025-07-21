@@ -248,7 +248,7 @@ router.delete('/desinscribir/:id', authenticateToken, requireAdmin, async (req, 
 // ==================== RUTAS ADMINISTRATIVAS ====================
 
 // GET /api/eventos/admin/all - Obtener todos los eventos (admin)
-router.get('/admin/all', authenticateToken, requireAdmin, async (req, res) => {
+router.get('/admin/all', authenticateToken, async (req, res) => {
     try {
         const result = await pool.query(`
             SELECT 

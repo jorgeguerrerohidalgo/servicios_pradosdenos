@@ -665,7 +665,7 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    guardiasGlobal = data.data || [];
+                    guardiasGlobal = data.guardias || [];
                     renderGuardiasTable();
                 } else {
                     console.error('Error al cargar guardias:', await response.text());
@@ -771,7 +771,7 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    plazasGlobal = data.data || [];
+                    plazasGlobal = data.plazas || [];
                     renderPlazasTable();
                 } else {
                     console.error('Error al cargar plazas:', await response.text());
@@ -882,13 +882,13 @@
                 const token = localStorage.getItem('adminToken');
                 if (!token) return;
 
-                const response = await fetch('/api/admin/administradores', {
+                const response = await fetch('/api/admin/admins', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
                 if (response.ok) {
                     const data = await response.json();
-                    adminsGlobal = data.data || [];
+                    adminsGlobal = data.admins || [];
                     renderAdminsTable();
                 } else {
                     console.error('Error al cargar administradores:', await response.text());
@@ -1003,13 +1003,13 @@
                 const token = localStorage.getItem('adminToken');
                 if (!token) return;
 
-                const response = await fetch('/api/admin/reportes', {
+                const response = await fetch('/api/admin/reports/recent', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
                 if (response.ok) {
                     const data = await response.json();
-                    renderReportesTable(data.data || []);
+                    renderReportesTable(data.reports || []);
                 } else {
                     console.error('Error al cargar reportes:', await response.text());
                 }
@@ -1126,6 +1126,11 @@
             
             const token = localStorage.getItem('adminToken');
             console.log('🔑 Token encontrado:', token ? 'Sí ✅' : 'No ❌');
+            
+            if (token) {
+                console.log('🔍 Token completo (primeros 50 chars):', token.substring(0, 50) + '...');
+                console.log('🔍 Token length:', token.length);
+            }
             
             if (!token) {
                 console.log('❌ No hay token válido, redirigiendo al login...');
