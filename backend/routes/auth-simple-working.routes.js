@@ -5,38 +5,35 @@ const bcrypt = require('bcrypt');
 
 router.post('/login', async (req, res) => {
     try {
-        console.log('🔍 LOGIN REQUEST:', req.body);
+        console.log('🔍 LOGIN REQUEST - Email:', req.body.email);
         
         const { email, username, password } = req.body;
         const loginField = email || username;
         
         if (!loginField || !password) {
+            console.log('❌ Missing credentials');
             return res.status(400).json({ error: 'Email y contraseña son requeridos' });
         }
         
         console.log('🔍 Searching for user:', loginField);
         
         // Buscar en admin_users primero
-        console.log('🔍 Query: SELECT * FROM admin_users WHERE email = $1 AND activo = true');
-        console.log('🔍 Params:', [loginField]);
         let result = await db.query('SELECT * FROM admin_users WHERE email = $1 AND activo = true', [loginField]);
-        console.log('🔍 Admin_users result:', { rowCount: result.rows.length, rows: result.rows });
         let userType = 'admin';
         let passwordField = 'password_hash';
+        console.log('🔍 Admin_users result count:', result.rows.length);
         
         if (result.rows.length === 0) {
             // Buscar en guardias
             console.log('🔍 User not found in admin_users, trying guardias...');
-            console.log('🔍 Query: SELECT * FROM guardias WHERE email = $1 AND activo = true');
-            console.log('🔍 Params:', [loginField]);
             result = await db.query('SELECT * FROM guardias WHERE email = $1 AND activo = true', [loginField]);
-            console.log('🔍 Guardias result:', { rowCount: result.rows.length, rows: result.rows });
             userType = 'guardia';
             passwordField = 'password';
+            console.log('🔍 Guardias result count:', result.rows.length);
         }
         
         if (result.rows.length === 0) {
-            console.log('❌ User not found in any table');
+            console.log('❌ User not found in any table for:', loginField);
             return res.status(401).json({ error: 'Credenciales inválidas' });
         }
         
@@ -45,24 +42,16 @@ router.post('/login', async (req, res) => {
         
         // Verificar contraseña
         const storedPassword = user[passwordField];
-        console.log('🔍 Password verification:', {
-            passwordField: passwordField,
-            hasStoredPassword: !!storedPassword,
-            storedPasswordType: typeof storedPassword,
-            storedPasswordLength: storedPassword ? storedPassword.length : 0,
-            receivedPasswordLength: password.length
-        });
+        console.log('🔍 Password check - hasStoredPassword:', !!storedPassword);
         let passwordMatch = false;
         
         if (storedPassword) {
             // Intentar bcrypt primero
             try {
-                console.log('🔍 Trying bcrypt comparison...');
                 passwordMatch = await bcrypt.compare(password, storedPassword);
                 console.log('🔍 Bcrypt result:', passwordMatch);
                 if (!passwordMatch) {
                     // Si bcrypt falla, intentar comparación directa
-                    console.log('🔍 Trying direct comparison...');
                     passwordMatch = (storedPassword === password);
                     console.log('🔍 Direct comparison result:', passwordMatch);
                 }
