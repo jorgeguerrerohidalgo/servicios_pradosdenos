@@ -1,0 +1,4 @@
+id,nombre,apellido_paterno,apellido_materno,run,email,fecha_nacimiento,direccion,plaza_id,password_hash,created_at,telefono,activo,last_login
+2,Supervisor,Seguridad,Nocturno,11.111.222-3,supervisor@pradosdenos.com,1982-05-20,Centro de Control Los Prados de Nos,2,$2b$10$ABC123def456ghi789jkl012mno345pqr678stu901vwx234yzA567Bc,2025-07-10 11:12:19.736351,,true,
+3,Admin,Sistema,Principal,11.111.111-1,admin@pradosdenos.cl,1990-01-01,Centro de Control,1,$2b$12$0q7J1r8.99Q9NUkQlHwzJuesTCbVKKyOxq9CkNiNaVKXgpKL.MDWC,2025-07-15 18:15:02.455479,,true,
+6,Jorge,Guerrero,Hidalgo,15.468.127-2,jorgeguerrerohidalgo@gmail.com,1982-04-24,Santiago de Compostela 4985,1,$2b$12$A77lpJIUOs4Q0uzsndec/ueLMSdsY3MOrj1p4v5p2iimp2rkM2I2.,2025-07-16 02:02:32.638727,,true,

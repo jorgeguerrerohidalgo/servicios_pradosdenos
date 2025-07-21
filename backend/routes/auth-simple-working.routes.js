@@ -18,7 +18,7 @@ router.post('/login', async (req, res) => {
         console.log('🔍 Searching for user:', loginField);
         
         // Buscar en admin_users primero
-        let result = await db.query('SELECT * FROM admin_users WHERE email = $1 AND activo = true', [loginField]);
+        let result = await db.query('SELECT * FROM admin_users WHERE email = $1 AND (activo = true OR activo = \'true\')', [loginField]);
         let userType = 'admin';
         let passwordField = 'password_hash';
         console.log('🔍 Admin_users result count:', result.rows.length);
@@ -26,7 +26,7 @@ router.post('/login', async (req, res) => {
         if (result.rows.length === 0) {
             // Buscar en guardias
             console.log('🔍 User not found in admin_users, trying guardias...');
-            result = await db.query('SELECT * FROM guardias WHERE email = $1 AND activo = true', [loginField]);
+            result = await db.query('SELECT * FROM guardias WHERE email = $1 AND (activo = true OR activo = \'true\')', [loginField]);
             userType = 'guardia';
             passwordField = 'password';
             console.log('🔍 Guardias result count:', result.rows.length);
@@ -38,7 +38,13 @@ router.post('/login', async (req, res) => {
         }
         
         const user = result.rows[0];
-        console.log('✅ User found:', { id: user.id, email: user.email, type: userType });
+        console.log('✅ User found:', { 
+            id: user.id, 
+            email: user.email, 
+            type: userType,
+            activo: user.activo,
+            activoType: typeof user.activo
+        });
         
         // Verificar contraseña
         const storedPassword = user[passwordField];
@@ -102,6 +108,49 @@ router.post('/login', async (req, res) => {
             details: error.message,
             timestamp: new Date().toISOString()
         });
+    }
+});
+
+// Ruta temporal para debugging - ELIMINAR EN PRODUCCIÓN
+router.get('/debug-users/:email', async (req, res) => {
+    try {
+        const email = req.params.email;
+        console.log('🔍 DEBUG: Searching for email pattern:', email);
+        
+        // Buscar exacto en admin_users
+        const adminExact = await db.query('SELECT id, email, activo FROM admin_users WHERE email = $1', [email]);
+        
+        // Buscar exacto en guardias  
+        const guardiaExact = await db.query('SELECT id, email, activo FROM guardias WHERE email = $1', [email]);
+        
+        // Buscar similares en admin_users
+        const adminSimilar = await db.query('SELECT id, email, activo FROM admin_users WHERE email ILIKE $1', [`%${email.split('@')[0]}%`]);
+        
+        // Buscar similares en guardias
+        const guardiaSimilar = await db.query('SELECT id, email, activo FROM guardias WHERE email ILIKE $1', [`%${email.split('@')[0]}%`]);
+        
+        // Contar totales
+        const adminTotal = await db.query('SELECT COUNT(*) as count FROM admin_users');
+        const guardiaTotal = await db.query('SELECT COUNT(*) as count FROM guardias');
+        
+        res.json({
+            searchEmail: email,
+            exactMatches: {
+                admin_users: adminExact.rows,
+                guardias: guardiaExact.rows
+            },
+            similarMatches: {
+                admin_users: adminSimilar.rows,
+                guardias: guardiaSimilar.rows
+            },
+            totals: {
+                admin_users: adminTotal.rows[0].count,
+                guardias: guardiaTotal.rows[0].count
+            }
+        });
+    } catch (error) {
+        console.error('Debug error:', error);
+        res.status(500).json({ error: error.message });
     }
 });
 
