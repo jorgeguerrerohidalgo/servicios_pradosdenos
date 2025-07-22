@@ -83,6 +83,12 @@
             <a class="nav-link" href="#" onclick="showSection('reportes')">
                 <i class="fas fa-chart-line me-2"></i> Reportes
             </a>
+            <a class="nav-link" href="#" onclick="showSection('qr-plazas')">
+                <i class="fas fa-qrcode me-2"></i> QR Plazas
+            </a>
+            <a class="nav-link" href="#" onclick="showSection('generar-tokens')">
+                <i class="fas fa-key me-2"></i> Generar Tokens
+            </a>
             <hr class="text-white">
             <a class="nav-link" href="#" onclick="logout()">
                 <i class="fas fa-sign-out-alt me-2"></i> Cerrar Sesión
@@ -300,6 +306,38 @@
                 </table>
             </div>
         </div>
+
+        <!-- Sección QR Plazas -->
+        <div id="qr-plazasSection" class="section-hidden">
+            <h2><i class="fas fa-qrcode"></i> QR Plazas</h2>
+            <div class="card">
+                <div class="card-body">
+                    <div class="text-center">
+                        <h5>Generador de QR para Plazas</h5>
+                        <p class="text-muted">Esta funcionalidad permite generar códigos QR para cada plaza</p>
+                        <button class="btn btn-primary" onclick="window.open('qr_plazas.html', '_blank')">
+                            <i class="fas fa-external-link-alt me-2"></i>Abrir QR Plazas
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección Generar Tokens -->
+        <div id="generar-tokensSection" class="section-hidden">
+            <h2><i class="fas fa-key"></i> Generar Tokens</h2>
+            <div class="card">
+                <div class="card-body">
+                    <div class="text-center">
+                        <h5>Generador de Tokens de Autenticación</h5>
+                        <p class="text-muted">Esta funcionalidad permite generar tokens de autenticación para usuarios</p>
+                        <button class="btn btn-primary" onclick="window.open('generar_tokens.html', '_blank')">
+                            <i class="fas fa-external-link-alt me-2"></i>Abrir Generador de Tokens
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -346,7 +384,7 @@
 
         // ==================== FUNCIONES DE NAVEGACIÓN ====================
         function hideAllSections() {
-            const sections = ['dashboardSection', 'eventosSection', 'documentosSection', 'guardiasSection', 'plazasSection', 'adminsSection', 'reportesSection'];
+            const sections = ['dashboardSection', 'eventosSection', 'documentosSection', 'guardiasSection', 'plazasSection', 'adminsSection', 'reportesSection', 'qr-plazasSection', 'generar-tokensSection'];
             sections.forEach(section => {
                 const element = document.getElementById(section);
                 if (element) {
@@ -371,7 +409,9 @@
                 'guardias': 'guardiasSection',
                 'plazas': 'plazasSection',
                 'admins': 'adminsSection',
-                'reportes': 'reportesSection'
+                'reportes': 'reportesSection',
+                'qr-plazas': 'qr-plazasSection',
+                'generar-tokens': 'generar-tokensSection'
             };
             
             const sectionId = sectionMap[sectionName];
@@ -490,38 +530,196 @@
             `).join('');
         }
 
-        function showEventoForm(eventoId = null) {
+        // ==================== FUNCIONES DE EVENTOS ====================
+        async function loadTiposEvento() {
+            try {
+                const response = await authenticatedFetch('/api/eventos/tipos');
+                if (response && response.ok) {
+                    const data = await response.json();
+                    return data.data || [];
+                }
+            } catch (error) {
+                console.error('Error cargando tipos de evento:', error);
+            }
+            return [];
+        }
+
+        async function showEventoForm(eventoId = null) {
+            // Cargar tipos de evento para el select
+            const tiposEvento = await loadTiposEvento();
+            const tipoOptions = tiposEvento.map(tipo => 
+                `<option value="${tipo.id}">${tipo.nombre}</option>`
+            ).join('');
+
+            let eventoData = null;
+            if (eventoId) {
+                try {
+                    const response = await authenticatedFetch(`/api/eventos/admin/${eventoId}`);
+                    if (response && response.ok) {
+                        const data = await response.json();
+                        eventoData = data.data;
+                    }
+                } catch (error) {
+                    console.error('Error cargando evento:', error);
+                }
+            }
+
             Swal.fire({
                 title: eventoId ? 'Editar Evento' : 'Nuevo Evento',
                 html: `
-                    <form id="eventoForm">
-                        <div class="mb-3">
-                            <input type="text" class="form-control" name="titulo" placeholder="Título del evento" required>
+                    <form id="eventoForm" class="text-start">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Título *</label>
+                                    <input type="text" class="form-control" name="titulo" 
+                                           value="${eventoData?.titulo || ''}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Tipo de Evento *</label>
+                                    <select class="form-control" name="tipo_evento_id" required>
+                                        <option value="">Seleccionar tipo</option>
+                                        ${tipoOptions}
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                         <div class="mb-3">
-                            <textarea class="form-control" name="descripcion" placeholder="Descripción"></textarea>
+                            <label class="form-label">Descripción</label>
+                            <textarea class="form-control" name="descripcion" rows="3">${eventoData?.descripcion || ''}</textarea>
                         </div>
                         <div class="mb-3">
-                            <input type="datetime-local" class="form-control" name="fecha_inicio" required>
+                            <label class="form-label">Ubicación</label>
+                            <input type="text" class="form-control" name="ubicacion" 
+                                   value="${eventoData?.ubicacion || ''}">
                         </div>
-                        <div class="mb-3">
-                            <input type="datetime-local" class="form-control" name="fecha_fin" required>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Fecha/Hora Inicio *</label>
+                                    <input type="datetime-local" class="form-control" name="fecha_inicio" 
+                                           value="${eventoData?.fecha_inicio ? new Date(eventoData.fecha_inicio).toISOString().slice(0, 16) : ''}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Fecha/Hora Fin *</label>
+                                    <input type="datetime-local" class="form-control" name="fecha_fin" 
+                                           value="${eventoData?.fecha_fin ? new Date(eventoData.fecha_fin).toISOString().slice(0, 16) : ''}" required>
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-check">
-                            <input type="checkbox" class="form-check-input" name="visible" checked>
-                            <label class="form-check-label">Visible</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Enlace Google Calendar</label>
+                                    <input type="url" class="form-control" name="link_google_cal" 
+                                           value="${eventoData?.link_google_cal || ''}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Enlace Reunión Virtual</label>
+                                    <input type="url" class="form-control" name="link_reunion" 
+                                           value="${eventoData?.link_reunion || ''}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Máximo Participantes</label>
+                                    <input type="number" class="form-control" name="max_participantes" min="1" 
+                                           value="${eventoData?.max_participantes || ''}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <div class="form-check mt-4">
+                                        <input type="checkbox" class="form-check-input" name="requiere_inscripcion" 
+                                               ${eventoData?.requiere_inscripcion ? 'checked' : ''}>
+                                        <label class="form-check-label">Requiere Inscripción</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="visible" 
+                                           ${eventoData?.visible !== false ? 'checked' : ''}>
+                                    <label class="form-check-label">Visible</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="destacado" 
+                                           ${eventoData?.destacado ? 'checked' : ''}>
+                                    <label class="form-check-label">Destacado</label>
+                                </div>
+                            </div>
                         </div>
                     </form>
                 `,
                 showCancelButton: true,
                 confirmButtonText: 'Guardar',
-                cancelButtonText: 'Cancelar'
+                cancelButtonText: 'Cancelar',
+                width: '800px',
+                preConfirm: () => {
+                    const formData = new FormData(document.getElementById('eventoForm'));
+                    const data = {};
+                    for (let [key, value] of formData.entries()) {
+                        if (key === 'visible' || key === 'destacado' || key === 'requiere_inscripcion') {
+                            data[key] = value === 'on';
+                        } else if (key === 'max_participantes' && value) {
+                            data[key] = parseInt(value);
+                        } else {
+                            data[key] = value;
+                        }
+                    }
+                    return saveEvento(data, eventoId);
+                }
             }).then((result) => {
-                if (result.isConfirmed) {
-                    // Handle form submission
+                if (result.isConfirmed && result.value) {
                     Swal.fire('Éxito', 'Evento guardado correctamente', 'success');
+                    loadEventos();
                 }
             });
+
+            // Set tipo_evento_id if editing
+            if (eventoData?.tipo_evento_id) {
+                setTimeout(() => {
+                    const select = document.querySelector('select[name="tipo_evento_id"]');
+                    if (select) select.value = eventoData.tipo_evento_id;
+                }, 100);
+            }
+        }
+
+        async function saveEvento(data, eventoId = null) {
+            try {
+                const url = eventoId ? `/api/eventos/admin/${eventoId}` : '/api/eventos/admin';
+                const method = eventoId ? 'PUT' : 'POST';
+                
+                const response = await authenticatedFetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response && response.ok) {
+                    return await response.json();
+                } else {
+                    throw new Error('Error al guardar evento');
+                }
+            } catch (error) {
+                console.error('Error guardando evento:', error);
+                Swal.fire('Error', 'No se pudo guardar el evento', 'error');
+                return false;
+            }
         }
 
         function editEvento(eventoId) {
@@ -621,34 +819,178 @@
             `).join('');
         }
 
-        function showDocumentoForm(documentoId = null) {
+        // ==================== FUNCIONES DE DOCUMENTOS ====================
+        async function loadTiposDocumento() {
+            try {
+                const response = await authenticatedFetch('/api/documentos/tipos');
+                if (response && response.ok) {
+                    const data = await response.json();
+                    return data.data || [];
+                }
+            } catch (error) {
+                console.error('Error cargando tipos de documento:', error);
+            }
+            return [];
+        }
+
+        async function showDocumentoForm(documentoId = null) {
+            // Cargar tipos de documento para el select
+            const tiposDocumento = await loadTiposDocumento();
+            const tipoOptions = tiposDocumento.map(tipo => 
+                `<option value="${tipo.id}">${tipo.nombre}</option>`
+            ).join('');
+
+            let documentoData = null;
+            if (documentoId) {
+                try {
+                    const response = await authenticatedFetch(`/api/documentos/admin/${documentoId}`);
+                    if (response && response.ok) {
+                        const data = await response.json();
+                        documentoData = data.data;
+                    }
+                } catch (error) {
+                    console.error('Error cargando documento:', error);
+                }
+            }
+
             Swal.fire({
                 title: documentoId ? 'Editar Documento' : 'Nuevo Documento',
                 html: `
-                    <form id="documentoForm">
-                        <div class="mb-3">
-                            <input type="text" class="form-control" name="nombre" placeholder="Nombre del documento" required>
+                    <form id="documentoForm" class="text-start">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Nombre *</label>
+                                    <input type="text" class="form-control" name="nombre" 
+                                           value="${documentoData?.nombre || ''}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Tipo de Documento *</label>
+                                    <select class="form-control" name="tipo_documento_id" required>
+                                        <option value="">Seleccionar tipo</option>
+                                        ${tipoOptions}
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                         <div class="mb-3">
-                            <textarea class="form-control" name="descripcion" placeholder="Descripción"></textarea>
+                            <label class="form-label">Descripción</label>
+                            <textarea class="form-control" name="descripcion" rows="3">${documentoData?.descripcion || ''}</textarea>
                         </div>
-                        <div class="mb-3">
-                            <input type="url" class="form-control" name="link_drive" placeholder="Link de Google Drive" required>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Link Google Drive *</label>
+                                    <input type="url" class="form-control" name="link_drive" 
+                                           value="${documentoData?.link_drive || ''}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Nombre del Archivo</label>
+                                    <input type="text" class="form-control" name="nombre_archivo" 
+                                           value="${documentoData?.nombre_archivo || ''}">
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-check">
-                            <input type="checkbox" class="form-check-input" name="visible" checked>
-                            <label class="form-check-label">Visible</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Fecha de Publicación</label>
+                                    <input type="date" class="form-control" name="fecha_publicacion" 
+                                           value="${documentoData?.fecha_publicacion ? new Date(documentoData.fecha_publicacion).toISOString().split('T')[0] : ''}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Fecha de Vencimiento</label>
+                                    <input type="date" class="form-control" name="fecha_vencimiento" 
+                                           value="${documentoData?.fecha_vencimiento ? new Date(documentoData.fecha_vencimiento).toISOString().split('T')[0] : ''}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="visible" 
+                                           ${documentoData?.visible !== false ? 'checked' : ''}>
+                                    <label class="form-check-label">Visible</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="destacado" 
+                                           ${documentoData?.destacado ? 'checked' : ''}>
+                                    <label class="form-check-label">Destacado</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="requiere_autenticacion" 
+                                           ${documentoData?.requiere_autenticacion ? 'checked' : ''}>
+                                    <label class="form-check-label">Requiere Login</label>
+                                </div>
+                            </div>
                         </div>
                     </form>
                 `,
                 showCancelButton: true,
                 confirmButtonText: 'Guardar',
-                cancelButtonText: 'Cancelar'
+                cancelButtonText: 'Cancelar',
+                width: '800px',
+                preConfirm: () => {
+                    const formData = new FormData(document.getElementById('documentoForm'));
+                    const data = {};
+                    for (let [key, value] of formData.entries()) {
+                        if (key === 'visible' || key === 'destacado' || key === 'requiere_autenticacion') {
+                            data[key] = value === 'on';
+                        } else {
+                            data[key] = value;
+                        }
+                    }
+                    return saveDocumento(data, documentoId);
+                }
             }).then((result) => {
-                if (result.isConfirmed) {
+                if (result.isConfirmed && result.value) {
                     Swal.fire('Éxito', 'Documento guardado correctamente', 'success');
+                    loadDocumentos();
                 }
             });
+
+            // Set tipo_documento_id if editing
+            if (documentoData?.tipo_documento_id) {
+                setTimeout(() => {
+                    const select = document.querySelector('select[name="tipo_documento_id"]');
+                    if (select) select.value = documentoData.tipo_documento_id;
+                }, 100);
+            }
+        }
+
+        async function saveDocumento(data, documentoId = null) {
+            try {
+                const url = documentoId ? `/api/documentos/admin/${documentoId}` : '/api/documentos/admin';
+                const method = documentoId ? 'PUT' : 'POST';
+                
+                const response = await authenticatedFetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response && response.ok) {
+                    return await response.json();
+                } else {
+                    throw new Error('Error al guardar documento');
+                }
+            } catch (error) {
+                console.error('Error guardando documento:', error);
+                Swal.fire('Error', 'No se pudo guardar el documento', 'error');
+                return false;
+            }
         }
 
         function editDocumento(documentoId) {
@@ -730,37 +1072,148 @@
             `).join('');
         }
 
-        function showGuardiaForm(guardiaId = null) {
+        // ==================== FUNCIONES DE GUARDIAS ====================
+        async function showGuardiaForm(guardiaId = null) {
+            let guardiaData = null;
+            if (guardiaId) {
+                try {
+                    const response = await authenticatedFetch(`/api/admin/guardias/${guardiaId}`);
+                    if (response && response.ok) {
+                        const data = await response.json();
+                        guardiaData = data.data;
+                    }
+                } catch (error) {
+                    console.error('Error cargando guardia:', error);
+                }
+            }
+
             Swal.fire({
                 title: guardiaId ? 'Editar Guardia' : 'Nuevo Guardia',
                 html: `
-                    <form id="guardiaForm">
-                        <div class="mb-3">
-                            <input type="text" class="form-control" name="nombre" placeholder="Nombre" required>
+                    <form id="guardiaForm" class="text-start">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Nombre *</label>
+                                    <input type="text" class="form-control" name="nombre" 
+                                           value="${guardiaData?.nombre || ''}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">RUT *</label>
+                                    <input type="text" class="form-control" name="rut" 
+                                           value="${guardiaData?.rut || ''}" placeholder="12.345.678-9" required>
+                                </div>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <input type="text" class="form-control" name="apellido_paterno" placeholder="Apellido Paterno" required>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Email *</label>
+                                    <input type="email" class="form-control" name="email" 
+                                           value="${guardiaData?.email || ''}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Teléfono</label>
+                                    <input type="tel" class="form-control" name="telefono" 
+                                           value="${guardiaData?.telefono || ''}">
+                                </div>
+                            </div>
                         </div>
+                        ${!guardiaId ? `
                         <div class="mb-3">
-                            <input type="email" class="form-control" name="email" placeholder="Email" required>
+                            <label class="form-label">Contraseña *</label>
+                            <input type="password" class="form-control" name="password" required>
                         </div>
-                        <div class="mb-3">
-                            <input type="tel" class="form-control" name="telefono" placeholder="Teléfono">
-                        </div>
-                        <div class="form-check">
-                            <input type="checkbox" class="form-check-input" name="activo" checked>
-                            <label class="form-check-label">Activo</label>
+                        ` : ''}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="activo" 
+                                           ${guardiaData?.activo !== false ? 'checked' : ''}>
+                                    <label class="form-check-label">Activo</label>
+                                </div>
+                            </div>
+                            ${guardiaId ? `
+                            <div class="col-md-6">
+                                <button type="button" class="btn btn-warning btn-sm" onclick="regenerarCodigoValidacion(${guardiaId})">
+                                    🔄 Regenerar Código
+                                </button>
+                                <small class="text-muted d-block">Código actual: ${guardiaData?.validation_code || 'N/A'}</small>
+                            </div>
+                            ` : ''}
                         </div>
                     </form>
                 `,
                 showCancelButton: true,
                 confirmButtonText: 'Guardar',
-                cancelButtonText: 'Cancelar'
+                cancelButtonText: 'Cancelar',
+                width: '700px',
+                preConfirm: () => {
+                    const formData = new FormData(document.getElementById('guardiaForm'));
+                    const data = {};
+                    for (let [key, value] of formData.entries()) {
+                        if (key === 'activo') {
+                            data[key] = value === 'on';
+                        } else {
+                            data[key] = value;
+                        }
+                    }
+                    return saveGuardia(data, guardiaId);
+                }
             }).then((result) => {
-                if (result.isConfirmed) {
+                if (result.isConfirmed && result.value) {
                     Swal.fire('Éxito', 'Guardia guardado correctamente', 'success');
+                    loadGuardias();
                 }
             });
+        }
+
+        async function saveGuardia(data, guardiaId = null) {
+            try {
+                const url = guardiaId ? `/api/admin/guardias/${guardiaId}` : '/api/admin/guardias';
+                const method = guardiaId ? 'PUT' : 'POST';
+                
+                const response = await authenticatedFetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response && response.ok) {
+                    return await response.json();
+                } else {
+                    throw new Error('Error al guardar guardia');
+                }
+            } catch (error) {
+                console.error('Error guardando guardia:', error);
+                Swal.fire('Error', 'No se pudo guardar el guardia', 'error');
+                return false;
+            }
+        }
+
+        async function regenerarCodigoValidacion(guardiaId) {
+            try {
+                const response = await authenticatedFetch(`/api/admin/guardias/${guardiaId}/regenerar-codigo`, {
+                    method: 'POST'
+                });
+
+                if (response && response.ok) {
+                    const data = await response.json();
+                    Swal.fire('Éxito', `Nuevo código generado: ${data.validation_code}`, 'success');
+                    loadGuardias();
+                } else {
+                    throw new Error('Error al regenerar código');
+                }
+            } catch (error) {
+                console.error('Error regenerando código:', error);
+                Swal.fire('Error', 'No se pudo regenerar el código', 'error');
+            }
         }
 
         function editGuardia(guardiaId) {
@@ -837,37 +1290,92 @@
             `).join('');
         }
 
-        function showPlazaForm(plazaId = null) {
+        async function showPlazaForm(plazaId = null) {
+            let plazaData = null;
+            if (plazaId) {
+                try {
+                    const response = await authenticatedFetch(`/api/admin/plazas/${plazaId}`);
+                    if (response && response.ok) {
+                        const data = await response.json();
+                        plazaData = data.data;
+                    }
+                } catch (error) {
+                    console.error('Error cargando plaza:', error);
+                }
+            }
+
             Swal.fire({
                 title: plazaId ? 'Editar Plaza' : 'Nueva Plaza',
                 html: `
-                    <form id="plazaForm">
+                    <form id="plazaForm" class="text-start">
                         <div class="mb-3">
-                            <input type="text" class="form-control" name="nombre" placeholder="Nombre de la plaza" required>
+                            <label class="form-label">Nombre *</label>
+                            <input type="text" class="form-control" name="nombre" 
+                                   value="${plazaData?.nombre || ''}" required>
                         </div>
                         <div class="mb-3">
-                            <input type="text" class="form-control" name="direccion" placeholder="Dirección">
+                            <label class="form-label">Dirección</label>
+                            <input type="text" class="form-control" name="direccion" 
+                                   value="${plazaData?.direccion || ''}">
                         </div>
                         <div class="mb-3">
-                            <input type="text" class="form-control" name="telefono" placeholder="Teléfono">
-                        </div>
-                        <div class="mb-3">
-                            <input type="email" class="form-control" name="email" placeholder="Email">
+                            <label class="form-label">Descripción</label>
+                            <textarea class="form-control" name="descripcion" rows="3">${plazaData?.descripcion || ''}</textarea>
                         </div>
                         <div class="form-check">
-                            <input type="checkbox" class="form-check-input" name="activa" checked>
+                            <input type="checkbox" class="form-check-input" name="activo" 
+                                   ${plazaData?.activo !== false ? 'checked' : ''}>
                             <label class="form-check-label">Activa</label>
                         </div>
                     </form>
                 `,
                 showCancelButton: true,
                 confirmButtonText: 'Guardar',
-                cancelButtonText: 'Cancelar'
+                cancelButtonText: 'Cancelar',
+                width: '600px',
+                preConfirm: () => {
+                    const formData = new FormData(document.getElementById('plazaForm'));
+                    const data = {};
+                    for (let [key, value] of formData.entries()) {
+                        if (key === 'activo') {
+                            data[key] = value === 'on';
+                        } else {
+                            data[key] = value;
+                        }
+                    }
+                    return savePlaza(data, plazaId);
+                }
             }).then((result) => {
-                if (result.isConfirmed) {
+                if (result.isConfirmed && result.value) {
                     Swal.fire('Éxito', 'Plaza guardada correctamente', 'success');
+                    loadPlazas();
                 }
             });
+        }
+
+        async function savePlaza(data, plazaId = null) {
+            try {
+                const url = plazaId ? `/api/admin/plazas/${plazaId}` : '/api/admin/plazas';
+                const method = plazaId ? 'PUT' : 'POST';
+                
+                const response = await authenticatedFetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response && response.ok) {
+                    return await response.json();
+                } else {
+                    throw new Error('Error al guardar plaza');
+                }
+            } catch (error) {
+                console.error('Error guardando plaza:', error);
+                Swal.fire('Error', 'No se pudo guardar la plaza', 'error');
+                return false;
+            }
         }
 
         function editPlaza(plazaId) {

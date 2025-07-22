@@ -214,6 +214,58 @@ router.get('/admin/all', requireAuthAdmin, async (req, res) => {
     }
 });
 
+// GET /api/documentos/admin/:id - Obtener documento por ID (admin)
+router.get('/admin/:id', requireAuthAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const result = await pool.query(`
+            SELECT 
+                d.id,
+                d.nombre,
+                d.descripcion,
+                d.tipo_documento_id,
+                d.link_drive,
+                d.nombre_archivo,
+                d.tamaño_archivo,
+                d.fecha_publicacion,
+                d.fecha_vencimiento,
+                d.visible,
+                d.destacado,
+                d.requiere_autenticacion,
+                d.created_at,
+                d.updated_at,
+                td.nombre as tipo_nombre,
+                td.icono as tipo_icono,
+                td.color as tipo_color,
+                au.nombre as subido_por_nombre,
+                (SELECT COUNT(*) FROM descargas_documentos WHERE documento_id = d.id) as total_descargas
+            FROM documentos_comunitarios d
+            LEFT JOIN tipo_documento td ON d.tipo_documento_id = td.id
+            LEFT JOIN admin_users au ON d.subido_por = au.id
+            WHERE d.id = $1
+        `, [id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Documento no encontrado'
+            });
+        }
+        
+        res.json({
+            success: true,
+            data: result.rows[0]
+        });
+    } catch (error) {
+        console.error('Error al obtener documento:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+});
+
 // POST /api/documentos/admin - Crear documento (admin)
 router.post('/admin', requireAuthAdmin, async (req, res) => {
     try {

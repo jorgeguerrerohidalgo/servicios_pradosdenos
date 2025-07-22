@@ -290,6 +290,59 @@ router.get('/admin/all', requireAuthAdmin, async (req, res) => {
     }
 });
 
+// GET /api/eventos/admin/:id - Obtener evento por ID (admin)
+router.get('/admin/:id', requireAuthAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const result = await pool.query(`
+            SELECT 
+                e.id,
+                e.titulo,
+                e.descripcion,
+                e.ubicacion,
+                e.fecha_inicio,
+                e.fecha_fin,
+                e.tipo_evento_id,
+                e.link_google_cal,
+                e.link_reunion,
+                e.visible,
+                e.destacado,
+                e.max_participantes,
+                e.requiere_inscripcion,
+                e.created_at,
+                e.updated_at,
+                te.nombre as tipo_nombre,
+                te.icono as tipo_icono,
+                te.color as tipo_color,
+                au.nombre as creado_por_nombre,
+                (SELECT COUNT(*) FROM inscripciones_eventos WHERE evento_id = e.id AND estado = 'confirmado') as inscripciones_confirmadas
+            FROM eventos_vecinales e
+            LEFT JOIN tipo_evento te ON e.tipo_evento_id = te.id
+            LEFT JOIN admin_users au ON e.creado_por = au.id
+            WHERE e.id = $1
+        `, [id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Evento no encontrado'
+            });
+        }
+        
+        res.json({
+            success: true,
+            data: result.rows[0]
+        });
+    } catch (error) {
+        console.error('Error al obtener evento:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor'
+        });
+    }
+});
+
 // POST /api/eventos/admin - Crear evento (admin)
 router.post('/admin', requireAuthAdmin, async (req, res) => {
     try {

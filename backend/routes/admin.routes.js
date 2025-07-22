@@ -22,9 +22,38 @@ router.get('/guardias', requireAuthAdmin, async (req, res) => {
       ORDER BY created_at DESC
     `);
     
-    res.json({ success: true, guardias });
+    res.json({ success: true, data: guardias });
   } catch (error) {
     console.error('Error obteniendo guardias:', error);
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
+  }
+});
+
+// GET /api/admin/guardias/:id - Obtener guardia por ID
+router.get('/guardias/:id', requireAuthAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const guardias = await query(`
+      SELECT 
+        id, nombre, rut, email, telefono, activo, validation_code,
+        created_at, last_login,
+        CASE 
+          WHEN last_login > NOW() - INTERVAL '7 days' THEN 'Activo'
+          WHEN last_login > NOW() - INTERVAL '30 days' THEN 'Inactivo'
+          ELSE 'Sin actividad'
+        END as estado
+      FROM guardias 
+      WHERE id = $1
+    `, [id]);
+    
+    if (guardias.length === 0) {
+      return res.status(404).json({ success: false, message: 'Guardia no encontrado' });
+    }
+    
+    res.json({ success: true, data: guardias[0] });
+  } catch (error) {
+    console.error('Error obteniendo guardia:', error);
     res.status(500).json({ success: false, message: 'Error interno del servidor' });
   }
 });
@@ -32,17 +61,23 @@ router.get('/guardias', requireAuthAdmin, async (req, res) => {
 // Crear nuevo guardia
 router.post('/guardias', requireAdmin, async (req, res) => {
   try {
-    const { nombre, email, telefono, password } = req.body;
+    const { nombre, rut, email, telefono, password } = req.body;
     
     // Validar campos requeridos
-    if (!nombre || !email || !password) {
+    if (!nombre || !rut || !email || !password) {
       return res.status(400).json({ success: false, message: 'Faltan campos requeridos' });
     }
     
     // Verificar si el email ya existe
-    const existingGuard = await query('SELECT id FROM guardias WHERE email = $1', [email]);
-    if (existingGuard.length > 0) {
+    const existingEmail = await query('SELECT id FROM guardias WHERE email = $1', [email]);
+    if (existingEmail.length > 0) {
       return res.status(400).json({ success: false, message: 'El email ya está registrado' });
+    }
+    
+    // Verificar si el RUT ya existe
+    const existingRut = await query('SELECT id FROM guardias WHERE rut = $1', [rut]);
+    if (existingRut.length > 0) {
+      return res.status(400).json({ success: false, message: 'El RUT ya está registrado' });
     }
     
     // Hash de la contraseña
@@ -54,12 +89,12 @@ router.post('/guardias', requireAdmin, async (req, res) => {
     
     // Insertar guardia
     const result = await query(`
-      INSERT INTO guardias (nombre, email, telefono, password, activo, validation_code) 
-      VALUES ($1, $2, $3, $4, true, $5) 
-      RETURNING id, nombre, email, telefono, activo, validation_code, created_at
-    `, [nombre, email, telefono, hashedPassword, validationCode]);
+      INSERT INTO guardias (nombre, rut, email, telefono, password, activo, validation_code) 
+      VALUES ($1, $2, $3, $4, $5, true, $6) 
+      RETURNING id, nombre, rut, email, telefono, activo, validation_code, created_at
+    `, [nombre, rut, email, telefono, hashedPassword, validationCode]);
     
-    res.json({ success: true, guardia: result[0] });
+    res.json({ success: true, data: result[0] });
   } catch (error) {
     console.error('Error creando guardia:', error);
     res.status(500).json({ success: false, message: 'Error interno del servidor' });
@@ -93,7 +128,7 @@ async function generateUniqueValidationCode() {
 router.put('/guardias/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, email, telefono, activo, password } = req.body;
+    const { nombre, rut, email, telefono, activo, password } = req.body;
     
     let updateFields = [];
     let params = [];
@@ -104,7 +139,22 @@ router.put('/guardias/:id', requireAdmin, async (req, res) => {
       params.push(nombre);
     }
     
+    if (rut) {
+      // Verificar si el RUT ya existe en otro guardia
+      const existingRut = await query('SELECT id FROM guardias WHERE rut = $1 AND id != $2', [rut, id]);
+      if (existingRut.length > 0) {
+        return res.status(400).json({ success: false, message: 'El RUT ya está registrado en otro guardia' });
+      }
+      updateFields.push(`rut = $${paramIndex++}`);
+      params.push(rut);
+    }
+    
     if (email) {
+      // Verificar si el email ya existe en otro guardia
+      const existingEmail = await query('SELECT id FROM guardias WHERE email = $1 AND id != $2', [email, id]);
+      if (existingEmail.length > 0) {
+        return res.status(400).json({ success: false, message: 'El email ya está registrado en otro guardia' });
+      }
       updateFields.push(`email = $${paramIndex++}`);
       params.push(email);
     }
@@ -120,6 +170,7 @@ router.put('/guardias/:id', requireAdmin, async (req, res) => {
     }
     
     if (password) {
+      const bcrypt = require('bcrypt');
       const hashedPassword = await bcrypt.hash(password, 10);
       updateFields.push(`password = $${paramIndex++}`);
       params.push(hashedPassword);
@@ -135,14 +186,14 @@ router.put('/guardias/:id', requireAdmin, async (req, res) => {
       UPDATE guardias 
       SET ${updateFields.join(', ')} 
       WHERE id = $${paramIndex}
-      RETURNING id, nombre, email, telefono, activo, created_at
+      RETURNING id, nombre, rut, email, telefono, activo, created_at
     `, params);
     
     if (result.length === 0) {
       return res.status(404).json({ success: false, message: 'Guardia no encontrado' });
     }
     
-    res.json({ success: true, guardia: result[0] });
+    res.json({ success: true, data: result[0] });
   } catch (error) {
     console.error('Error actualizando guardia:', error);
     res.status(500).json({ success: false, message: 'Error interno del servidor' });
@@ -177,7 +228,7 @@ router.delete('/guardias/:id', requireAdmin, async (req, res) => {
 });
 
 // Regenerar código de validación para un guardia
-router.post('/guardias/:id/regenerate-code', requireAdmin, async (req, res) => {
+router.post('/guardias/:id/regenerar-codigo', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -220,9 +271,37 @@ router.get('/plazas', requireAuthAdmin, async (req, res) => {
       ORDER BY p.nombre ASC
     `);
     
-    res.json({ success: true, plazas });
+    res.json({ success: true, data: plazas });
   } catch (error) {
     console.error('Error obteniendo plazas:', error);
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
+  }
+});
+
+// GET /api/admin/plazas/:id - Obtener plaza por ID
+router.get('/plazas/:id', requireAuthAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const plazas = await query(`
+      SELECT 
+        p.id, p.nombre, p.direccion, p.descripcion, p.activo,
+        p.created_at, p.updated_at,
+        COUNT(c.id) as total_checkins,
+        MAX(c.fecha) as ultimo_checkin
+      FROM plazas p
+      LEFT JOIN checkins c ON p.id = c.plaza_id
+      WHERE p.id = $1
+      GROUP BY p.id, p.nombre, p.direccion, p.descripcion, p.activo, p.created_at, p.updated_at
+    `, [id]);
+    
+    if (plazas.length === 0) {
+      return res.status(404).json({ success: false, message: 'Plaza no encontrada' });
+    }
+    
+    res.json({ success: true, data: plazas[0] });
+  } catch (error) {
+    console.error('Error obteniendo plaza:', error);
     res.status(500).json({ success: false, message: 'Error interno del servidor' });
   }
 });
@@ -242,7 +321,7 @@ router.post('/plazas', requireAdmin, async (req, res) => {
       RETURNING id, nombre, direccion, descripcion, activo
     `, [nombre, direccion || null, descripcion || null]);
     
-    res.json({ success: true, plaza: result[0] });
+    res.json({ success: true, data: result[0] });
   } catch (error) {
     console.error('Error creando plaza:', error);
     res.status(500).json({ success: false, message: 'Error interno del servidor' });
@@ -296,7 +375,7 @@ router.put('/plazas/:id', requireAdmin, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Plaza no encontrada' });
     }
     
-    res.json({ success: true, plaza: result[0] });
+    res.json({ success: true, data: result[0] });
   } catch (error) {
     console.error('Error actualizando plaza:', error);
     res.status(500).json({ success: false, message: 'Error interno del servidor' });
