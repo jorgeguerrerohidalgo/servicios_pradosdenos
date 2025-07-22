@@ -301,7 +301,7 @@ router.post('/admin', requireAuthAdmin, async (req, res) => {
         `, [
             nombre, descripcion, tipo_documento_id, link_drive, nombre_archivo,
             tamaño_archivo, fecha_publicacion, fecha_vencimiento, visible,
-            destacado, requiere_autenticacion, req.user.id
+            destacado, requiere_autenticacion, req.session.guardia.id
         ]);
         
         res.status(201).json({
@@ -356,7 +356,7 @@ router.put('/admin/:id', requireAuthAdmin, async (req, res) => {
         `, [
             nombre, descripcion, tipo_documento_id, link_drive, nombre_archivo,
             tamaño_archivo, fecha_publicacion, fecha_vencimiento, visible,
-            destacado, requiere_autenticacion, req.user.id, id
+            destacado, requiere_autenticacion, req.session.guardia.id, id
         ]);
         
         if (result.rows.length === 0) {

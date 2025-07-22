@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
     try {
         const { tipo, destacado, visible = 'true', proximos } = req.query;
         
-        let query = `
+        let sql = `
             SELECT 
                 e.id,
                 e.titulo,
@@ -42,25 +42,25 @@ router.get('/', async (req, res) => {
         
         if (tipo) {
             paramCount++;
-            query += ` AND e.tipo_evento_id = $${paramCount}`;
+            sql += ` AND e.tipo_evento_id = $${paramCount}`;
             params.push(tipo);
         }
         
         if (destacado !== undefined) {
             paramCount++;
-            query += ` AND e.destacado = $${paramCount}`;
+            sql += ` AND e.destacado = $${paramCount}`;
             params.push(destacado === 'true');
         }
         
         if (proximos === 'true') {
             paramCount++;
-            query += ` AND e.fecha_inicio >= NOW()`;
+            sql += ` AND e.fecha_inicio >= NOW()`;
         }
         
         // Ordenar por destacado primero, luego por fecha de inicio
-        query += ' ORDER BY e.destacado DESC, e.fecha_inicio ASC';
+        sql += ' ORDER BY e.destacado DESC, e.fecha_inicio ASC';
         
-        const result = await pool.query(query, params);
+        const result = await pool.query(sql, params);
         
         res.json({
             success: true,
@@ -168,7 +168,7 @@ router.post('/inscribir/:id', requireAuthAdmin, async (req, res) => {
         // Verificar si ya está inscrito
         const inscripcionExistente = await pool.query(
             'SELECT id FROM inscripciones_eventos WHERE evento_id = $1 AND admin_user_id = $2',
-            [id, req.user.id]
+            [id, req.session.guardia.id]
         );
         
         if (inscripcionExistente.rows.length > 0) {
@@ -199,7 +199,7 @@ router.post('/inscribir/:id', requireAuthAdmin, async (req, res) => {
             (evento_id, admin_user_id, comentarios, estado)
             VALUES ($1, $2, $3, 'confirmado')
             RETURNING *
-        `, [id, req.user.id, comentarios]);
+        `, [id, req.session.guardia.id, comentarios]);
         
         res.status(201).json({
             success: true,
@@ -222,7 +222,7 @@ router.delete('/desinscribir/:id', requireAuthAdmin, async (req, res) => {
         
         const result = await pool.query(
             'DELETE FROM inscripciones_eventos WHERE evento_id = $1 AND admin_user_id = $2 RETURNING *',
-            [id, req.user.id]
+            [id, req.session.guardia.id]
         );
         
         if (result.rows.length === 0) {
@@ -360,6 +360,22 @@ router.post('/admin', requireAuthAdmin, async (req, res) => {
             max_participantes,
             requiere_inscripcion
         } = req.body;
+
+        // Validar campos requeridos
+        if (!titulo || !tipo_evento_id) {
+            return res.status(400).json({
+                success: false,
+                message: 'Título y tipo de evento son requeridos'
+            });
+        }
+
+        // Validar UUID del tipo de evento
+        if (!tipo_evento_id || tipo_evento_id.trim() === '') {
+            return res.status(400).json({
+                success: false,
+                message: 'Debe seleccionar un tipo de evento válido'
+            });
+        }
         
         const result = await pool.query(`
             INSERT INTO eventos_vecinales 
@@ -371,7 +387,7 @@ router.post('/admin', requireAuthAdmin, async (req, res) => {
         `, [
             titulo, descripcion, ubicacion, fecha_inicio, fecha_fin,
             tipo_evento_id, link_google_cal, link_reunion, visible,
-            destacado, max_participantes, requiere_inscripcion, req.user.id
+            destacado, max_participantes, requiere_inscripcion, req.session.guardia.id
         ]);
         
         res.status(201).json({
@@ -419,7 +435,7 @@ router.put('/admin/:id', requireAuthAdmin, async (req, res) => {
         `, [
             titulo, descripcion, ubicacion, fecha_inicio, fecha_fin,
             tipo_evento_id, link_google_cal, link_reunion, visible,
-            destacado, max_participantes, requiere_inscripcion, req.user.id, id
+            destacado, max_participantes, requiere_inscripcion, req.session.guardia.id, id
         ]);
         
         if (result.rows.length === 0) {

@@ -22,7 +22,7 @@ router.get('/guardias', requireAuthAdmin, async (req, res) => {
       ORDER BY created_at DESC
     `);
     
-    res.json({ success: true, data: guardias });
+    res.json({ success: true, data: guardias, guardias: guardias });
   } catch (error) {
     console.error('Error obteniendo guardias:', error);
     res.status(500).json({ success: false, message: 'Error interno del servidor' });
@@ -271,7 +271,7 @@ router.get('/plazas', requireAuthAdmin, async (req, res) => {
       ORDER BY p.nombre ASC
     `);
     
-    res.json({ success: true, data: plazas });
+    res.json({ success: true, data: plazas, plazas: plazas });
   } catch (error) {
     console.error('Error obteniendo plazas:', error);
     res.status(500).json({ success: false, message: 'Error interno del servidor' });

@@ -1030,7 +1030,7 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    guardiasGlobal = data.guardias || [];
+                    guardiasGlobal = data.data || [];
                     renderGuardiasTable();
                     console.log('✅ Guardias cargados:', guardiasGlobal.length);
                 } else {
@@ -1245,7 +1245,7 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    plazasGlobal = data.plazas || [];
+                    plazasGlobal = data.data || [];
                     renderPlazasTable();
                     console.log('✅ Plazas cargadas:', plazasGlobal.length);
                 } else {
