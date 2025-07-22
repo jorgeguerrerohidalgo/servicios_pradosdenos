@@ -207,7 +207,7 @@ app.use('/api/checkin', checkinRoutes);
 app.use('/api/checkins', publicRoutes); // Para /api/checkins/public
 app.use('/api/admin', adminRoutes);
 app.use('/api/eventos', eventosRoutes);
-app.use('/api/documentos_comunitarios', documentosRoutes);
+app.use('/api/documentos', documentosRoutes);
 app.use('/api/init', initRoutes);
 app.use('/api', publicRoutes); // Esta debe ir al final para no interceptar otras rutas
 

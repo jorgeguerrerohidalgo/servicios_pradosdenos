@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../utils/db');
+const { pool } = require('../utils/db');
 const { requireAuth, requireAdmin, requireAuthAdmin } = require('../middleware/sessionAuth');
 
 // ==================== DOCUMENTOS COMUNITARIOS ====================
@@ -282,6 +282,14 @@ router.post('/admin', requireAuthAdmin, async (req, res) => {
             destacado,
             requiere_autenticacion
         } = req.body;
+
+        // Validar UUID del tipo de documento
+        if (!tipo_documento_id || tipo_documento_id.trim() === '') {
+            return res.status(400).json({
+                success: false,
+                message: 'Debe seleccionar un tipo de documento válido'
+            });
+        }
         
         const result = await pool.query(`
             INSERT INTO documentos_comunitarios 
@@ -327,6 +335,14 @@ router.put('/admin/:id', requireAuthAdmin, async (req, res) => {
             destacado,
             requiere_autenticacion
         } = req.body;
+
+        // Validar UUID del tipo de documento
+        if (!tipo_documento_id || tipo_documento_id.trim() === '') {
+            return res.status(400).json({
+                success: false,
+                message: 'Debe seleccionar un tipo de documento válido'
+            });
+        }
         
         const result = await pool.query(`
             UPDATE documentos_comunitarios 
