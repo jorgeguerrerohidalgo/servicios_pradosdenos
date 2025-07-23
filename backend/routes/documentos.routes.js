@@ -332,11 +332,11 @@ router.post('/admin', requireAuthAdmin, async (req, res) => {
         }
 
         // Validar que el usuario esté en sesión
-        if (!req.session?.guardia?.id) {
-            console.log('❌ Sesión inválida:', req.session);
+        if (!req.user?.id) {
+            console.log('❌ Usuario no válido:', req.user);
             return res.status(401).json({
                 success: false,
-                message: 'Sesión no válida'
+                message: 'Usuario no válido'
             });
         }
 
@@ -352,7 +352,7 @@ router.post('/admin', requireAuthAdmin, async (req, res) => {
         `, [
             nombre, descripcion, tipo_documento_id, link_drive, nombre_archivo,
             tamaño_archivo, fecha_publicacion, fecha_vencimiento, visible,
-            destacado, requiere_autenticacion, req.session.guardia.id
+            destacado, requiere_autenticacion, req.user.id
         ]);
         
         res.status(201).json({
@@ -407,7 +407,7 @@ router.put('/admin/:id', requireAuthAdmin, async (req, res) => {
         `, [
             nombre, descripcion, tipo_documento_id, link_drive, nombre_archivo,
             tamaño_archivo, fecha_publicacion, fecha_vencimiento, visible,
-            destacado, requiere_autenticacion, req.session.guardia.id, id
+            destacado, requiere_autenticacion, req.user.id, id
         ]);
         
         if (result.rows.length === 0) {

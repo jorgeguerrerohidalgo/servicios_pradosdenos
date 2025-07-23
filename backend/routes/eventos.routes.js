@@ -195,7 +195,7 @@ router.post('/inscribir/:id', requireAuthAdmin, async (req, res) => {
         // Verificar si ya está inscrito
         const inscripcionExistente = await pool.query(
             'SELECT id FROM inscripciones_eventos WHERE evento_id = $1 AND admin_user_id = $2',
-            [id, req.session.guardia.id]
+            [id, req.user.id]
         );
         
         if (inscripcionExistente.rows.length > 0) {
@@ -226,7 +226,7 @@ router.post('/inscribir/:id', requireAuthAdmin, async (req, res) => {
             (evento_id, admin_user_id, comentarios, estado)
             VALUES ($1, $2, $3, 'confirmado')
             RETURNING *
-        `, [id, req.session.guardia.id, comentarios]);
+        `, [id, req.user.id, comentarios]);
         
         res.status(201).json({
             success: true,
@@ -249,7 +249,7 @@ router.delete('/desinscribir/:id', requireAuthAdmin, async (req, res) => {
         
         const result = await pool.query(
             'DELETE FROM inscripciones_eventos WHERE evento_id = $1 AND admin_user_id = $2 RETURNING *',
-            [id, req.session.guardia.id]
+            [id, req.user.id]
         );
         
         if (result.rows.length === 0) {
@@ -409,11 +409,11 @@ router.post('/admin', requireAuthAdmin, async (req, res) => {
         }
 
         // Validar que el usuario esté en sesión
-        if (!req.session?.guardia?.id) {
-            console.log('❌ Sesión inválida:', req.session);
+        if (!req.user?.id) {
+            console.log('❌ Usuario no válido:', req.user);
             return res.status(401).json({
                 success: false,
-                message: 'Sesión no válida'
+                message: 'Usuario no válido'
             });
         }
 
@@ -429,7 +429,7 @@ router.post('/admin', requireAuthAdmin, async (req, res) => {
         `, [
             titulo, descripcion, ubicacion, fecha_inicio, fecha_fin,
             tipo_evento_id, link_google_cal, link_reunion, visible,
-            destacado, max_participantes, requiere_inscripcion, req.session.guardia.id
+            destacado, max_participantes, requiere_inscripcion, req.user.id
         ]);
         
         res.status(201).json({
@@ -477,7 +477,7 @@ router.put('/admin/:id', requireAuthAdmin, async (req, res) => {
         `, [
             titulo, descripcion, ubicacion, fecha_inicio, fecha_fin,
             tipo_evento_id, link_google_cal, link_reunion, visible,
-            destacado, max_participantes, requiere_inscripcion, req.session.guardia.id, id
+            destacado, max_participantes, requiere_inscripcion, req.user.id, id
         ]);
         
         if (result.rows.length === 0) {

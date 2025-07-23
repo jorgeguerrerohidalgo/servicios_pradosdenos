@@ -1,6 +1,42 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../utils/db');
+const { pool } = require('../utils/db');
+
+// Ruta simple para verificar tablas
+router.get('/check-tables', async (req, res) => {
+    try {
+        console.log('🔍 Verificando existencia de tablas...');
+        
+        const tableChecks = await Promise.allSettled([
+            pool.query("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'tipo_evento')"),
+            pool.query("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'eventos_vecinales')"),
+            pool.query("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'tipo_documento')"),
+            pool.query("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'documentos_comunitarios')")
+        ]);
+        
+        const tables = {
+            tipo_evento: tableChecks[0].status === 'fulfilled' ? tableChecks[0].value.rows[0].exists : false,
+            eventos_vecinales: tableChecks[1].status === 'fulfilled' ? tableChecks[1].value.rows[0].exists : false,
+            tipo_documento: tableChecks[2].status === 'fulfilled' ? tableChecks[2].value.rows[0].exists : false,
+            documentos_comunitarios: tableChecks[3].status === 'fulfilled' ? tableChecks[3].value.rows[0].exists : false
+        };
+        
+        console.log('📋 Estado de tablas:', tables);
+        
+        res.json({
+            success: true,
+            tables,
+            allExist: Object.values(tables).every(exists => exists)
+        });
+    } catch (error) {
+        console.error('❌ Error verificando tablas:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error verificando tablas',
+            details: error.message
+        });
+    }
+});
 
 // Ruta para inicializar las tablas de eventos y documentos
 router.post('/init-eventos-documentos', async (req, res) => {
@@ -87,7 +123,7 @@ router.post('/init-eventos-documentos', async (req, res) => {
         `;
 
         // Ejecutar el script de creación de tablas
-        await db.query(createTablesSQL);
+        await pool.query(createTablesSQL);
         
         // Insertar tipos de evento por defecto
         const insertTiposEventoSQL = `
@@ -101,7 +137,7 @@ router.post('/init-eventos-documentos', async (req, res) => {
             ON CONFLICT (nombre) DO NOTHING;
         `;
 
-        await db.query(insertTiposEventoSQL);
+        await pool.query(insertTiposEventoSQL);
         
         // Insertar tipos de documento por defecto
         const insertTiposDocumentoSQL = `
@@ -115,7 +151,7 @@ router.post('/init-eventos-documentos', async (req, res) => {
             ON CONFLICT (nombre) DO NOTHING;
         `;
         
-        await db.query(insertTiposDocumentoSQL);
+        await pool.query(insertTiposDocumentoSQL);
         
         console.log('✅ Tablas de eventos y documentos creadas exitosamente');
         

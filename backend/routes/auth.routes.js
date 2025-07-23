@@ -292,9 +292,20 @@ router.post('/login',
 
 // Ruta para verificar si el usuario está autenticado (SIN validateSession)
 router.get('/check', (req, res) => {
+  console.log('🔍 Verificando estado de sesión...');
+  console.log('Session ID:', req.sessionID);
+  console.log('Session data:', req.session);
+  
   if (!req.session.guardia) {
+    console.log('❌ No hay datos de guardia en sesión');
     return res.json({ authenticated: false, reason: 'no_session' });
   }
+  
+  console.log('✅ Datos de guardia encontrados:', {
+    id: req.session.guardia.id,
+    email: req.session.guardia.email,
+    tipo: req.session.guardia.tipo
+  });
   
   // Verificar que la sesión no sea demasiado antigua (opcional)
   const loginTime = req.session.guardia.loginTime;
@@ -303,6 +314,7 @@ router.get('/check', (req, res) => {
     const maxSessionAge = 8 * 60 * 60 * 1000; // 8 horas
     
     if (sessionAge > maxSessionAge) {
+      console.log('⏰ Sesión expirada');
       req.session.destroy();
       return res.json({ authenticated: false, reason: 'session_expired' });
     }
