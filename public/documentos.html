@@ -778,8 +778,12 @@
         // Función para ver detalle del documento
         async function verDetalleDocumento(documentoId) {
             try {
+                console.log('Cargando detalles del documento ID:', documentoId); // Debug log
+                
                 const response = await fetch(`${API_BASE_URL}/documentos/${documentoId}`);
                 const data = await response.json();
+
+                console.log('Respuesta del documento:', data); // Debug log
 
                 if (data.success) {
                     const documento = data.data;
@@ -832,7 +836,15 @@
                         </a>
                     `;
                     
-                    new bootstrap.Modal(document.getElementById('documentoModal')).show();
+                    console.log('Mostrando modal...'); // Debug log
+                    const modalElement = document.getElementById('documentoModal');
+                    if (modalElement) {
+                        const modal = new bootstrap.Modal(modalElement);
+                        modal.show();
+                        console.log('Modal mostrado'); // Debug log
+                    } else {
+                        console.error('No se encontró el elemento del modal');
+                    }
                 } else {
                     throw new Error(data.message);
                 }

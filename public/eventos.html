@@ -418,8 +418,8 @@
             try {
                 const params = new URLSearchParams({
                     limit: 10,
-                    offset: (page - 1) * 10,
-                    proximos: true
+                    offset: (page - 1) * 10
+                    // Temporarily removed: proximos: true to show all events
                 });
 
                 if (currentFilters.tipo) {
@@ -432,6 +432,8 @@
 
                 const response = await fetch(`${API_BASE_URL}/eventos?${params}`);
                 const data = await response.json();
+
+                console.log('Respuesta eventos:', data); // Debug log
 
                 if (data.success) {
                     mostrarEventos(data.data);

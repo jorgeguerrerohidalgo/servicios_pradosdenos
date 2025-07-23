@@ -72,10 +72,19 @@ router.get('/', async (req, res) => {
 router.get('/tipos', async (req, res) => {
     try {
         let result = await pool.query(`
-            SELECT id, nombre, descripcion, icono, color, orden
-            FROM tipo_documento 
-            WHERE activo = true 
-            ORDER BY orden, nombre
+            SELECT 
+                td.id, 
+                td.nombre, 
+                td.descripcion, 
+                td.icono, 
+                td.color, 
+                td.orden,
+                COUNT(d.id) as total_documentos
+            FROM tipo_documento td
+            LEFT JOIN documentos_comunitarios d ON td.id = d.tipo_documento_id AND d.visible = true
+            WHERE td.activo = true 
+            GROUP BY td.id, td.nombre, td.descripcion, td.icono, td.color, td.orden
+            ORDER BY td.orden, td.nombre
         `);
         
         // Si no hay tipos, crear algunos básicos
@@ -97,12 +106,21 @@ router.get('/tipos', async (req, res) => {
                 `, [tipo.nombre, tipo.descripcion, tipo.icono, tipo.color, tipo.orden]);
             }
             
-            // Obtener los tipos recién creados
+            // Obtener los tipos recién creados con conteo
             result = await pool.query(`
-                SELECT id, nombre, descripcion, icono, color, orden
-                FROM tipo_documento 
-                WHERE activo = true 
-                ORDER BY orden, nombre
+                SELECT 
+                    td.id, 
+                    td.nombre, 
+                    td.descripcion, 
+                    td.icono, 
+                    td.color, 
+                    td.orden,
+                    COUNT(d.id) as total_documentos
+                FROM tipo_documento td
+                LEFT JOIN documentos_comunitarios d ON td.id = d.tipo_documento_id AND d.visible = true
+                WHERE td.activo = true 
+                GROUP BY td.id, td.nombre, td.descripcion, td.icono, td.color, td.orden
+                ORDER BY td.orden, td.nombre
             `);
         }
         
