@@ -943,6 +943,7 @@
                 preConfirm: () => {
                     const formData = new FormData(document.getElementById('documentoForm'));
                     const data = {};
+                    
                     for (let [key, value] of formData.entries()) {
                         if (key === 'visible' || key === 'destacado' || key === 'requiere_autenticacion') {
                             data[key] = value === 'on';
@@ -950,6 +951,19 @@
                             data[key] = value;
                         }
                     }
+                    
+                    // Asegurar que los checkboxes no seleccionados sean false
+                    if (!formData.has('visible')) data.visible = false;
+                    if (!formData.has('destacado')) data.destacado = false;
+                    if (!formData.has('requiere_autenticacion')) data.requiere_autenticacion = false;
+                    
+                    // Validar que tipo_documento_id no esté vacío
+                    if (!data.tipo_documento_id || data.tipo_documento_id.trim() === '') {
+                        Swal.showValidationMessage('Debe seleccionar un tipo de documento');
+                        return false;
+                    }
+                    
+                    console.log('Datos a enviar:', data);
                     return saveDocumento(data, documentoId);
                 }
             }).then((result) => {

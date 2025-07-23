@@ -298,6 +298,7 @@ router.get('/admin/:id', requireAuthAdmin, async (req, res) => {
 router.post('/admin', requireAuthAdmin, async (req, res) => {
     try {
         console.log('📄 Creando documento - Datos recibidos:', req.body);
+        console.log('📄 Usuario en sesión:', req.user);
         
         const {
             nombre,
@@ -313,6 +314,14 @@ router.post('/admin', requireAuthAdmin, async (req, res) => {
             requiere_autenticacion
         } = req.body;
 
+        console.log('📄 Campos extraídos:', {
+            nombre,
+            tipo_documento_id,
+            visible,
+            destacado,
+            requiere_autenticacion
+        });
+
         // Validar campos requeridos
         if (!nombre || !tipo_documento_id) {
             console.log('❌ Faltan campos requeridos:', { nombre, tipo_documento_id });
@@ -323,11 +332,26 @@ router.post('/admin', requireAuthAdmin, async (req, res) => {
         }
 
         // Validar UUID del tipo de documento
-        if (!tipo_documento_id || tipo_documento_id.trim() === '') {
+        if (!tipo_documento_id || tipo_documento_id.trim() === '' || tipo_documento_id === 'undefined') {
             console.log('❌ Tipo de documento inválido:', tipo_documento_id);
             return res.status(400).json({
                 success: false,
                 message: 'Debe seleccionar un tipo de documento válido'
+            });
+        }
+
+        // Verificar que el tipo de documento existe
+        console.log('🔍 Verificando tipo de documento:', tipo_documento_id);
+        const tipoExiste = await pool.query(
+            'SELECT id FROM tipo_documento WHERE id = $1 AND activo = true',
+            [tipo_documento_id]
+        );
+        
+        if (tipoExiste.rows.length === 0) {
+            console.log('❌ Tipo de documento no encontrado:', tipo_documento_id);
+            return res.status(400).json({
+                success: false,
+                message: 'El tipo de documento seleccionado no existe'
             });
         }
 
