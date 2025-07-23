@@ -224,11 +224,57 @@ publicPaths.forEach(publicPath => {
   }
 });
 
+// Rutas específicas para archivos HTML importantes
+app.get('/qr_plazas.html', (req, res) => {
+  const possiblePaths = [
+    path.join(__dirname, 'public', 'qr_plazas.html'),
+    path.join(__dirname, '../public', 'qr_plazas.html')
+  ];
+  
+  for (const filePath of possiblePaths) {
+    if (require('fs').existsSync(filePath)) {
+      return res.sendFile(filePath);
+    }
+  }
+  
+  res.status(404).json({ 
+    error: 'Archivo qr_plazas.html no encontrado',
+    path: req.path,
+    method: req.method,
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.get('/generar_tokens.html', (req, res) => {
+  const possiblePaths = [
+    path.join(__dirname, 'public', 'generar_tokens.html'),
+    path.join(__dirname, '../public', 'generar_tokens.html')
+  ];
+  
+  for (const filePath of possiblePaths) {
+    if (require('fs').existsSync(filePath)) {
+      return res.sendFile(filePath);
+    }
+  }
+  
+  res.status(404).json({ 
+    error: 'Archivo generar_tokens.html no encontrado',
+    path: req.path,
+    method: req.method,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Ruta por defecto para SPA (Single Page App)
 app.get('*', (req, res) => {
   // Evitar que rutas de API sean capturadas aquí
   if (req.path.startsWith('/api/')) {
-    return res.status(404).json({ error: 'API endpoint no encontrado' });
+    return res.status(404).json({ 
+      error: 'Ruta no encontrada',
+      path: req.path,
+      method: req.method,
+      timestamp: new Date().toISOString()
+    });
   }
   
   // Buscar login.html en múltiples ubicaciones
