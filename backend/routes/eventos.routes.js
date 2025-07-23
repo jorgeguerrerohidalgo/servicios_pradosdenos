@@ -374,6 +374,7 @@ router.get('/admin/:id', requireAuthAdmin, async (req, res) => {
 router.post('/admin', requireAuthAdmin, async (req, res) => {
     try {
         console.log('🎯 Creando evento - Datos recibidos:', req.body);
+        console.log('🎯 Usuario en sesión:', req.user);
         
         const {
             titulo,
@@ -390,6 +391,14 @@ router.post('/admin', requireAuthAdmin, async (req, res) => {
             requiere_inscripcion
         } = req.body;
 
+        console.log('🎯 Campos extraídos:', {
+            titulo,
+            tipo_evento_id,
+            visible,
+            destacado,
+            requiere_inscripcion
+        });
+
         // Validar campos requeridos
         if (!titulo || !tipo_evento_id) {
             console.log('❌ Faltan campos requeridos:', { titulo, tipo_evento_id });
@@ -400,11 +409,26 @@ router.post('/admin', requireAuthAdmin, async (req, res) => {
         }
 
         // Validar UUID del tipo de evento
-        if (!tipo_evento_id || tipo_evento_id.trim() === '') {
+        if (!tipo_evento_id || tipo_evento_id.trim() === '' || tipo_evento_id === 'undefined') {
             console.log('❌ Tipo de evento inválido:', tipo_evento_id);
             return res.status(400).json({
                 success: false,
                 message: 'Debe seleccionar un tipo de evento válido'
+            });
+        }
+
+        // Verificar que el tipo de evento existe
+        console.log('🔍 Verificando tipo de evento:', tipo_evento_id);
+        const tipoExiste = await pool.query(
+            'SELECT id FROM tipo_evento WHERE id = $1 AND activo = true',
+            [tipo_evento_id]
+        );
+        
+        if (tipoExiste.rows.length === 0) {
+            console.log('❌ Tipo de evento no encontrado:', tipo_evento_id);
+            return res.status(400).json({
+                success: false,
+                message: 'El tipo de evento seleccionado no existe'
             });
         }
 

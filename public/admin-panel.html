@@ -670,6 +670,7 @@
                 preConfirm: () => {
                     const formData = new FormData(document.getElementById('eventoForm'));
                     const data = {};
+                    
                     for (let [key, value] of formData.entries()) {
                         if (key === 'visible' || key === 'destacado' || key === 'requiere_inscripcion') {
                             data[key] = value === 'on';
@@ -679,6 +680,19 @@
                             data[key] = value;
                         }
                     }
+                    
+                    // Asegurar que los checkboxes no seleccionados sean false
+                    if (!formData.has('visible')) data.visible = false;
+                    if (!formData.has('destacado')) data.destacado = false;
+                    if (!formData.has('requiere_inscripcion')) data.requiere_inscripcion = false;
+                    
+                    // Validar que tipo_evento_id no esté vacío
+                    if (!data.tipo_evento_id || data.tipo_evento_id.trim() === '') {
+                        Swal.showValidationMessage('Debe seleccionar un tipo de evento');
+                        return false;
+                    }
+                    
+                    console.log('Datos a enviar:', data);
                     return saveEvento(data, eventoId);
                 }
             }).then((result) => {
