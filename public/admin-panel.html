@@ -273,15 +273,40 @@
                         <div class="card-body">
                             <h5>Filtros de Reporte</h5>
                             <div class="row">
-                                <div class="col-md-3">
+                                <div class="col-md-2">
+                                    <label for="fechaInicio" class="form-label">Fecha Inicio</label>
                                     <input type="date" class="form-control" id="fechaInicio">
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
+                                    <label for="fechaFin" class="form-label">Fecha Fin</label>
                                     <input type="date" class="form-control" id="fechaFin">
                                 </div>
-                                <div class="col-md-3">
-                                    <button class="btn btn-primary" onclick="generateReport()">
+                                <div class="col-md-2">
+                                    <label for="ordenCampo" class="form-label">Ordenar por</label>
+                                    <select class="form-control" id="ordenCampo">
+                                        <option value="fecha">Fecha</option>
+                                        <option value="plaza_nombre">Plaza</option>
+                                        <option value="guardia_nombre">Guardia</option>
+                                        <option value="guardia_email">Email</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="ordenDireccion" class="form-label">Dirección</label>
+                                    <select class="form-control" id="ordenDireccion">
+                                        <option value="DESC">Descendente</option>
+                                        <option value="ASC">Ascendente</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">&nbsp;</label>
+                                    <button class="btn btn-primary d-block w-100" onclick="generateReport()">
                                         <i class="fas fa-search"></i> Generar Reporte
+                                    </button>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">&nbsp;</label>
+                                    <button class="btn btn-secondary d-block w-100" onclick="exportReport()">
+                                        <i class="fas fa-download"></i> Exportar CSV
                                     </button>
                                 </div>
                             </div>
@@ -290,18 +315,19 @@
                 </div>
             </div>
             <div class="table-responsive mt-4">
-                <table class="table table-striped">
+                <table class="table table-striped" id="reportTable">
                     <thead class="table-dark">
                         <tr>
-                            <th>Fecha</th>
+                            <th>Fecha y Hora</th>
                             <th>Plaza</th>
                             <th>Guardia</th>
-                            <th>Hora</th>
+                            <th>Email</th>
+                            <th>Teléfono</th>
                             <th>Estado</th>
                         </tr>
                     </thead>
-                    <tbody id="reportesTableBody">
-                        <tr><td colspan="5" class="text-center">Seleccione fechas y genere reporte...</td></tr>
+                    <tbody>
+                        <tr><td colspan="6" class="text-center">Seleccione fechas y genere reporte...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -1619,7 +1645,7 @@
             `).join('');
         }
 
-        function generateReport() {
+        async function generateReport() {
             const fechaInicio = document.getElementById('fechaInicio').value;
             const fechaFin = document.getElementById('fechaFin').value;
 
@@ -1632,7 +1658,211 @@
                 return;
             }
 
-            Swal.fire('Éxito', 'Reporte generado correctamente', 'success');
+            // Mostrar loading
+            Swal.fire({
+                title: 'Generando reporte...',
+                text: 'Por favor espere',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                // Obtener orden seleccionado
+                const ordenCampo = document.getElementById('ordenCampo')?.value || 'fecha';
+                const ordenDireccion = document.getElementById('ordenDireccion')?.value || 'DESC';
+
+                // Construir URL con parámetros
+                const params = new URLSearchParams({
+                    fecha_inicio: fechaInicio,
+                    fecha_fin: fechaFin,
+                    orden_campo: ordenCampo,
+                    orden_direccion: ordenDireccion
+                });
+
+                const response = await authenticatedFetch(`/api/admin/reports/checkins?${params}`);
+                
+                if (!response.ok) {
+                    throw new Error('Error al obtener el reporte');
+                }
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayReportResults(data.checkins, data.estadisticas);
+                    Swal.close();
+                } else {
+                    throw new Error(data.message || 'Error al generar el reporte');
+                }
+
+            } catch (error) {
+                console.error('Error generando reporte:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al generar el reporte: ' + error.message,
+                    icon: 'error'
+                });
+            }
+        }
+
+        function displayReportResults(checkins, estadisticas) {
+            const tbody = document.querySelector('#reportTable tbody');
+            
+            // Limpiar tabla
+            tbody.innerHTML = '';
+
+            // Mostrar estadísticas
+            document.getElementById('totalReports').textContent = estadisticas.total_checkins;
+            
+            // Agregar estadísticas adicionales si no existen
+            let statsContainer = document.getElementById('reportStats');
+            if (!statsContainer) {
+                statsContainer = document.createElement('div');
+                statsContainer.id = 'reportStats';
+                statsContainer.className = 'alert alert-info mb-3';
+                document.querySelector('#reportTable').parentNode.insertBefore(statsContainer, document.querySelector('#reportTable'));
+            }
+            
+            statsContainer.innerHTML = `
+                <h5><i class="fas fa-chart-bar"></i> Estadísticas del Reporte</h5>
+                <div class="row">
+                    <div class="col-md-3">
+                        <strong>Total Checkins:</strong> ${estadisticas.total_checkins}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Plazas:</strong> ${estadisticas.total_plazas}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Guardias:</strong> ${estadisticas.total_guardias}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Período:</strong> ${estadisticas.fecha_inicio} - ${estadisticas.fecha_fin}
+                    </div>
+                </div>
+            `;
+
+            // Agregar filas a la tabla
+            if (checkins.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No se encontraron registros en el período seleccionado</td></tr>';
+                return;
+            }
+
+            checkins.forEach(checkin => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${checkin.fecha}</td>
+                    <td>${checkin.plaza_nombre}</td>
+                    <td>${checkin.guardia_nombre}</td>
+                    <td>${checkin.guardia_email}</td>
+                    <td>${checkin.guardia_telefono || 'N/A'}</td>
+                    <td>
+                        <span class="badge bg-success">Completado</span>
+                    </td>
+                `;
+            });
+
+            // Hacer scroll a la tabla
+            document.querySelector('#reportTable').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function exportReport() {
+            const fechaInicio = document.getElementById('fechaInicio').value;
+            const fechaFin = document.getElementById('fechaFin').value;
+
+            if (!fechaInicio || !fechaFin) {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Debe generar un reporte primero seleccionando las fechas',
+                    icon: 'error'
+                });
+                return;
+            }
+
+            try {
+                // Obtener orden seleccionado
+                const ordenCampo = document.getElementById('ordenCampo')?.value || 'fecha';
+                const ordenDireccion = document.getElementById('ordenDireccion')?.value || 'DESC';
+
+                // Construir URL con parámetros
+                const params = new URLSearchParams({
+                    fecha_inicio: fechaInicio,
+                    fecha_fin: fechaFin,
+                    orden_campo: ordenCampo,
+                    orden_direccion: ordenDireccion
+                });
+
+                const response = await authenticatedFetch(`/api/admin/reports/checkins?${params}`);
+                
+                if (!response.ok) {
+                    throw new Error('Error al obtener los datos del reporte');
+                }
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    downloadCSV(data.checkins, `reporte_checkins_${fechaInicio}_${fechaFin}.csv`);
+                } else {
+                    throw new Error(data.message || 'Error al obtener los datos');
+                }
+
+            } catch (error) {
+                console.error('Error exportando reporte:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Error al exportar el reporte: ' + error.message,
+                    icon: 'error'
+                });
+            }
+        }
+
+        function downloadCSV(data, filename) {
+            if (!data || data.length === 0) {
+                Swal.fire({
+                    title: 'Sin datos',
+                    text: 'No hay datos para exportar',
+                    icon: 'warning'
+                });
+                return;
+            }
+
+            // Crear headers CSV
+            const headers = ['Fecha y Hora', 'Plaza', 'Guardia', 'Email', 'Teléfono', 'Estado'];
+            
+            // Crear filas CSV
+            const csvContent = [
+                headers.join(','),
+                ...data.map(row => [
+                    `"${row.fecha}"`,
+                    `"${row.plaza_nombre}"`,
+                    `"${row.guardia_nombre}"`,
+                    `"${row.guardia_email}"`,
+                    `"${row.guardia_telefono || 'N/A'}"`,
+                    `"Completado"`
+                ].join(','))
+            ].join('\n');
+
+            // Crear y descargar archivo
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                Swal.fire({
+                    title: 'Éxito',
+                    text: 'Reporte exportado correctamente',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }
         }
 
         // ==================== FUNCIONES GENERALES ====================

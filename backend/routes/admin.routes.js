@@ -662,6 +662,91 @@ router.get('/reports/recent', requireAuthAdmin, async (req, res) => {
   }
 });
 
+// Reporte completo de checkins con filtros y ordenamiento
+router.get('/reports/checkins', requireAdmin, async (req, res) => {
+  try {
+    const { fecha_inicio, fecha_fin, orden_campo, orden_direccion } = req.query;
+    
+    // Construir cláusula WHERE
+    let whereClause = 'WHERE 1=1';
+    let params = [];
+    let paramIndex = 1;
+    
+    if (fecha_inicio) {
+      whereClause += ` AND c.fecha >= $${paramIndex}`;
+      params.push(fecha_inicio + ' 00:00:00');
+      paramIndex++;
+    }
+    
+    if (fecha_fin) {
+      whereClause += ` AND c.fecha <= $${paramIndex}`;
+      params.push(fecha_fin + ' 23:59:59');
+      paramIndex++;
+    }
+    
+    // Construir cláusula ORDER BY
+    let orderClause = 'ORDER BY c.fecha DESC';
+    const camposValidos = ['fecha', 'plaza_nombre', 'guardia_nombre', 'guardia_email'];
+    const direccionesValidas = ['ASC', 'DESC'];
+    
+    if (orden_campo && camposValidos.includes(orden_campo)) {
+      const direccion = (orden_direccion && direccionesValidas.includes(orden_direccion.toUpperCase())) 
+        ? orden_direccion.toUpperCase() 
+        : 'ASC';
+      
+      switch (orden_campo) {
+        case 'fecha':
+          orderClause = `ORDER BY c.fecha ${direccion}`;
+          break;
+        case 'plaza_nombre':
+          orderClause = `ORDER BY p.nombre ${direccion}`;
+          break;
+        case 'guardia_nombre':
+          orderClause = `ORDER BY g.nombre ${direccion}`;
+          break;
+        case 'guardia_email':
+          orderClause = `ORDER BY g.email ${direccion}`;
+          break;
+      }
+    }
+    
+    const checkins = await query(`
+      SELECT 
+        c.id,
+        TO_CHAR(c.fecha AT TIME ZONE 'UTC' AT TIME ZONE 'America/Santiago', 'DD/MM/YYYY HH24:MI:SS') as fecha,
+        p.nombre as plaza_nombre,
+        g.nombre as guardia_nombre,
+        g.email as guardia_email,
+        g.telefono as guardia_telefono
+      FROM checkins c
+      JOIN plazas p ON c.plaza_id = p.id
+      JOIN guardias g ON c.guardia_id = g.id
+      ${whereClause}
+      ${orderClause}
+    `, params);
+    
+    // Estadísticas adicionales
+    const totalCheckins = checkins.length;
+    const plazasUnicas = [...new Set(checkins.map(c => c.plaza_nombre))];
+    const guardiasUnicos = [...new Set(checkins.map(c => c.guardia_nombre))];
+    
+    res.json({ 
+      success: true, 
+      checkins,
+      estadisticas: {
+        total_checkins: totalCheckins,
+        total_plazas: plazasUnicas.length,
+        total_guardias: guardiasUnicos.length,
+        fecha_inicio: fecha_inicio || 'Sin filtro',
+        fecha_fin: fecha_fin || 'Sin filtro'
+      }
+    });
+  } catch (error) {
+    console.error('Error obteniendo reporte de checkins:', error);
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
+  }
+});
+
 // ==================== ENDPOINT TEMPORAL: GENERAR TOKENS ====================
 // Endpoint temporal para generar tokens automáticamente para plazas sin token
 router.post('/generate-tokens', requireAdmin, async (req, res) => {
