@@ -775,10 +775,24 @@
                 showCancelButton: true,
                 confirmButtonText: 'Sí, eliminar',
                 cancelButtonText: 'Cancelar'
-            }).then((result) => {
+            }).then(async (result) => {
                 if (result.isConfirmed) {
-                    Swal.fire('Eliminado', 'Evento eliminado correctamente', 'success');
-                    loadEventos();
+                    try {
+                        const response = await authenticatedFetch(`/api/eventos/admin/${eventoId}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        if (response && response.ok) {
+                            const data = await response.json();
+                            Swal.fire('Eliminado', data.message || 'Evento eliminado correctamente', 'success');
+                            loadEventos();
+                        } else {
+                            Swal.fire('Error', 'No se pudo eliminar el evento', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error eliminando evento:', error);
+                        Swal.fire('Error', 'No se pudo eliminar el evento', 'error');
+                    }
                 }
             });
         }
@@ -1474,10 +1488,24 @@
                 showCancelButton: true,
                 confirmButtonText: 'Sí, eliminar',
                 cancelButtonText: 'Cancelar'
-            }).then((result) => {
+            }).then(async (result) => {
                 if (result.isConfirmed) {
-                    Swal.fire('Eliminado', 'Plaza eliminada correctamente', 'success');
-                    loadPlazas();
+                    try {
+                        const response = await authenticatedFetch(`/api/admin/plazas/${plazaId}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        if (response && response.ok) {
+                            const data = await response.json();
+                            Swal.fire('Eliminado', data.message || 'Plaza eliminada correctamente', 'success');
+                            loadPlazas();
+                        } else {
+                            Swal.fire('Error', 'No se pudo eliminar la plaza', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error eliminando plaza:', error);
+                        Swal.fire('Error', 'No se pudo eliminar la plaza', 'error');
+                    }
                 }
             });
         }
@@ -1605,12 +1633,55 @@
                 `,
                 showCancelButton: true,
                 confirmButtonText: 'Guardar',
-                cancelButtonText: 'Cancelar'
+                cancelButtonText: 'Cancelar',
+                preConfirm: () => {
+                    const formData = new FormData(document.getElementById('adminForm'));
+                    const data = {};
+                    
+                    for (let [key, value] of formData.entries()) {
+                        if (key === 'activo') {
+                            data[key] = value === 'on';
+                        } else {
+                            data[key] = value;
+                        }
+                    }
+                    
+                    // Asegurar que activo esté definido
+                    if (!formData.has('activo')) data.activo = false;
+                    
+                    return saveAdmin(data, adminId);
+                }
             }).then((result) => {
-                if (result.isConfirmed) {
+                if (result.isConfirmed && result.value) {
                     Swal.fire('Éxito', 'Administrador guardado correctamente', 'success');
+                    loadAdmins();
                 }
             });
+        }
+
+        async function saveAdmin(data, adminId = null) {
+            try {
+                const url = adminId ? `/api/admin/admins/${adminId}` : '/api/admin/admins';
+                const method = adminId ? 'PUT' : 'POST';
+                
+                const response = await authenticatedFetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response && response.ok) {
+                    return await response.json();
+                } else {
+                    throw new Error('Error al guardar administrador');
+                }
+            } catch (error) {
+                console.error('Error guardando administrador:', error);
+                Swal.fire('Error', 'No se pudo guardar el administrador', 'error');
+                return false;
+            }
         }
 
         function editAdmin(adminId) {
@@ -1625,10 +1696,24 @@
                 showCancelButton: true,
                 confirmButtonText: 'Sí, eliminar',
                 cancelButtonText: 'Cancelar'
-            }).then((result) => {
+            }).then(async (result) => {
                 if (result.isConfirmed) {
-                    Swal.fire('Eliminado', 'Administrador eliminado correctamente', 'success');
-                    loadAdmins();
+                    try {
+                        const response = await authenticatedFetch(`/api/admin/admins/${adminId}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        if (response && response.ok) {
+                            const data = await response.json();
+                            Swal.fire('Eliminado', data.message || 'Administrador eliminado correctamente', 'success');
+                            loadAdmins();
+                        } else {
+                            Swal.fire('Error', 'No se pudo eliminar el administrador', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error eliminando administrador:', error);
+                        Swal.fire('Error', 'No se pudo eliminar el administrador', 'error');
+                    }
                 }
             });
         }

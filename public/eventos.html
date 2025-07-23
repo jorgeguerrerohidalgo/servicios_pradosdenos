@@ -671,8 +671,11 @@
         // Función para ver detalle del evento
         async function verDetalleEvento(eventoId) {
             try {
+                console.log('Cargando evento ID:', eventoId);
                 const response = await fetch(`${API_BASE_URL}/eventos/${eventoId}`);
                 const data = await response.json();
+                
+                console.log('Respuesta API:', data);
 
                 if (data.success) {
                     const evento = data.data;
@@ -731,13 +734,19 @@
                         ` : ''}
                     `;
                     
-                    new bootstrap.Modal(document.getElementById('eventoModal')).show();
+                    const modalElement = document.getElementById('eventoModal');
+                    if (modalElement) {
+                        const modal = new bootstrap.Modal(modalElement);
+                        modal.show();
+                    } else {
+                        console.error('Modal eventoModal no encontrado');
+                    }
                 } else {
-                    throw new Error(data.message);
+                    throw new Error(data.message || 'Error al cargar evento');
                 }
             } catch (error) {
                 console.error('Error cargando detalle del evento:', error);
-                alert('Error al cargar el detalle del evento');
+                alert('Error al cargar el detalle del evento: ' + error.message);
             }
         }
 
