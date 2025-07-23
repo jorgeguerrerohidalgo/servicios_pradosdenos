@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Tokens - Prados de Nos</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Generar Tokens para Plazas - Los Prados de Nos</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         body {
@@ -12,672 +12,625 @@
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        .card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.95);
+        
+        .container-main {
+            padding: 30px 0;
         }
-        .card-header {
-            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+        
+        .header-section {
+            text-align: center;
             color: white;
-            border-radius: 15px 15px 0 0 !important;
-            border: none;
-            padding: 20px;
+            margin-bottom: 30px;
         }
+        
+        .header-section h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 50px;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .card {
+            background: rgba(255,255,255,0.95);
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+            margin-bottom: 30px;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px 20px 0 0 !important;
+            padding: 20px;
+            border: none;
+        }
+        
+        .card-body {
+            padding: 30px;
+        }
+        
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            font-size: 16px;
             transition: all 0.3s ease;
         }
+        
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
+        
         .btn-success {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
             border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            font-size: 16px;
             transition: all 0.3s ease;
         }
+        
         .btn-success:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
         }
+        
         .btn-warning {
-            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
             border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            font-size: 16px;
             transition: all 0.3s ease;
         }
+        
         .btn-warning:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 15px rgba(255, 193, 7, 0.4);
         }
-        .token-display {
-            background: #f8f9fa;
-            border: 2px dashed #dee2e6;
-            border-radius: 10px;
+        
+        .plaza-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .plaza-card {
+            background: white;
+            border-radius: 15px;
             padding: 20px;
-            font-family: 'Courier New', monospace;
-            font-size: 1.1em;
-            word-break: break-all;
-            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
         }
-        .token-card {
-            transition: all 0.3s ease;
-            border: 1px solid #e0e0e0;
-            border-radius: 10px;
-            margin-bottom: 15px;
-        }
-        .token-card:hover {
+        
+        .plaza-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         }
-        .loading {
-            display: none;
-        }
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .token-type-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.75em;
+        
+        .plaza-card h6 {
+            color: #495057;
+            margin-bottom: 15px;
             font-weight: 600;
         }
-        .token-type-api {
-            background: #e3f2fd;
-            color: #1976d2;
-        }
-        .token-type-session {
-            background: #f3e5f5;
-            color: #7b1fa2;
-        }
-        .token-type-temp {
-            background: #fff3e0;
-            color: #f57c00;
-        }
-        .stats-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        
+        .token-display {
+            background: #f8f9fa;
             border-radius: 10px;
-            padding: 20px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #dee2e6;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            word-break: break-all;
+        }
+        
+        .token-new {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        
+        .token-regenerated {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+        
+        .loading {
             text-align: center;
-            margin-bottom: 20px;
+            padding: 50px;
+            color: #6c757d;
+        }
+        
+        .loading .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            color: #667eea;
+        }
+        
+        .alert-success {
+            background: rgba(40, 167, 69, 0.1);
+            border: 1px solid rgba(40, 167, 69, 0.3);
+            color: #155724;
+            border-radius: 10px;
+        }
+        
+        .alert-danger {
+            background: rgba(220, 53, 69, 0.1);
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            color: #721c24;
+            border-radius: 10px;
+        }
+        
+        .alert-info {
+            background: rgba(13, 202, 240, 0.1);
+            border: 1px solid rgba(13, 202, 240, 0.3);
+            color: #0c5460;
+            border-radius: 10px;
+        }
+        
+        .alert-warning {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            color: #664d03;
+            border-radius: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .header-section h1 {
+                font-size: 2rem;
+            }
+            
+            .card-body {
+                padding: 20px;
+            }
+            
+            .plaza-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container-fluid py-4">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <div class="card fade-in">
-                    <div class="card-header text-center">
-                        <h2><i class="fas fa-key me-3"></i>Generador de Tokens de Autenticación</h2>
-                        <p class="mb-0">Sistema de Gestión de Tokens - Prados de Nos</p>
+    <a href="/admin-panel.html" class="back-btn">
+        <i class="fas fa-arrow-left"></i> Volver al Panel
+    </a>
+    
+    <div class="container container-main">
+        <div class="header-section">
+            <h1><i class="fas fa-key"></i> Generar Tokens para Plazas</h1>
+            <p class="lead">Genera tokens únicos y seguros para el acceso a cada plaza</p>
+        </div>
+        
+        <!-- Controles Generales -->
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-cogs"></i> Controles Generales</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <button class="btn btn-primary w-100" onclick="generateAllTokens()">
+                            <i class="fas fa-magic"></i> Generar Todos los Tokens
+                        </button>
                     </div>
-                    <div class="card-body">
-                        <!-- Estadísticas -->
-                        <div class="row mb-4">
-                            <div class="col-md-4">
-                                <div class="stats-card">
-                                    <h3 id="totalTokens">0</h3>
-                                    <p><i class="fas fa-key"></i> Tokens Activos</p>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="stats-card">
-                                    <h3 id="totalUsers">0</h3>
-                                    <p><i class="fas fa-users"></i> Usuarios con Token</p>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="stats-card">
-                                    <h3 id="tokensSemana">0</h3>
-                                    <p><i class="fas fa-calendar-week"></i> Esta Semana</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Panel de generación de tokens -->
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-header bg-primary text-white">
-                                        <h5><i class="fas fa-plus-circle me-2"></i>Generar Nuevo Token</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <form id="tokenForm">
-                                            <div class="mb-3">
-                                                <label class="form-label">Tipo de Token</label>
-                                                <select class="form-control" name="tipo" required>
-                                                    <option value="">Seleccionar tipo</option>
-                                                    <option value="api">Token API (Permanente)</option>
-                                                    <option value="session">Token de Sesión (24h)</option>
-                                                    <option value="temp">Token Temporal (1h)</option>
-                                                </select>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label">Descripción</label>
-                                                <input type="text" class="form-control" name="descripcion" 
-                                                       placeholder="Ej: Token para app móvil" required>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label">Usuario/Email (Opcional)</label>
-                                                <input type="email" class="form-control" name="usuario" 
-                                                       placeholder="usuario@email.com">
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label">Permisos</label>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="permisos" value="read" checked>
-                                                    <label class="form-check-label">Lectura</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="permisos" value="write">
-                                                    <label class="form-check-label">Escritura</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" name="permisos" value="admin">
-                                                    <label class="form-check-label">Administración</label>
-                                                </div>
-                                            </div>
-                                            <button type="submit" class="btn btn-primary w-100">
-                                                <i class="fas fa-key me-2"></i>Generar Token
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-header bg-success text-white">
-                                        <h5><i class="fas fa-cogs me-2"></i>Herramientas</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="d-grid gap-2">
-                                            <button class="btn btn-outline-primary" onclick="loadTokens()">
-                                                <i class="fas fa-sync-alt me-2"></i>Actualizar Lista
-                                            </button>
-                                            <button class="btn btn-outline-warning" onclick="revokeExpiredTokens()">
-                                                <i class="fas fa-trash-alt me-2"></i>Limpiar Expirados
-                                            </button>
-                                            <button class="btn btn-outline-info" onclick="exportTokens()">
-                                                <i class="fas fa-download me-2"></i>Exportar Lista
-                                            </button>
-                                            <button class="btn btn-outline-secondary" onclick="showTokenStats()">
-                                                <i class="fas fa-chart-bar me-2"></i>Ver Estadísticas
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Display del token generado -->
-                        <div id="tokenResult" style="display: none;">
-                            <div class="alert alert-success">
-                                <h5><i class="fas fa-check-circle me-2"></i>Token Generado Exitosamente</h5>
-                                <div class="token-display" id="generatedToken"></div>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <button class="btn btn-success w-100" onclick="copyToken()">
-                                            <i class="fas fa-copy me-2"></i>Copiar Token
-                                        </button>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <button class="btn btn-info w-100" onclick="showTokenInfo()">
-                                            <i class="fas fa-info-circle me-2"></i>Ver Detalles
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="mt-3">
-                                    <small class="text-muted">
-                                        <i class="fas fa-exclamation-triangle me-1"></i>
-                                        Guarda este token en un lugar seguro. No se mostrará nuevamente.
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Loading indicator -->
-                        <div class="loading text-center" id="loadingIndicator">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Cargando...</span>
-                            </div>
-                            <p class="mt-2">Procesando...</p>
-                        </div>
-
-                        <!-- Lista de tokens existentes -->
-                        <div class="card">
-                            <div class="card-header">
-                                <h5><i class="fas fa-list me-2"></i>Tokens Existentes</h5>
-                            </div>
-                            <div class="card-body">
-                                <div id="tokensList" class="row">
-                                    <div class="col-12 text-center text-muted">
-                                        <i class="fas fa-key fa-3x mb-3"></i>
-                                        <p>No hay tokens registrados</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-warning w-100" onclick="regenerateAllTokens()">
+                            <i class="fas fa-refresh"></i> Regenerar Todos
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-success w-100" onclick="exportTokens()">
+                            <i class="fas fa-download"></i> Exportar Tokens
+                        </button>
                     </div>
                 </div>
+                
+                <div id="alertContainer" class="mt-3"></div>
+            </div>
+        </div>
+        
+        <!-- Lista de Plazas -->
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-list"></i> Tokens por Plaza</h4>
+            </div>
+            <div class="card-body">
+                <div id="loadingPlazas" class="loading" style="display: none;">
+                    <div class="spinner-border" role="status"></div>
+                    <p class="mt-3">Cargando plazas...</p>
+                </div>
+                <div id="plazasContainer" class="plaza-grid"></div>
             </div>
         </div>
     </div>
-
-    <!-- Modal para detalles del token -->
-    <div class="modal fade" id="tokenModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-info-circle me-2"></i>Detalles del Token
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="tokenModalBody">
-                    <!-- Contenido dinámico -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        Cerrar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script>
-        let currentTokens = [];
-        let generatedTokenData = null;
-
-        // Función para hacer requests autenticados
-        async function authenticatedFetch(url, options = {}) {
-            const defaultOptions = {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...options.headers
-                }
-            };
-            
-            const finalOptions = { ...defaultOptions, ...options };
-            
-            try {
-                const response = await fetch(url, finalOptions);
-                
-                if (response.status === 401) {
-                    alert('Sesión expirada. Redirigiendo al login...');
-                    window.location.href = '/admin-login.html';
-                    return null;
-                }
-                
-                return response;
-            } catch (error) {
-                console.error('Error en request autenticado:', error);
-                throw error;
-            }
+        let plazasData = [];
+        
+        // Función para obtener la URL base de la API
+        function getApiUrl() {
+            return window.location.origin;
         }
-
-        // Generar token aleatorio en el frontend (simulación)
-        function generateRandomToken() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            let token = '';
-            for (let i = 0; i < 64; i++) {
-                token += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return token;
+        
+        // Función de debugging
+        function debug(message, data = null) {
+            console.log(`[Token Debug] ${message}`, data);
         }
-
-        // Generar nuevo token
-        document.getElementById('tokenForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const tipo = formData.get('tipo');
-            const descripcion = formData.get('descripcion');
-            const usuario = formData.get('usuario');
-            const permisos = formData.getAll('permisos');
-            
-            if (!tipo || !descripcion) {
-                alert('Por favor completa todos los campos requeridos');
-                return;
-            }
-            
-            showLoading(true);
-            
-            try {
-                // Simular generación de token
-                const token = generateRandomToken();
-                const expiracion = calculateExpiration(tipo);
-                
-                generatedTokenData = {
-                    token: token,
-                    tipo: tipo,
-                    descripcion: descripcion,
-                    usuario: usuario || 'Sistema',
-                    permisos: permisos,
-                    creado: new Date(),
-                    expira: expiracion
-                };
-                
-                // Guardar en localStorage como simulación
-                saveTokenToStorage(generatedTokenData);
-                
-                // Mostrar token generado
-                showGeneratedToken(token);
-                
-                // Limpiar formulario
-                this.reset();
-                
-                // Actualizar lista
-                loadTokens();
-                
-            } catch (error) {
-                console.error('Error generando token:', error);
-                alert('Error al generar el token');
-            } finally {
-                showLoading(false);
-            }
+        
+        // Cargar plazas al iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            debug('Documento cargado, iniciando...');
+            loadPlazas();
         });
-
-        // Calcular fecha de expiración según el tipo
-        function calculateExpiration(tipo) {
-            const now = new Date();
-            switch(tipo) {
-                case 'session':
-                    return new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 horas
-                case 'temp':
-                    return new Date(now.getTime() + 60 * 60 * 1000); // 1 hora
-                case 'api':
-                default:
-                    return new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000); // 1 año
-            }
-        }
-
-        // Guardar token en localStorage (simulación)
-        function saveTokenToStorage(tokenData) {
-            let tokens = JSON.parse(localStorage.getItem('generatedTokens') || '[]');
-            tokens.push({
-                ...tokenData,
-                id: Date.now().toString()
-            });
-            localStorage.setItem('generatedTokens', JSON.stringify(tokens));
-        }
-
-        // Mostrar token generado
-        function showGeneratedToken(token) {
-            document.getElementById('generatedToken').textContent = token;
-            document.getElementById('tokenResult').style.display = 'block';
+        
+        // Cargar plazas desde la API
+        async function loadPlazas() {
+            debug('Cargando plazas desde API...');
             
-            // Scroll to token result
-            document.getElementById('tokenResult').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        // Copiar token al portapapeles
-        async function copyToken() {
-            const tokenText = document.getElementById('generatedToken').textContent;
+            const loading = document.getElementById('loadingPlazas');
+            const container = document.getElementById('plazasContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
             
             try {
-                await navigator.clipboard.writeText(tokenText);
+                const apiUrl = `${getApiUrl()}/api/plazas`;
+                debug('URL API:', apiUrl);
                 
-                // Mostrar confirmación
-                const button = event.target;
-                const originalText = button.innerHTML;
-                button.innerHTML = '<i class="fas fa-check me-2"></i>Copiado!';
-                button.classList.add('btn-success');
-                button.classList.remove('btn-primary');
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
                 
-                setTimeout(() => {
-                    button.innerHTML = originalText;
-                    button.classList.remove('btn-success');
-                    button.classList.add('btn-primary');
-                }, 2000);
+                debug('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                debug('Datos recibidos:', data);
+                
+                if (!data || (!data.plazas && !Array.isArray(data))) {
+                    if (Array.isArray(data)) {
+                        plazasData = data;
+                    } else {
+                        throw new Error('Formato de datos inválido');
+                    }
+                } else {
+                    plazasData = data.plazas || data;
+                }
+                
+                debug('Plazas cargadas:', plazasData.length);
+                
+                displayPlazas();
+                
+                if (plazasData.length > 0) {
+                    showAlert('success', `${plazasData.length} plazas cargadas correctamente`);
+                } else {
+                    showAlert('warning', 'No se encontraron plazas disponibles');
+                }
+                
             } catch (error) {
-                console.error('Error copiando token:', error);
-                alert('No se pudo copiar el token');
+                debug('Error cargando plazas:', error);
+                showAlert('danger', 'Error al cargar las plazas: ' + error.message);
+                
+                // Datos de prueba si la API falla
+                debug('Usando datos de prueba...');
+                plazasData = [
+                    { id: 1, nombre: 'Plaza A1', direccion: 'Calle Principal 123', token: null },
+                    { id: 2, nombre: 'Plaza A2', direccion: 'Calle Principal 124', token: null },
+                    { id: 3, nombre: 'Plaza B1', direccion: 'Calle Secundaria 125', token: null },
+                    { id: 4, nombre: 'Plaza B2', direccion: 'Calle Secundaria 126', token: null },
+                    { id: 5, nombre: 'Plaza C1', direccion: 'Avenida Central 127', token: null }
+                ];
+                
+                displayPlazas();
+                showAlert('info', 'Usando datos de prueba. Verifique la conexión con el servidor.');
+                
+            } finally {
+                loading.style.display = 'none';
             }
         }
-
-        // Mostrar información del token generado
-        function showTokenInfo() {
-            if (!generatedTokenData) return;
+        
+        // Mostrar plazas en el grid
+        function displayPlazas() {
+            const container = document.getElementById('plazasContainer');
+            container.innerHTML = '';
             
-            const modalBody = document.getElementById('tokenModalBody');
-            modalBody.innerHTML = `
-                <div class="row">
-                    <div class="col-md-6">
-                        <strong>Tipo:</strong>
-                        <span class="token-type-badge token-type-${generatedTokenData.tipo}">
-                            ${generatedTokenData.tipo.toUpperCase()}
-                        </span>
+            plazasData.forEach(plaza => {
+                const plazaCard = document.createElement('div');
+                plazaCard.className = 'plaza-card';
+                plazaCard.id = `plaza-${plaza.id}`;
+                
+                const hasToken = plaza.token && plaza.token.length > 0;
+                const tokenDisplay = hasToken ? 
+                    `<div class="token-display">${plaza.token}</div>` : 
+                    '<div class="token-display text-muted">Token no generado</div>';
+                
+                plazaCard.innerHTML = `
+                    <h6>${plaza.nombre}</h6>
+                    <p class="text-muted">${plaza.direccion || 'Sin dirección'}</p>
+                    
+                    <div class="token-section">
+                        <strong>Token:</strong>
+                        ${tokenDisplay}
                     </div>
-                    <div class="col-md-6">
-                        <strong>Usuario:</strong> ${generatedTokenData.usuario}
-                    </div>
-                </div>
-                <hr>
-                <div class="row">
-                    <div class="col-md-6">
-                        <strong>Creado:</strong> ${generatedTokenData.creado.toLocaleString('es-CL')}
-                    </div>
-                    <div class="col-md-6">
-                        <strong>Expira:</strong> ${generatedTokenData.expira.toLocaleString('es-CL')}
-                    </div>
-                </div>
-                <hr>
-                <div>
-                    <strong>Descripción:</strong> ${generatedTokenData.descripcion}
-                </div>
-                <hr>
-                <div>
-                    <strong>Permisos:</strong> ${generatedTokenData.permisos.join(', ') || 'Solo lectura'}
-                </div>
-                <hr>
-                <div>
-                    <strong>Token:</strong>
-                    <div class="token-display mt-2">${generatedTokenData.token}</div>
-                </div>
-            `;
-            
-            const modal = new bootstrap.Modal(document.getElementById('tokenModal'));
-            modal.show();
-        }
-
-        // Cargar tokens existentes
-        function loadTokens() {
-            try {
-                const tokens = JSON.parse(localStorage.getItem('generatedTokens') || '[]');
-                currentTokens = tokens.filter(token => new Date(token.expira) > new Date());
-                renderTokensList();
-                updateStats();
-            } catch (error) {
-                console.error('Error cargando tokens:', error);
-            }
-        }
-
-        // Renderizar lista de tokens
-        function renderTokensList() {
-            const tokensList = document.getElementById('tokensList');
-            
-            if (currentTokens.length === 0) {
-                tokensList.innerHTML = `
-                    <div class="col-12 text-center text-muted">
-                        <i class="fas fa-key fa-3x mb-3"></i>
-                        <p>No hay tokens activos</p>
+                    
+                    <div class="mt-3">
+                        <button class="btn btn-sm btn-primary me-2" onclick="generateToken('${plaza.id}')">
+                            <i class="fas fa-key"></i> ${hasToken ? 'Regenerar' : 'Generar'} Token
+                        </button>
+                        ${hasToken ? `
+                            <button class="btn btn-sm btn-success" onclick="copyToken('${plaza.id}')">
+                                <i class="fas fa-copy"></i> Copiar
+                            </button>
+                        ` : ''}
                     </div>
                 `;
-                return;
-            }
-
-            tokensList.innerHTML = currentTokens.map(token => `
-                <div class="col-md-6 col-lg-4">
-                    <div class="token-card card h-100">
-                        <div class="card-body">
-                            <h6 class="card-title">
-                                <span class="token-type-badge token-type-${token.tipo}">
-                                    ${token.tipo.toUpperCase()}
-                                </span>
-                            </h6>
-                            <p class="card-text">${token.descripcion}</p>
-                            <small class="text-muted">
-                                <i class="fas fa-user me-1"></i>${token.usuario}<br>
-                                <i class="fas fa-clock me-1"></i>Expira: ${new Date(token.expira).toLocaleDateString('es-CL')}
-                            </small>
-                            <div class="mt-3 d-grid gap-2">
-                                <button class="btn btn-sm btn-outline-info" onclick="viewToken('${token.id}')">
-                                    <i class="fas fa-eye me-1"></i>Ver
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="revokeToken('${token.id}')">
-                                    <i class="fas fa-times me-1"></i>Revocar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
+                
+                container.appendChild(plazaCard);
+            });
         }
-
-        // Ver detalles de un token
-        function viewToken(tokenId) {
-            const token = currentTokens.find(t => t.id === tokenId);
-            if (!token) return;
+        
+        // Generar token único
+        function generateUniqueToken() {
+            const timestamp = Date.now().toString(36);
+            const randomStr = Math.random().toString(36).substr(2, 9);
+            const additionalRandom = Math.random().toString(36).substr(2, 5);
             
-            generatedTokenData = token;
-            showTokenInfo();
+            return `tok_${timestamp}_${randomStr}_${additionalRandom}`.toUpperCase();
         }
-
-        // Revocar token
-        function revokeToken(tokenId) {
-            if (confirm('¿Estás seguro de que quieres revocar este token?')) {
-                let tokens = JSON.parse(localStorage.getItem('generatedTokens') || '[]');
-                tokens = tokens.filter(t => t.id !== tokenId);
-                localStorage.setItem('generatedTokens', JSON.stringify(tokens));
-                loadTokens();
+        
+        // Generar token para una plaza específica
+        async function generateToken(plazaId) {
+            debug(`Generando token para plaza ${plazaId}`);
+            
+            try {
+                const plaza = plazasData.find(p => p.id == plazaId);
+                if (!plaza) {
+                    throw new Error('Plaza no encontrada');
+                }
+                
+                const newToken = generateUniqueToken();
+                
+                // Actualizar token en la plaza
+                plaza.token = newToken;
+                
+                // Actualizar display
+                updatePlazaTokenDisplay(plazaId, newToken, true);
+                
+                // Aquí deberías enviar el token al servidor
+                await saveTokenToServer(plazaId, newToken);
+                
+                showAlert('success', `Token generado exitosamente para ${plaza.nombre}`);
+                debug(`Token generado: ${newToken}`);
+                
+            } catch (error) {
+                debug('Error generando token:', error);
+                showAlert('danger', 'Error al generar token: ' + error.message);
             }
         }
-
-        // Limpiar tokens expirados
-        function revokeExpiredTokens() {
-            let tokens = JSON.parse(localStorage.getItem('generatedTokens') || '[]');
-            const activeTokens = tokens.filter(token => new Date(token.expira) > new Date());
-            const expiredCount = tokens.length - activeTokens.length;
+        
+        // Actualizar display del token
+        function updatePlazaTokenDisplay(plazaId, token, isNew = false) {
+            const plazaCard = document.getElementById(`plaza-${plazaId}`);
+            if (!plazaCard) return;
             
-            if (expiredCount === 0) {
-                alert('No hay tokens expirados para limpiar');
-                return;
-            }
+            const tokenSection = plazaCard.querySelector('.token-section');
+            const tokenClass = isNew ? 'token-new' : 'token-regenerated';
             
-            if (confirm(`¿Eliminar ${expiredCount} token(s) expirado(s)?`)) {
-                localStorage.setItem('generatedTokens', JSON.stringify(activeTokens));
-                loadTokens();
-                alert(`Se eliminaron ${expiredCount} tokens expirados`);
-            }
-        }
-
-        // Exportar tokens
-        function exportTokens() {
-            const tokens = currentTokens.map(token => ({
-                descripcion: token.descripcion,
-                tipo: token.tipo,
-                usuario: token.usuario,
-                creado: token.creado,
-                expira: token.expira,
-                permisos: token.permisos
-            }));
-            
-            const dataStr = JSON.stringify(tokens, null, 2);
-            const dataBlob = new Blob([dataStr], {type: 'application/json'});
-            
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(dataBlob);
-            link.download = `tokens_${new Date().toISOString().split('T')[0]}.json`;
-            link.click();
-        }
-
-        // Actualizar estadísticas
-        function updateStats() {
-            document.getElementById('totalTokens').textContent = currentTokens.length;
-            
-            const uniqueUsers = new Set(currentTokens.map(t => t.usuario)).size;
-            document.getElementById('totalUsers').textContent = uniqueUsers;
-            
-            const thisWeek = currentTokens.filter(token => {
-                const tokenDate = new Date(token.creado);
-                const weekAgo = new Date();
-                weekAgo.setDate(weekAgo.getDate() - 7);
-                return tokenDate > weekAgo;
-            }).length;
-            document.getElementById('tokensSemana').textContent = thisWeek;
-        }
-
-        // Mostrar estadísticas detalladas
-        function showTokenStats() {
-            const stats = {
-                total: currentTokens.length,
-                porTipo: currentTokens.reduce((acc, token) => {
-                    acc[token.tipo] = (acc[token.tipo] || 0) + 1;
-                    return acc;
-                }, {}),
-                usuarios: new Set(currentTokens.map(t => t.usuario)).size
-            };
-            
-            const modalBody = document.getElementById('tokenModalBody');
-            modalBody.innerHTML = `
-                <h5>Estadísticas Generales</h5>
-                <div class="row">
-                    <div class="col-md-4 text-center">
-                        <h3 class="text-primary">${stats.total}</h3>
-                        <p>Tokens Activos</p>
-                    </div>
-                    <div class="col-md-4 text-center">
-                        <h3 class="text-success">${stats.usuarios}</h3>
-                        <p>Usuarios Únicos</p>
-                    </div>
-                    <div class="col-md-4 text-center">
-                        <h3 class="text-info">${Object.keys(stats.porTipo).length}</h3>
-                        <p>Tipos de Token</p>
-                    </div>
-                </div>
-                <hr>
-                <h5>Distribución por Tipo</h5>
-                ${Object.entries(stats.porTipo).map(([tipo, count]) => `
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="token-type-badge token-type-${tipo}">${tipo.toUpperCase()}</span>
-                        <span class="badge bg-secondary">${count}</span>
-                    </div>
-                `).join('')}
+            tokenSection.innerHTML = `
+                <strong>Token:</strong>
+                <div class="token-display ${tokenClass}">${token}</div>
             `;
             
-            const modal = new bootstrap.Modal(document.getElementById('tokenModal'));
-            modal.show();
+            // Actualizar botones
+            const buttonContainer = plazaCard.querySelector('.mt-3');
+            buttonContainer.innerHTML = `
+                <button class="btn btn-sm btn-primary me-2" onclick="generateToken('${plazaId}')">
+                    <i class="fas fa-key"></i> Regenerar Token
+                </button>
+                <button class="btn btn-sm btn-success" onclick="copyToken('${plazaId}')">
+                    <i class="fas fa-copy"></i> Copiar
+                </button>
+            `;
         }
-
-        // Mostrar/ocultar loading
-        function showLoading(show) {
-            document.getElementById('loadingIndicator').style.display = show ? 'block' : 'none';
+        
+        // Copiar token al portapapeles
+        async function copyToken(plazaId) {
+            const plaza = plazasData.find(p => p.id == plazaId);
+            if (!plaza || !plaza.token) return;
+            
+            try {
+                await navigator.clipboard.writeText(plaza.token);
+                showAlert('success', `Token copiado al portapapeles para ${plaza.nombre}`);
+            } catch (error) {
+                // Fallback para navegadores que no soportan clipboard API
+                const textArea = document.createElement('textarea');
+                textArea.value = plaza.token;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showAlert('success', `Token copiado al portapapeles para ${plaza.nombre}`);
+            }
         }
-
-        // Inicializar al cargar la página
-        document.addEventListener('DOMContentLoaded', function() {
-            loadTokens();
-        });
+        
+        // Generar todos los tokens
+        async function generateAllTokens() {
+            debug('Generando todos los tokens...');
+            
+            try {
+                let generatedCount = 0;
+                
+                for (const plaza of plazasData) {
+                    if (!plaza.token) {
+                        const newToken = generateUniqueToken();
+                        plaza.token = newToken;
+                        updatePlazaTokenDisplay(plaza.id, newToken, true);
+                        await saveTokenToServer(plaza.id, newToken);
+                        generatedCount++;
+                        
+                        // Pequeña pausa para no sobrecargar
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+                }
+                
+                if (generatedCount > 0) {
+                    showAlert('success', `${generatedCount} tokens generados exitosamente`);
+                } else {
+                    showAlert('info', 'Todas las plazas ya tienen tokens generados');
+                }
+                
+            } catch (error) {
+                debug('Error generando todos los tokens:', error);
+                showAlert('danger', 'Error al generar tokens: ' + error.message);
+            }
+        }
+        
+        // Regenerar todos los tokens
+        async function regenerateAllTokens() {
+            debug('Regenerando todos los tokens...');
+            
+            if (!confirm('¿Estás seguro de que quieres regenerar TODOS los tokens? Esto invalidará todos los códigos QR existentes.')) {
+                return;
+            }
+            
+            try {
+                for (const plaza of plazasData) {
+                    const newToken = generateUniqueToken();
+                    plaza.token = newToken;
+                    updatePlazaTokenDisplay(plaza.id, newToken, false);
+                    await saveTokenToServer(plaza.id, newToken);
+                    
+                    // Pequeña pausa para no sobrecargar
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                showAlert('success', `Todos los tokens han sido regenerados exitosamente`);
+                
+            } catch (error) {
+                debug('Error regenerando tokens:', error);
+                showAlert('danger', 'Error al regenerar tokens: ' + error.message);
+            }
+        }
+        
+        // Exportar tokens
+        function exportTokens() {
+            debug('Exportando tokens...');
+            
+            const tokensWithPlazas = plazasData.filter(plaza => plaza.token);
+            
+            if (tokensWithPlazas.length === 0) {
+                showAlert('warning', 'No hay tokens para exportar');
+                return;
+            }
+            
+            const csvContent = [
+                ['Plaza', 'Direccion', 'Token', 'URL_Checkin'],
+                ...tokensWithPlazas.map(plaza => [
+                    plaza.nombre,
+                    plaza.direccion || 'N/A',
+                    plaza.token,
+                    `${getApiUrl()}/checkin.html?plaza=${plaza.token}`
+                ])
+            ].map(row => row.join(',')).join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `tokens_plazas_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showAlert('success', `Tokens exportados exitosamente (${tokensWithPlazas.length} plazas)`);
+        }
+        
+        // Guardar token en el servidor
+        async function saveTokenToServer(plazaId, token) {
+            debug(`Guardando token en servidor para plaza ${plazaId}`);
+            
+            try {
+                const response = await fetch(`${getApiUrl()}/api/plazas/${plazaId}/token`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ token: token })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                debug('Token guardado exitosamente:', result);
+                
+            } catch (error) {
+                debug('Error guardando token (continuando con local):', error);
+                // Continuar con el token local aunque falle el servidor
+            }
+        }
+        
+        // Mostrar alertas
+        function showAlert(type, message) {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            container.innerHTML = '';
+            container.appendChild(alert);
+            
+            // Auto-dismiss después de 5 segundos
+            setTimeout(() => {
+                if (alert && alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
     </script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
