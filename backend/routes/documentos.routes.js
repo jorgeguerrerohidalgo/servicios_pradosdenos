@@ -71,12 +71,40 @@ router.get('/', async (req, res) => {
 // GET /api/documentos/tipos - Obtener tipos de documento
 router.get('/tipos', async (req, res) => {
     try {
-        const result = await pool.query(`
+        let result = await pool.query(`
             SELECT id, nombre, descripcion, icono, color, orden
             FROM tipo_documento 
             WHERE activo = true 
             ORDER BY orden, nombre
         `);
+        
+        // Si no hay tipos, crear algunos básicos
+        if (result.rows.length === 0) {
+            console.log('No hay tipos de documento, creando tipos básicos...');
+            
+            const tiposBasicos = [
+                { nombre: 'Acta', descripcion: 'Actas de reuniones y asambleas', icono: 'fas fa-file-alt', color: '#007bff', orden: 1 },
+                { nombre: 'Reglamento', descripcion: 'Reglamentos y normativas', icono: 'fas fa-gavel', color: '#6f42c1', orden: 2 },
+                { nombre: 'Comunicado', descripcion: 'Comunicados oficiales', icono: 'fas fa-bullhorn', color: '#28a745', orden: 3 },
+                { nombre: 'Formulario', descripcion: 'Formularios y solicitudes', icono: 'fas fa-clipboard', color: '#ffc107', orden: 4 },
+                { nombre: 'Informe', descripcion: 'Informes técnicos y financieros', icono: 'fas fa-chart-bar', color: '#17a2b8', orden: 5 }
+            ];
+            
+            for (const tipo of tiposBasicos) {
+                await pool.query(`
+                    INSERT INTO tipo_documento (nombre, descripcion, icono, color, orden, activo)
+                    VALUES ($1, $2, $3, $4, $5, true)
+                `, [tipo.nombre, tipo.descripcion, tipo.icono, tipo.color, tipo.orden]);
+            }
+            
+            // Obtener los tipos recién creados
+            result = await pool.query(`
+                SELECT id, nombre, descripcion, icono, color, orden
+                FROM tipo_documento 
+                WHERE activo = true 
+                ORDER BY orden, nombre
+            `);
+        }
         
         res.json({
             success: true,
@@ -269,6 +297,8 @@ router.get('/admin/:id', requireAuthAdmin, async (req, res) => {
 // POST /api/documentos/admin - Crear documento (admin)
 router.post('/admin', requireAuthAdmin, async (req, res) => {
     try {
+        console.log('📄 Creando documento - Datos recibidos:', req.body);
+        
         const {
             nombre,
             descripcion,
@@ -283,13 +313,34 @@ router.post('/admin', requireAuthAdmin, async (req, res) => {
             requiere_autenticacion
         } = req.body;
 
+        // Validar campos requeridos
+        if (!nombre || !tipo_documento_id) {
+            console.log('❌ Faltan campos requeridos:', { nombre, tipo_documento_id });
+            return res.status(400).json({
+                success: false,
+                message: 'Nombre y tipo de documento son requeridos'
+            });
+        }
+
         // Validar UUID del tipo de documento
         if (!tipo_documento_id || tipo_documento_id.trim() === '') {
+            console.log('❌ Tipo de documento inválido:', tipo_documento_id);
             return res.status(400).json({
                 success: false,
                 message: 'Debe seleccionar un tipo de documento válido'
             });
         }
+
+        // Validar que el usuario esté en sesión
+        if (!req.session?.guardia?.id) {
+            console.log('❌ Sesión inválida:', req.session);
+            return res.status(401).json({
+                success: false,
+                message: 'Sesión no válida'
+            });
+        }
+
+        console.log('✅ Validaciones pasadas, insertando en BD...');
         
         const result = await pool.query(`
             INSERT INTO documentos_comunitarios 
