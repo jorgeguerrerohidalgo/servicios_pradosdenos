@@ -443,6 +443,25 @@ router.post('/admin', requireAuthAdmin, async (req, res) => {
 
         console.log('✅ Validaciones pasadas, insertando en BD...');
         
+        // Preparar los valores para la inserción
+        const valores = [
+            titulo, 
+            descripcion || null, 
+            ubicacion || null, 
+            fecha_inicio || null, 
+            fecha_fin || null,
+            tipo_evento_id, 
+            link_google_cal || null, 
+            link_reunion || null, 
+            visible === true || visible === 'true',
+            destacado === true || destacado === 'true', 
+            max_participantes ? parseInt(max_participantes) : null, 
+            requiere_inscripcion === true || requiere_inscripcion === 'true', 
+            req.user.id
+        ];
+        
+        console.log('📊 Valores a insertar:', valores);
+        
         const result = await pool.query(`
             INSERT INTO eventos_vecinales 
             (titulo, descripcion, ubicacion, fecha_inicio, fecha_fin, 
@@ -450,11 +469,7 @@ router.post('/admin', requireAuthAdmin, async (req, res) => {
              destacado, max_participantes, requiere_inscripcion, creado_por)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
             RETURNING *
-        `, [
-            titulo, descripcion, ubicacion, fecha_inicio, fecha_fin,
-            tipo_evento_id, link_google_cal, link_reunion, visible,
-            destacado, max_participantes, requiere_inscripcion, req.user.id
-        ]);
+        `, valores);
         
         res.status(201).json({
             success: true,
@@ -462,10 +477,14 @@ router.post('/admin', requireAuthAdmin, async (req, res) => {
             data: result.rows[0]
         });
     } catch (error) {
-        console.error('Error al crear evento:', error);
+        console.error('❌ Error completo al crear evento:', error);
+        console.error('❌ Stack trace:', error.stack);
+        console.error('❌ Mensaje de error:', error.message);
+        console.error('❌ Código de error:', error.code);
         res.status(500).json({
             success: false,
-            message: 'Error interno del servidor'
+            message: 'Error interno del servidor',
+            debug: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 });
