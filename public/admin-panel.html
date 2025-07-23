@@ -1609,40 +1609,12 @@
 
         // ==================== FUNCIONES DE REPORTES ====================
         async function loadReportes() {
-            try {
-                console.log('📊 Cargando reportes con sesiones...');
-                const response = await authenticatedFetch('/api/admin/reports/recent');
-                if (!response) return; // Sesión expirada, ya redirigió
-
-                if (response.ok) {
-                    const data = await response.json();
-                    renderReportesTable(data.reports || []);
-                    console.log('✅ Reportes cargados:', data.reports?.length || 0);
-                } else {
-                    console.error('Error al cargar reportes:', await response.text());
-                }
-            } catch (error) {
-                console.error('Error al cargar reportes:', error);
-            }
+            console.log('📊 Sección de reportes lista - use el formulario para generar reportes');
+            // Esta función ya no es necesaria, los reportes se generan bajo demanda
         }
 
         function renderReportesTable(reportes) {
-            const tbody = document.getElementById('reportesTableBody');
-            
-            if (reportes.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No hay reportes disponibles</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = reportes.map(reporte => `
-                <tr>
-                    <td>${new Date(reporte.fecha_checkin).toLocaleDateString('es-CL')}</td>
-                    <td>${reporte.plaza_nombre}</td>
-                    <td>${reporte.guardia_nombre}</td>
-                    <td>${new Date(reporte.fecha_checkin).toLocaleTimeString('es-CL')}</td>
-                    <td><span class="badge bg-success">Completado</span></td>
-                </tr>
-            `).join('');
+            console.log('renderReportesTable ya no se usa - los reportes usan displayReportResults');
         }
 
         async function generateReport() {
@@ -1709,12 +1681,14 @@
         function displayReportResults(checkins, estadisticas) {
             const tbody = document.querySelector('#reportTable tbody');
             
+            if (!tbody) {
+                console.error('No se encontró la tabla de reportes');
+                return;
+            }
+
             // Limpiar tabla
             tbody.innerHTML = '';
 
-            // Mostrar estadísticas
-            document.getElementById('totalReports').textContent = estadisticas.total_checkins;
-            
             // Agregar estadísticas adicionales si no existen
             let statsContainer = document.getElementById('reportStats');
             if (!statsContainer) {
@@ -2115,11 +2089,28 @@
             }
         };
 
+        // Función para establecer fechas por defecto en reportes
+        function setupDefaultDates() {
+            const today = new Date();
+            const oneWeekAgo = new Date(today);
+            oneWeekAgo.setDate(today.getDate() - 7);
+            
+            const fechaInicioInput = document.getElementById('fechaInicio');
+            const fechaFinInput = document.getElementById('fechaFin');
+            
+            if (fechaInicioInput && fechaFinInput) {
+                fechaInicioInput.value = oneWeekAgo.toISOString().split('T')[0];
+                fechaFinInput.value = today.toISOString().split('T')[0];
+            }
+        }
+
         // Auto-run test on load
         setTimeout(() => {
             if (typeof window.testAdminPanel === 'function') {
                 window.testAdminPanel();
             }
+            // Establecer fechas por defecto
+            setupDefaultDates();
         }, 3000);
     </script>
 </body>
