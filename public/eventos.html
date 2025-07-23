@@ -11,7 +11,11 @@
             --primary-color: #1a365d;
             --secondary-color: #2c5282;
             --accent-color: #38a169;
-            --light-bg: #f8fafc;
+            -                        ${evento.requiere_inscripcion ? `
+                        <div class="participantes-info">
+                            <small>
+                                <i class="fas fa-users me-1"></i>
+                                Inscripciones: ${evento.inscripciones_confirmadas || 0}${evento.max_participantes ? `/${evento.max_participantes}` : ''}t-bg: #f8fafc;
             --border-color: #e2e8f0;
             --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
             --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
@@ -573,11 +577,11 @@
                         <div class="participantes-info">
                             <small>
                                 <i class="fas fa-users me-1"></i>
-                                Inscripciones: ${evento.total_inscripciones}${evento.max_participantes ? `/${evento.max_participantes}` : ''}
+                                Inscripciones: ${evento.inscripciones_confirmadas || 0}${evento.max_participantes ? `/${evento.max_participantes}` : ''}
                             </small>
                             ${evento.max_participantes ? `
                                 <div class="progress">
-                                    <div class="progress-bar" style="width: ${(evento.total_inscripciones / evento.max_participantes) * 100}%"></div>
+                                    <div class="progress-bar" style="width: ${((evento.inscripciones_confirmadas || 0) / evento.max_participantes) * 100}%"></div>
                                 </div>
                             ` : ''}
                         </div>
@@ -698,10 +702,10 @@
                                     <div class="card">
                                         <div class="card-body">
                                             <h6>Inscripciones</h6>
-                                            <p>Participantes: ${evento.total_inscripciones}${evento.max_participantes ? `/${evento.max_participantes}` : ''}</p>
+                                            <p>Participantes: ${evento.inscripciones_confirmadas || 0}${evento.max_participantes ? `/${evento.max_participantes}` : ''}</p>
                                             ${evento.max_participantes ? `
                                                 <div class="progress mb-2">
-                                                    <div class="progress-bar" style="width: ${(evento.total_inscripciones / evento.max_participantes) * 100}%"></div>
+                                                    <div class="progress-bar" style="width: ${((evento.inscripciones_confirmadas || 0) / evento.max_participantes) * 100}%"></div>
                                                 </div>
                                             ` : ''}
                                         </div>

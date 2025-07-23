@@ -605,6 +605,7 @@
         function filtrarPorCategoria(categoria) {
             currentFilters.categoria = categoria;
             currentPage = 1;
+            mostrarCategorias(categorias); // Re-renderizar categorías para actualizar estado activo
             actualizarFiltrosActivos();
             cargarDocumentos(currentPage);
         }

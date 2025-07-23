@@ -573,10 +573,7 @@
         async function showEventoForm(eventoId = null) {
             // Cargar tipos de evento para el select
             const tiposEvento = await loadTiposEvento();
-            const tipoOptions = tiposEvento.map(tipo => 
-                `<option value="${tipo.id}">${tipo.nombre}</option>`
-            ).join('');
-
+            
             let eventoData = null;
             if (eventoId) {
                 try {
@@ -589,6 +586,10 @@
                     console.error('Error cargando evento:', error);
                 }
             }
+
+            const tipoOptions = tiposEvento.map(tipo => 
+                `<option value="${tipo.id}" ${eventoData?.tipo_evento_id === tipo.id ? 'selected' : ''}>${tipo.nombre}</option>`
+            ).join('');
 
             Swal.fire({
                 title: eventoId ? 'Editar Evento' : 'Nuevo Evento',
@@ -876,10 +877,7 @@
         async function showDocumentoForm(documentoId = null) {
             // Cargar tipos de documento para el select
             const tiposDocumento = await loadTiposDocumento();
-            const tipoOptions = tiposDocumento.map(tipo => 
-                `<option value="${tipo.id}">${tipo.nombre}</option>`
-            ).join('');
-
+            
             let documentoData = null;
             if (documentoId) {
                 try {
@@ -892,6 +890,10 @@
                     console.error('Error cargando documento:', error);
                 }
             }
+
+            const tipoOptions = tiposDocumento.map(tipo => 
+                `<option value="${tipo.id}" ${documentoData?.tipo_documento_id === tipo.id ? 'selected' : ''}>${tipo.nombre}</option>`
+            ).join('');
 
             Swal.fire({
                 title: documentoId ? 'Editar Documento' : 'Nuevo Documento',
@@ -1539,9 +1541,22 @@
             `).join('');
         }
 
-        function showAdminForm(adminId = null) {
+        async function showAdminForm(adminId = null) {
+            let adminData = null;
+            if (adminId) {
+                try {
+                    const response = await authenticatedFetch(`/api/admin/users/${adminId}`);
+                    if (response && response.ok) {
+                        const data = await response.json();
+                        adminData = data.data;
+                    }
+                } catch (error) {
+                    console.error('Error cargando administrador:', error);
+                }
+            }
+
             const plazasOptions = plazasGlobal.map(plaza => 
-                `<option value="${plaza.id}">${plaza.nombre}</option>`
+                `<option value="${plaza.id}" ${adminData?.plaza_id === plaza.id ? 'selected' : ''}>${plaza.nombre}</option>`
             ).join('');
 
             Swal.fire({
@@ -1549,13 +1564,24 @@
                 html: `
                     <form id="adminForm">
                         <div class="mb-3">
-                            <input type="text" class="form-control" name="nombre" placeholder="Nombre" required>
+                            <input type="text" class="form-control" name="nombre" placeholder="Nombre" 
+                                   value="${adminData?.nombre || ''}" required>
                         </div>
                         <div class="mb-3">
-                            <input type="text" class="form-control" name="apellido_paterno" placeholder="Apellido Paterno" required>
+                            <input type="text" class="form-control" name="apellido_paterno" placeholder="Apellido Paterno" 
+                                   value="${adminData?.apellido_paterno || ''}" required>
                         </div>
                         <div class="mb-3">
-                            <input type="email" class="form-control" name="email" placeholder="Email" required>
+                            <input type="text" class="form-control" name="apellido_materno" placeholder="Apellido Materno" 
+                                   value="${adminData?.apellido_materno || ''}">
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" class="form-control" name="email" placeholder="Email" 
+                                   value="${adminData?.email || ''}" required>
+                        </div>
+                        <div class="mb-3">
+                            <input type="tel" class="form-control" name="telefono" placeholder="Teléfono" 
+                                   value="${adminData?.telefono || ''}">
                         </div>
                         <div class="mb-3">
                             <select class="form-select" name="plaza_id">
@@ -1572,7 +1598,7 @@
                         </div>
                         ` : ''}
                         <div class="form-check">
-                            <input type="checkbox" class="form-check-input" name="activo" checked>
+                            <input type="checkbox" class="form-check-input" name="activo" ${adminData?.activo !== false ? 'checked' : ''}>
                             <label class="form-check-label">Activo</label>
                         </div>
                     </form>
