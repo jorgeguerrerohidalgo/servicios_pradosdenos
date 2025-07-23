@@ -435,7 +435,13 @@
 
                 if (data.success) {
                     mostrarEventos(data.data);
-                    actualizarPaginacion(data.pagination);
+                    // Solo actualizar paginación si hay datos de paginación
+                    if (data.pagination) {
+                        actualizarPaginacion(data.pagination);
+                    } else {
+                        // Limpiar paginación si no hay datos
+                        document.getElementById('paginacion').innerHTML = '';
+                    }
                 } else {
                     throw new Error(data.message);
                 }
@@ -538,6 +544,13 @@
         // Función para actualizar paginación
         function actualizarPaginacion(pagination) {
             const container = document.getElementById('paginacion');
+            
+            // Si no hay datos de paginación, ocultar el contenedor
+            if (!pagination || !pagination.total) {
+                container.innerHTML = '';
+                return;
+            }
+            
             const totalPages = Math.ceil(pagination.total / pagination.limit);
             
             if (totalPages <= 1) {
