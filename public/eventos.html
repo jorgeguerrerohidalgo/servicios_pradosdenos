@@ -351,10 +351,7 @@
                         <label class="form-label">Tipo de evento:</label>
                         <div id="filtroTipos">
                             <button class="btn btn-filter active" data-tipo="">Todos</button>
-                            <button class="btn btn-filter" data-tipo="Reunión">Reuniones</button>
-                            <button class="btn btn-filter" data-tipo="Actividad">Actividades</button>
-                            <button class="btn btn-filter" data-tipo="Taller">Talleres</button>
-                            <button class="btn btn-filter" data-tipo="Evento Social">Eventos Sociales</button>
+                            <!-- Los tipos se cargarán dinámicamente -->
                         </div>
                     </div>
                 </div>
@@ -412,6 +409,71 @@
             tipo: '',
             destacados: false
         };
+
+        // Función para cargar tipos de evento
+        async function cargarTiposEvento() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/eventos/tipos`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const container = document.getElementById('filtroTipos');
+                    const todosBtn = container.querySelector('[data-tipo=""]');
+                    
+                    data.data.forEach(tipo => {
+                        const btn = document.createElement('button');
+                        btn.className = 'btn btn-filter';
+                        btn.setAttribute('data-tipo', tipo.nombre);
+                        btn.textContent = tipo.nombre;
+                        container.appendChild(btn);
+                    });
+                    
+                    // Reactivar event listeners
+                    setupEventListeners();
+                } else {
+                    console.error('Error cargando tipos de evento:', data.message);
+                }
+            } catch (error) {
+                console.error('Error cargando tipos de evento:', error);
+            }
+        }
+
+        // Función para configurar event listeners
+        function setupEventListeners() {
+            // Filtros por tipo
+            document.querySelectorAll('[data-tipo]').forEach(btn => {
+                btn.removeEventListener('click', handleTipoClick); // Remover duplicados
+                btn.addEventListener('click', handleTipoClick);
+            });
+
+            // Filtros por destacados
+            document.querySelectorAll('[data-destacados]').forEach(btn => {
+                btn.removeEventListener('click', handleDestacadosClick); // Remover duplicados
+                btn.addEventListener('click', handleDestacadosClick);
+            });
+        }
+
+        function handleTipoClick() {
+            // Actualizar botones activos
+            document.querySelectorAll('[data-tipo]').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Actualizar filtro
+            currentFilters.tipo = this.dataset.tipo;
+            currentPage = 1;
+            cargarEventos(currentPage);
+        }
+
+        function handleDestacadosClick() {
+            // Actualizar botones activos
+            document.querySelectorAll('[data-destacados]').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Actualizar filtro
+            currentFilters.destacados = this.dataset.destacados === 'true';
+            currentPage = 1;
+            cargarEventos(currentPage);
+        }
 
         // Función para cargar eventos
         async function cargarEventos(page = 1) {
@@ -694,34 +756,12 @@
 
         // Event listeners para filtros
         document.addEventListener('DOMContentLoaded', function() {
-            // Filtros por tipo
-            document.querySelectorAll('[data-tipo]').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    // Actualizar botones activos
-                    document.querySelectorAll('[data-tipo]').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    // Actualizar filtro
-                    currentFilters.tipo = this.dataset.tipo;
-                    currentPage = 1;
-                    cargarEventos(currentPage);
-                });
-            });
-
-            // Filtros por destacados
-            document.querySelectorAll('[data-destacados]').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    // Actualizar botones activos
-                    document.querySelectorAll('[data-destacados]').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    // Actualizar filtro
-                    currentFilters.destacados = this.dataset.destacados === 'true';
-                    currentPage = 1;
-                    cargarEventos(currentPage);
-                });
-            });
-
+            // Cargar tipos dinámicamente
+            cargarTiposEvento();
+            
+            // Configurar event listeners iniciales
+            setupEventListeners();
+            
             // Cargar eventos iniciales
             cargarEventos();
         });

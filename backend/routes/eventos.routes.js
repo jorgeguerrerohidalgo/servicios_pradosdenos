@@ -42,7 +42,7 @@ router.get('/', async (req, res) => {
         
         if (tipo) {
             paramCount++;
-            sql += ` AND e.tipo_evento_id = $${paramCount}`;
+            sql += ` AND te.nombre = $${paramCount}`;
             params.push(tipo);
         }
         
