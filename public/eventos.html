@@ -340,7 +340,7 @@
                 console.log('Respuesta API:', data);
 
                 if (data.success) {
-                    const evento = data.evento;
+                    const evento = data.data;
                     
                     document.getElementById('eventoModalTitle').innerHTML = `
                         <i class="${evento.tipo_icono || 'fas fa-calendar'} me-2"></i>
@@ -419,11 +419,11 @@
                 
                 console.log('Datos de tipos de evento:', data);
                 
-                if (data.success && data.tipos) {
+                if (data.success && data.data) {
                     const select = document.getElementById('filtroTipo');
                     select.innerHTML = '<option value="">Todos los tipos</option>';
                     
-                    data.tipos.forEach(tipo => {
+                    data.data.forEach(tipo => {
                         const option = document.createElement('option');
                         option.value = tipo.id;
                         option.textContent = tipo.nombre;
@@ -461,8 +461,8 @@
                 
                 loadingSpinner.style.display = 'none';
                 
-                if (data.success && data.eventos && data.eventos.length > 0) {
-                    eventosData = data.eventos;
+                if (data.success && data.data && data.data.length > 0) {
+                    eventosData = data.data;
                     mostrarEventos(eventosData);
                 } else {
                     noEventos.style.display = 'block';

@@ -312,7 +312,7 @@
                 console.log('Respuesta API:', data);
 
                 if (data.success) {
-                    const documento = data.documento;
+                    const documento = data.data;
                     
                     document.getElementById('documentoModalTitle').innerHTML = `
                         <i class="${documento.tipo_icono || 'fas fa-file'} me-2"></i>
@@ -374,8 +374,8 @@
                 const response = await fetch(`${API_BASE_URL}/documentos/tipos`);
                 const data = await response.json();
                 
-                if (data.success) {
-                    tiposDocumentos = data.tipos;
+                if (data.success && data.data) {
+                    tiposDocumentos = data.data;
                     const select = document.getElementById('filtroTipo');
                     select.innerHTML = '<option value="">Todos los tipos</option>';
                     
@@ -418,8 +418,8 @@
                 
                 loadingSpinner.style.display = 'none';
                 
-                if (data.success && data.documentos && data.documentos.length > 0) {
-                    documentosData = data.documentos;
+                if (data.success && data.data && data.data.length > 0) {
+                    documentosData = data.data;
                     mostrarDocumentos(documentosData);
                 } else {
                     noDocumentos.style.display = 'block';

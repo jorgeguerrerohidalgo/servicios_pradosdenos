@@ -542,13 +542,13 @@
                         ${evento.max_participantes ? ` / ${evento.max_participantes}` : ''}
                     </td>
                     <td>
-                        <button class="btn btn-sm btn-info me-1" onclick="window.editEvento(${evento.id})">
+                        <button class="btn btn-sm btn-info me-1" onclick="editEvento(${evento.id})">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-success me-1" onclick="window.viewInscripcionesEvento(${evento.id})">
+                        <button class="btn btn-sm btn-success me-1" onclick="viewInscripcionesEvento(${evento.id})">
                             <i class="fas fa-users"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="window.deleteEvento(${evento.id})">
+                        <button class="btn btn-sm btn-danger" onclick="deleteEvento(${evento.id})">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -764,7 +764,7 @@
         }
 
         // Funciones globales para edición y eliminación
-        window.editEvento = function(eventoId) {
+        function editEvento(eventoId) {
             console.log('EditEvento llamado con ID:', eventoId);
             if (!eventoId) {
                 console.error('ID de evento no válido');
@@ -774,7 +774,7 @@
             showEventoForm(eventoId);
         };
 
-        window.deleteEvento = function(eventoId) {
+        function deleteEvento(eventoId) {
             Swal.fire({
                 title: '¿Eliminar evento?',
                 text: 'Esta acción no se puede deshacer',
@@ -804,7 +804,7 @@
             });
         }
 
-        window.viewInscripcionesEvento = function(eventoId) {
+        function viewInscripcionesEvento(eventoId) {
             Swal.fire({
                 title: 'Inscripciones del Evento',
                 html: '<p>No hay inscripciones registradas</p>',
@@ -867,13 +867,13 @@
                     </td>
                     <td>${doc.total_descargas || 0}</td>
                     <td>
-                        <button class="btn btn-sm btn-info me-1" onclick="window.editDocumento(${doc.id})">
+                        <button class="btn btn-sm btn-info me-1" onclick="editDocumento(${doc.id})">
                             <i class="fas fa-edit"></i>
                         </button>
                         <button class="btn btn-sm btn-success me-1" onclick="viewDescargasDocumento(${doc.id})">
                             <i class="fas fa-download"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="window.deleteDocumento(${doc.id})">
+                        <button class="btn btn-sm btn-danger" onclick="deleteDocumento(${doc.id})">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -1070,7 +1070,7 @@
             }
         }
 
-        window.editDocumento = function(documentoId) {
+        function editDocumento(documentoId) {
             console.log('EditDocumento llamado con ID:', documentoId);
             if (!documentoId) {
                 console.error('ID de documento no válido');
@@ -1080,7 +1080,7 @@
             showDocumentoForm(documentoId);
         };
 
-        window.deleteDocumento = function(documentoId) {
+        function deleteDocumento(documentoId) {
             Swal.fire({
                 title: '¿Eliminar documento?',
                 text: 'Esta acción no se puede deshacer',
@@ -1571,7 +1571,7 @@
                     </td>
                     <td>${admin.created_at ? new Date(admin.created_at).toLocaleDateString('es-CL') : 'N/A'}</td>
                     <td>
-                        <button class="btn btn-sm btn-info me-1" onclick="window.editAdmin(${admin.id})">
+                        <button class="btn btn-sm btn-info me-1" onclick="editAdmin(${admin.id})">
                             <i class="fas fa-edit"></i>
                         </button>
                         <button class="btn btn-sm btn-danger" onclick="deleteAdmin(${admin.id})">
@@ -1697,7 +1697,7 @@
             }
         }
 
-        window.editAdmin = function(adminId) {
+        function editAdmin(adminId) {
             console.log('EditAdmin llamado con ID:', adminId);
             if (!adminId) {
                 console.error('ID de administrador no válido');
