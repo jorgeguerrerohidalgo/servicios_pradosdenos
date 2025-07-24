@@ -763,11 +763,18 @@
             }
         }
 
-        function editEvento(eventoId) {
+        // Funciones globales para edición y eliminación
+        window.editEvento = function(eventoId) {
+            console.log('EditEvento llamado con ID:', eventoId);
+            if (!eventoId) {
+                console.error('ID de evento no válido');
+                Swal.fire('Error', 'ID de evento no válido', 'error');
+                return;
+            }
             showEventoForm(eventoId);
-        }
+        };
 
-        function deleteEvento(eventoId) {
+        window.deleteEvento = function(eventoId) {
             Swal.fire({
                 title: '¿Eliminar evento?',
                 text: 'Esta acción no se puede deshacer',
@@ -1063,11 +1070,17 @@
             }
         }
 
-        function editDocumento(documentoId) {
+        window.editDocumento = function(documentoId) {
+            console.log('EditDocumento llamado con ID:', documentoId);
+            if (!documentoId) {
+                console.error('ID de documento no válido');
+                Swal.fire('Error', 'ID de documento no válido', 'error');
+                return;
+            }
             showDocumentoForm(documentoId);
-        }
+        };
 
-        function deleteDocumento(documentoId) {
+        window.deleteDocumento = function(documentoId) {
             Swal.fire({
                 title: '¿Eliminar documento?',
                 text: 'Esta acción no se puede deshacer',
@@ -1684,11 +1697,17 @@
             }
         }
 
-        function editAdmin(adminId) {
+        window.editAdmin = function(adminId) {
+            console.log('EditAdmin llamado con ID:', adminId);
+            if (!adminId) {
+                console.error('ID de administrador no válido');
+                Swal.fire('Error', 'ID de administrador no válido', 'error');
+                return;
+            }
             showAdminForm(adminId);
-        }
+        };
 
-        function deleteAdmin(adminId) {
+        window.deleteAdmin = function(adminId) {
             Swal.fire({
                 title: '¿Eliminar administrador?',
                 text: 'Esta acción no se puede deshacer',
