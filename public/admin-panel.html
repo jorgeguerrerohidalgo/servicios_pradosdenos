@@ -542,13 +542,13 @@
                         ${evento.max_participantes ? ` / ${evento.max_participantes}` : ''}
                     </td>
                     <td>
-                        <button class="btn btn-sm btn-info me-1" onclick="editEvento(${evento.id})">
+                        <button class="btn btn-sm btn-info me-1" onclick="window.editEvento(${evento.id})">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-success me-1" onclick="viewInscripcionesEvento(${evento.id})">
+                        <button class="btn btn-sm btn-success me-1" onclick="window.viewInscripcionesEvento(${evento.id})">
                             <i class="fas fa-users"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteEvento(${evento.id})">
+                        <button class="btn btn-sm btn-danger" onclick="window.deleteEvento(${evento.id})">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -804,7 +804,7 @@
             });
         }
 
-        function viewInscripcionesEvento(eventoId) {
+        window.viewInscripcionesEvento = function(eventoId) {
             Swal.fire({
                 title: 'Inscripciones del Evento',
                 html: '<p>No hay inscripciones registradas</p>',
@@ -867,13 +867,13 @@
                     </td>
                     <td>${doc.total_descargas || 0}</td>
                     <td>
-                        <button class="btn btn-sm btn-info me-1" onclick="editDocumento(${doc.id})">
+                        <button class="btn btn-sm btn-info me-1" onclick="window.editDocumento(${doc.id})">
                             <i class="fas fa-edit"></i>
                         </button>
                         <button class="btn btn-sm btn-success me-1" onclick="viewDescargasDocumento(${doc.id})">
                             <i class="fas fa-download"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteDocumento(${doc.id})">
+                        <button class="btn btn-sm btn-danger" onclick="window.deleteDocumento(${doc.id})">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -1571,7 +1571,7 @@
                     </td>
                     <td>${admin.created_at ? new Date(admin.created_at).toLocaleDateString('es-CL') : 'N/A'}</td>
                     <td>
-                        <button class="btn btn-sm btn-info me-1" onclick="editAdmin(${admin.id})">
+                        <button class="btn btn-sm btn-info me-1" onclick="window.editAdmin(${admin.id})">
                             <i class="fas fa-edit"></i>
                         </button>
                         <button class="btn btn-sm btn-danger" onclick="deleteAdmin(${admin.id})">
@@ -1589,7 +1589,7 @@
                     const response = await authenticatedFetch(`/api/admin/admins/${adminId}`);
                     if (response && response.ok) {
                         const data = await response.json();
-                        adminData = data.data;
+                        adminData = data.admin;
                     }
                 } catch (error) {
                     console.error('Error cargando administrador:', error);

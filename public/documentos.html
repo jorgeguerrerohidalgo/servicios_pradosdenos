@@ -82,15 +82,70 @@
             border-radius: 12px;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
-            box-shadow: var(--shadow-sm);
             border: 1px solid var(--border-color);
             transition: all 0.3s ease;
             cursor: pointer;
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
         }
 
         .documento-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border-color: var(--accent-color);
+        }
+
+        .documento-card .badge {
+            background: linear-gradient(135deg, var(--accent-color), #48bb78);
+            color: white;
+            font-size: 0.85rem;
+            padding: 0.5rem 0.8rem;
+            border-radius: 25px;
+        }
+
+        .documento-card h5 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .documento-card p {
+            color: #64748b;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .documento-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 1rem;
+        }
+
+        .documento-meta i {
+            color: var(--accent-color);
+        }
+
+        .btn-ver-detalle {
+            background: linear-gradient(135deg, var(--accent-color), #48bb78);
+            border: none;
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-ver-detalle:hover {
+            background: linear-gradient(135deg, #2f855a, #38a169);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(56, 161, 105, 0.3);
+            color: white;
         }
 
         .modal-header {
@@ -241,7 +296,8 @@
         let tiposDocumentos = [];
 
         // Función GLOBAL para ver detalle del documento
-        function verDetalleDocumento(documentoId) {
+        // Función GLOBAL para ver detalle del documento
+        window.verDetalleDocumento = function(documentoId) {
             console.log('VerDetalleDocumento llamada con ID:', documentoId);
             cargarDetalleDocumento(documentoId);
         }
@@ -256,7 +312,7 @@
                 console.log('Respuesta API:', data);
 
                 if (data.success) {
-                    const documento = data.data;
+                    const documento = data.documento;
                     
                     document.getElementById('documentoModalTitle').innerHTML = `
                         <i class="${documento.tipo_icono || 'fas fa-file'} me-2"></i>
@@ -315,11 +371,11 @@
         // Cargar tipos de documentos
         async function cargarTiposDocumento() {
             try {
-                const response = await fetch(`${API_BASE_URL}/tipos-documento`);
+                const response = await fetch(`${API_BASE_URL}/documentos/tipos`);
                 const data = await response.json();
                 
                 if (data.success) {
-                    tiposDocumentos = data.data;
+                    tiposDocumentos = data.tipos;
                     const select = document.getElementById('filtroTipo');
                     select.innerHTML = '<option value="">Todos los tipos</option>';
                     
@@ -362,8 +418,8 @@
                 
                 loadingSpinner.style.display = 'none';
                 
-                if (data.success && data.data.length > 0) {
-                    documentosData = data.data;
+                if (data.success && data.documentos && data.documentos.length > 0) {
+                    documentosData = data.documentos;
                     mostrarDocumentos(documentosData);
                 } else {
                     noDocumentos.style.display = 'block';

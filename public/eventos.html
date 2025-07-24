@@ -340,7 +340,7 @@
                 console.log('Respuesta API:', data);
 
                 if (data.success) {
-                    const evento = data.data;
+                    const evento = data.evento;
                     
                     document.getElementById('eventoModalTitle').innerHTML = `
                         <i class="${evento.tipo_icono || 'fas fa-calendar'} me-2"></i>
@@ -410,30 +410,32 @@
             }
         }
 
-        // Cargar tipos de eventos
+        // Cargar tipos de evento
         async function cargarTiposEvento() {
             try {
-                const response = await fetch(`${API_BASE_URL}/tipos-evento`);
+                console.log('Cargando tipos de evento...');
+                const response = await fetch('/api/eventos/tipos');
                 const data = await response.json();
                 
-                if (data.success) {
-                    tiposEventos = data.data;
+                console.log('Datos de tipos de evento:', data);
+                
+                if (data.success && data.tipos) {
                     const select = document.getElementById('filtroTipo');
                     select.innerHTML = '<option value="">Todos los tipos</option>';
                     
-                    tiposEventos.forEach(tipo => {
+                    data.tipos.forEach(tipo => {
                         const option = document.createElement('option');
                         option.value = tipo.id;
                         option.textContent = tipo.nombre;
                         select.appendChild(option);
                     });
+                } else {
+                    console.error('Error en la respuesta de tipos:', data);
                 }
             } catch (error) {
                 console.error('Error cargando tipos de evento:', error);
             }
-        }
-
-        // Cargar eventos
+        }        // Cargar eventos
         async function cargarEventos() {
             const container = document.getElementById('eventosContainer');
             const loadingSpinner = document.getElementById('loadingSpinner');
@@ -459,8 +461,8 @@
                 
                 loadingSpinner.style.display = 'none';
                 
-                if (data.success && data.data.length > 0) {
-                    eventosData = data.data;
+                if (data.success && data.eventos && data.eventos.length > 0) {
+                    eventosData = data.eventos;
                     mostrarEventos(eventosData);
                 } else {
                     noEventos.style.display = 'block';
