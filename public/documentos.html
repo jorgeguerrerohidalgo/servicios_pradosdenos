@@ -61,6 +61,22 @@
             box-shadow: var(--shadow-sm);
         }
 
+        .filter-section h5 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .btn-primary:hover {
+            background: #2f855a;
+            border-color: #2f855a;
+        }
+
         .documento-card {
             background: white;
             border-radius: 12px;
@@ -103,7 +119,10 @@
                 <i class="fas fa-home me-2"></i>
                 Los Prados de Nos
             </a>
-            <div class="collapse navbar-collapse">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="checkin.html">

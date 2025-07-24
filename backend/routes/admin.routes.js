@@ -429,6 +429,30 @@ router.get('/admins', requireAuthAdmin, async (req, res) => {
   }
 });
 
+// Obtener administrador específico por ID
+router.get('/admins/:id', requireAuthAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const admin = await query(`
+      SELECT 
+        id, nombre, apellido_paterno, apellido_materno, email, 
+        telefono, activo, created_at, last_login
+      FROM admin_users 
+      WHERE id = $1
+    `, [id]);
+    
+    if (admin.length === 0) {
+      return res.status(404).json({ success: false, message: 'Administrador no encontrado' });
+    }
+    
+    res.json({ success: true, admin: admin[0] });
+  } catch (error) {
+    console.error('Error obteniendo administrador:', error);
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
+  }
+});
+
 // Crear nuevo administrador
 router.post('/admins', requireAdmin, async (req, res) => {
   try {

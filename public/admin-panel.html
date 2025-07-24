@@ -1586,7 +1586,7 @@
             let adminData = null;
             if (adminId) {
                 try {
-                    const response = await authenticatedFetch(`/api/admin/users/${adminId}`);
+                    const response = await authenticatedFetch(`/api/admin/admins/${adminId}`);
                     if (response && response.ok) {
                         const data = await response.json();
                         adminData = data.data;
