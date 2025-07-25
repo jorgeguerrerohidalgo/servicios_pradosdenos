@@ -447,7 +447,7 @@
                 noEventos.style.display = 'none';
                 
                 const filtros = {
-                    tipo: document.getElementById('filtroTipo').selectedOptions[0]?.text === 'Todos los tipos' ? '' : document.getElementById('filtroTipo').selectedOptions[0]?.text,
+                    tipo: document.getElementById('filtroTipo').value,
                     fecha: document.getElementById('filtroFecha').value
                 };
                 

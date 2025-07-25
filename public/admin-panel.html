@@ -762,6 +762,7 @@
                 return false;
             }
         }
+        window.showEventoForm = showEventoForm;
 
         // Funciones globales para edición y eliminación
         function editEvento(eventoId) {
@@ -772,7 +773,8 @@
                 return;
             }
             showEventoForm(eventoId);
-        };
+        }
+        window.editEvento = editEvento;
 
         function deleteEvento(eventoId) {
             Swal.fire({
@@ -803,6 +805,7 @@
                 }
             });
         }
+        window.deleteEvento = deleteEvento;
 
         function viewInscripcionesEvento(eventoId) {
             Swal.fire({
@@ -811,6 +814,7 @@
                 confirmButtonText: 'Cerrar'
             });
         }
+        window.viewInscripcionesEvento = viewInscripcionesEvento;
 
         // ==================== FUNCIONES DE DOCUMENTOS ====================
         async function loadTiposDocumento() {
@@ -1069,6 +1073,7 @@
                 return false;
             }
         }
+        window.showDocumentoForm = showDocumentoForm;
 
         function editDocumento(documentoId) {
             console.log('EditDocumento llamado con ID:', documentoId);
@@ -1078,7 +1083,8 @@
                 return;
             }
             showDocumentoForm(documentoId);
-        };
+        }
+        window.editDocumento = editDocumento;
 
         function deleteDocumento(documentoId) {
             Swal.fire({
@@ -1109,6 +1115,7 @@
                 }
             });
         }
+        window.deleteDocumento = deleteDocumento;
 
         function viewDescargasDocumento(documentoId) {
             Swal.fire({
@@ -1117,6 +1124,7 @@
                 confirmButtonText: 'Cerrar'
             });
         }
+        window.viewDescargasDocumento = viewDescargasDocumento;
 
         // ==================== FUNCIONES DE GUARDIAS ====================
         async function loadGuardias() {
