@@ -592,6 +592,7 @@
         function filtrarEventos() {
             cargarEventos();
         }
+        window.filtrarEventos = filtrarEventos;
 
         // Función para limpiar filtros
         function limpiarFiltros() {
@@ -600,6 +601,7 @@
             document.getElementById('filtroFechaHasta').value = '';
             cargarEventos();
         }
+        window.limpiarFiltros = limpiarFiltros;
 
         // Formatear fecha
         function formatearFecha(fechaString) {

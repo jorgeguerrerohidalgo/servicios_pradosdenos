@@ -544,7 +544,6 @@
                 `;
             }
         }
-        }
 
         // Mostrar documentos en el DOM
         function mostrarDocumentos(documentos) {
@@ -628,6 +627,7 @@
         function filtrarDocumentos() {
             cargarDocumentos();
         }
+        window.filtrarDocumentos = filtrarDocumentos;
 
         // Limpiar filtros
         function limpiarFiltros() {
@@ -636,6 +636,7 @@
             document.getElementById('filtroFechaHasta').value = '';
             cargarDocumentos();
         }
+        window.limpiarFiltros = limpiarFiltros;
 
         // Formatear fecha
         function formatearFecha(fechaString) {
@@ -664,14 +665,8 @@
             
             // Event listeners para filtros
             document.getElementById('filtroTipo').addEventListener('change', cargarDocumentos);
-            document.getElementById('filtroFecha').addEventListener('change', cargarDocumentos);
-            
-            // Busqueda con delay
-            let busquedaTimeout;
-            document.getElementById('filtroBusqueda').addEventListener('input', function() {
-                clearTimeout(busquedaTimeout);
-                busquedaTimeout = setTimeout(cargarDocumentos, 500);
-            });
+            document.getElementById('filtroFechaDesde').addEventListener('change', cargarDocumentos);
+            document.getElementById('filtroFechaHasta').addEventListener('change', cargarDocumentos);
         });
     </script>
 </body>
