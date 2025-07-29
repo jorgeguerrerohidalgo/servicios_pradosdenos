@@ -528,36 +528,43 @@
                 return;
             }
 
-            tbody.innerHTML = eventosGlobal.map(evento => `
-                <tr>
-                    <td>
-                        ${evento.titulo}
-                        ${evento.destacado ? '<span class="badge bg-warning ms-2">Destacado</span>' : ''}
-                    </td>
-                    <td>${evento.tipo_nombre || 'Sin tipo'}</td>
-                    <td>${new Date(evento.fecha_inicio).toLocaleDateString('es-CL')}</td>
-                    <td>
-                        <span class="badge ${evento.visible ? 'bg-success' : 'bg-secondary'}">
-                            ${evento.visible ? 'Visible' : 'Oculto'}
-                        </span>
-                    </td>
-                    <td>
-                        ${evento.inscripciones_confirmadas || 0}
-                        ${evento.max_participantes ? ` / ${evento.max_participantes}` : ''}
-                    </td>
-                    <td>
-                        <button class="btn btn-sm btn-info me-1" onclick="editEvento(${evento.id})">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-sm btn-success me-1" onclick="viewInscripcionesEvento(${evento.id})">
-                            <i class="fas fa-users"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteEvento(${evento.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = eventosGlobal.map(evento => {
+                const destacadoBadge = evento.destacado ? '<span class="badge bg-warning ms-2">Destacado</span>' : '';
+                const visibleBadge = evento.visible ? 'bg-success' : 'bg-secondary';
+                const visibleText = evento.visible ? 'Visible' : 'Oculto';
+                const maxParticipantes = evento.max_participantes ? ` / ${evento.max_participantes}` : '';
+                
+                return `
+                    <tr>
+                        <td>
+                            ${evento.titulo}
+                            ${destacadoBadge}
+                        </td>
+                        <td>${evento.tipo_nombre || 'Sin tipo'}</td>
+                        <td>${new Date(evento.fecha_inicio).toLocaleDateString('es-CL')}</td>
+                        <td>
+                            <span class="badge ${visibleBadge}">
+                                ${visibleText}
+                            </span>
+                        </td>
+                        <td>
+                            ${evento.inscripciones_confirmadas || 0}
+                            ${maxParticipantes}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-info me-1" onclick="editEvento(${evento.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-success me-1" onclick="viewInscripcionesEvento(${evento.id})">
+                                <i class="fas fa-users"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteEvento(${evento.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         // ==================== FUNCIONES DE EVENTOS ====================
@@ -862,33 +869,39 @@
                 return;
             }
 
-            tbody.innerHTML = documentosGlobal.map(doc => `
-                <tr>
-                    <td>
-                        ${doc.nombre}
-                        ${doc.destacado ? '<span class="badge bg-warning ms-2">Destacado</span>' : ''}
-                    </td>
-                    <td>${doc.tipo_nombre || 'Sin tipo'}</td>
-                    <td>${new Date(doc.fecha_publicacion).toLocaleDateString('es-CL')}</td>
-                    <td>
-                        <span class="badge ${doc.visible ? 'bg-success' : 'bg-secondary'}">
-                            ${doc.visible ? 'Visible' : 'Oculto'}
-                        </span>
-                    </td>
-                    <td>${doc.total_descargas || 0}</td>
-                    <td>
-                        <button class="btn btn-sm btn-info me-1" onclick="editDocumento(${doc.id})">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-sm btn-success me-1" onclick="viewDescargasDocumento(${doc.id})">
-                            <i class="fas fa-download"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteDocumento(${doc.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = documentosGlobal.map(doc => {
+                const destacadoBadge = doc.destacado ? '<span class="badge bg-warning ms-2">Destacado</span>' : '';
+                const visibleBadge = doc.visible ? 'bg-success' : 'bg-secondary';
+                const visibleText = doc.visible ? 'Visible' : 'Oculto';
+                
+                return `
+                    <tr>
+                        <td>
+                            ${doc.nombre}
+                            ${destacadoBadge}
+                        </td>
+                        <td>${doc.tipo_nombre || 'Sin tipo'}</td>
+                        <td>${new Date(doc.fecha_publicacion).toLocaleDateString('es-CL')}</td>
+                        <td>
+                            <span class="badge ${visibleBadge}">
+                                ${visibleText}
+                            </span>
+                        </td>
+                        <td>${doc.total_descargas || 0}</td>
+                        <td>
+                            <button class="btn btn-sm btn-info me-1" onclick="editDocumento(${doc.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-success me-1" onclick="viewDescargasDocumento(${doc.id})">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteDocumento(${doc.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         // ==================== FUNCIONES DE DOCUMENTOS ====================

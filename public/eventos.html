@@ -490,80 +490,81 @@
                 return;
             }
             
-            container.innerHTML = eventos.map(evento => `
-                <div class="evento-card" onclick="verDetalleEvento(${evento.id})">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div>
-                            <span class="badge-tipo">
-                                <i class="${evento.tipo_icono || 'fas fa-calendar'} me-2"></i>
-                                ${evento.tipo_nombre || 'Evento'}
-                            </span>
-                        </div>
-                        ${evento.destacado ? `
-                            <span class="badge bg-warning text-dark">
-                                <i class="fas fa-star me-1"></i>
-                                Destacado
-                            </span>
-                        ` : ''}
-                    </div>
-                    
-                    <h3 class="evento-title">${evento.titulo || 'Sin título'}</h3>
-                    
-                    <div class="evento-meta">
-                        <div class="row g-2">
-                            <div class="col-md-6">
-                                <i class="fas fa-calendar text-primary me-2"></i>
-                                ${evento.fecha_inicio ? formatearFecha(evento.fecha_inicio) : 'Fecha por confirmar'}
+            container.innerHTML = eventos.map(evento => {
+                const destacadoBadge = evento.destacado ? 
+                    '<span class="badge bg-warning text-dark"><i class="fas fa-star me-1"></i>Destacado</span>' : '';
+                
+                const ubicacionInfo = evento.ubicacion ? 
+                    `<div class="mt-2"><i class="fas fa-map-marker-alt text-primary me-2"></i>${evento.ubicacion}</div>` : '';
+                
+                const descripcionTexto = evento.descripcion ? 
+                    (evento.descripcion.length > 200 ? 
+                        evento.descripcion.substring(0, 200) + '...' : 
+                        evento.descripcion
+                    ) : 'Sin descripción disponible';
+                
+                const inscripcionInfo = evento.requiere_inscripcion ? 
+                    `<small class="text-muted"><i class="fas fa-users me-1"></i>${evento.inscripciones_confirmadas || 0} inscritos${evento.max_participantes ? `/${evento.max_participantes}` : ''}</small>` : '';
+                
+                const horarioTexto = evento.fecha_inicio && evento.fecha_fin ? 
+                    `${formatearHora(evento.fecha_inicio)} - ${formatearHora(evento.fecha_fin)}` : 
+                    'Horario por confirmar';
+                
+                return `
+                    <div class="evento-card" onclick="verDetalleEvento(${evento.id})">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <span class="badge-tipo">
+                                    <i class="${evento.tipo_icono || 'fas fa-calendar'} me-2"></i>
+                                    ${evento.tipo_nombre || 'Evento'}
+                                </span>
                             </div>
-                            <div class="col-md-6">
-                                <i class="fas fa-clock text-primary me-2"></i>
-                                ${evento.fecha_inicio && evento.fecha_fin ? 
-                                    `${formatearHora(evento.fecha_inicio)} - ${formatearHora(evento.fecha_fin)}` : 
-                                    'Horario por confirmar'}
+                            ${destacadoBadge}
+                        </div>
+                        
+                        <h3 class="evento-title">${evento.titulo || 'Sin título'}</h3>
+                        
+                        <div class="evento-meta">
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <i class="fas fa-calendar text-primary me-2"></i>
+                                    ${evento.fecha_inicio ? formatearFecha(evento.fecha_inicio) : 'Fecha por confirmar'}
+                                </div>
+                                <div class="col-md-6">
+                                    <i class="fas fa-clock text-primary me-2"></i>
+                                    ${horarioTexto}
+                                </div>
+                            </div>
+                            ${ubicacionInfo}
+                        </div>
+                        
+                        <div class="evento-description">
+                            ${descripcionTexto}
+                        </div>
+                        
+                        <div class="evento-footer">
+                            <div>
+                                ${inscripcionInfo}
+                            </div>
+                            <div class="btn-ver-detalle">
+                                <i class="fas fa-eye"></i>
+                                Ver detalles
                             </div>
                         </div>
-                        ${evento.ubicacion ? `
-                            <div class="mt-2">
-                                <i class="fas fa-map-marker-alt text-primary me-2"></i>
-                                ${evento.ubicacion}
-                            </div>
-                        ` : ''}
                     </div>
-                    
-                    <div class="evento-description">
-                        ${evento.descripcion ? 
-                            (evento.descripcion.length > 200 ? 
-                                evento.descripcion.substring(0, 200) + '...' : 
-                                evento.descripcion
-                            ) : 
-                            'Sin descripción disponible'
-                        }
-                    </div>
-                    
-                    <div class="evento-footer">
-                        <div>
-                            ${evento.requiere_inscripcion ? `
-                                <small class="text-muted">
-                                    <i class="fas fa-users me-1"></i>
-                                    ${evento.inscripciones_confirmadas || 0} inscritos${evento.max_participantes ? `/${evento.max_participantes}` : ''}
-                                </small>
-                            ` : ''}
-                        </div>
-                        <div class="btn-ver-detalle">
-                            <i class="fas fa-eye"></i>
-                            Ver detalles
-                        </div>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
+        // Limpiar filtros
         // Limpiar filtros
         function limpiarFiltros() {
             document.getElementById('filtroTipo').value = '';
             document.getElementById('filtroFecha').value = '';
             cargarEventos();
         }
+        window.limpiarFiltros = limpiarFiltros;
+        window.cargarEventos = cargarEventos;
 
         // Formatear fecha
         function formatearFecha(fechaString) {

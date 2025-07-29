@@ -475,73 +475,66 @@
                 return;
             }
             
-            container.innerHTML = documentos.map(documento => `
-                <div class="documento-card" onclick="verDetalleDocumento(${documento.id})">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div>
-                            <span class="badge-tipo">
-                                <i class="${documento.tipo_icono || 'fas fa-file'} me-2"></i>
-                                ${documento.tipo_nombre || 'Documento'}
-                            </span>
-                        </div>
-                        ${documento.destacado ? `
-                            <span class="badge bg-warning text-dark">
-                                <i class="fas fa-star me-1"></i>
-                                Destacado
-                            </span>
-                        ` : ''}
-                    </div>
-                    
-                    <h3 class="documento-title">${documento.nombre || 'Sin título'}</h3>
-                    
-                    <div class="documento-meta">
-                        <div class="row g-2">
-                            <div class="col-md-6">
-                                <i class="fas fa-calendar text-primary me-2"></i>
-                                ${documento.fecha_publicacion ? formatearFecha(documento.fecha_publicacion) : 'Fecha por confirmar'}
+            container.innerHTML = documentos.map(documento => {
+                const destacadoBadge = documento.destacado ? 
+                    '<span class="badge bg-warning text-dark"><i class="fas fa-star me-1"></i>Destacado</span>' : '';
+                
+                const fechaVencimiento = documento.fecha_vencimiento ? 
+                    `<div class="col-md-6"><i class="fas fa-clock text-primary me-2"></i>Vence: ${formatearFecha(documento.fecha_vencimiento)}</div>` : '';
+                
+                const archivoInfo = documento.nombre_archivo ? 
+                    `<div class="mt-2"><i class="fas fa-file text-primary me-2"></i>${documento.nombre_archivo}${documento.tamaño_archivo ? ` (${formatearTamaño(documento.tamaño_archivo)})` : ''}</div>` : '';
+                
+                const descripcionTexto = documento.descripcion ? 
+                    (documento.descripcion.length > 200 ? 
+                        documento.descripcion.substring(0, 200) + '...' : 
+                        documento.descripcion
+                    ) : 'Sin descripción disponible';
+                
+                const subidoPor = documento.subido_por_nombre ? 
+                    `<small class="text-muted"><i class="fas fa-user me-1"></i>${documento.subido_por_nombre}</small>` : '';
+                
+                return `
+                    <div class="documento-card" onclick="verDetalleDocumento(${documento.id})">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <span class="badge-tipo">
+                                    <i class="${documento.tipo_icono || 'fas fa-file'} me-2"></i>
+                                    ${documento.tipo_nombre || 'Documento'}
+                                </span>
                             </div>
-                            ${documento.fecha_vencimiento ? `
+                            ${destacadoBadge}
+                        </div>
+                        
+                        <h3 class="documento-title">${documento.nombre || 'Sin título'}</h3>
+                        
+                        <div class="documento-meta">
+                            <div class="row g-2">
                                 <div class="col-md-6">
-                                    <i class="fas fa-clock text-primary me-2"></i>
-                                    Vence: ${formatearFecha(documento.fecha_vencimiento)}
+                                    <i class="fas fa-calendar text-primary me-2"></i>
+                                    ${documento.fecha_publicacion ? formatearFecha(documento.fecha_publicacion) : 'Fecha por confirmar'}
                                 </div>
-                            ` : ''}
-                        </div>
-                        ${documento.nombre_archivo ? `
-                            <div class="mt-2">
-                                <i class="fas fa-file text-primary me-2"></i>
-                                ${documento.nombre_archivo}
-                                ${documento.tamaño_archivo ? ` (${formatearTamaño(documento.tamaño_archivo)})` : ''}
+                                ${fechaVencimiento}
                             </div>
-                        ` : ''}
-                    </div>
-                    
-                    <div class="documento-description">
-                        ${documento.descripcion ? 
-                            (documento.descripcion.length > 200 ? 
-                                documento.descripcion.substring(0, 200) + '...' : 
-                                documento.descripcion
-                            ) : 
-                            'Sin descripción disponible'
-                        }
-                    </div>
-                    
-                    <div class="documento-footer">
-                        <div>
-                            ${documento.subido_por_nombre ? `
-                                <small class="text-muted">
-                                    <i class="fas fa-user me-1"></i>
-                                    ${documento.subido_por_nombre}
-                                </small>
-                            ` : ''}
+                            ${archivoInfo}
                         </div>
-                        <div class="btn-ver-detalle">
-                            <i class="fas fa-eye"></i>
-                            Ver detalles
+                        
+                        <div class="documento-description">
+                            ${descripcionTexto}
+                        </div>
+                        
+                        <div class="documento-footer">
+                            <div>
+                                ${subidoPor}
+                            </div>
+                            <div class="btn-ver-detalle">
+                                <i class="fas fa-eye"></i>
+                                Ver detalles
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         // Limpiar filtros
@@ -551,6 +544,8 @@
             document.getElementById('filtroBusqueda').value = '';
             cargarDocumentos();
         }
+        window.limpiarFiltros = limpiarFiltros;
+        window.cargarDocumentos = cargarDocumentos;
 
         // Formatear fecha
         function formatearFecha(fechaString) {
