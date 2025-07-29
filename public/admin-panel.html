@@ -581,6 +581,17 @@
             return [];
         }
 
+        // Helper function para escapar HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.toString()
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#x27;');
+        }
+
         async function showEventoForm(eventoId = null) {
             // Cargar tipos de evento para el select
             const tiposEvento = await loadTiposEvento();
@@ -599,8 +610,18 @@
             }
 
             const tipoOptions = tiposEvento.map(tipo => 
-                `<option value="${tipo.id}" ${eventoData?.tipo_evento_id === tipo.id ? 'selected' : ''}>${tipo.nombre}</option>`
+                `<option value="${tipo.id}" ${eventoData?.tipo_evento_id === tipo.id ? 'selected' : ''}>${escapeHtml(tipo.nombre)}</option>`
             ).join('');
+
+            // Preparar valores escapados
+            const titulo = escapeHtml(eventoData?.titulo || '');
+            const descripcion = escapeHtml(eventoData?.descripcion || '');
+            const ubicacion = escapeHtml(eventoData?.ubicacion || '');
+            const linkGoogleCal = escapeHtml(eventoData?.link_google_cal || '');
+            const linkReunion = escapeHtml(eventoData?.link_reunion || '');
+            const maxParticipantes = eventoData?.max_participantes || '';
+            const fechaInicio = eventoData?.fecha_inicio ? new Date(eventoData.fecha_inicio).toISOString().slice(0, 16) : '';
+            const fechaFin = eventoData?.fecha_fin ? new Date(eventoData.fecha_fin).toISOString().slice(0, 16) : '';
 
             Swal.fire({
                 title: eventoId ? 'Editar Evento' : 'Nuevo Evento',
@@ -611,7 +632,7 @@
                                 <div class="mb-3">
                                     <label class="form-label">Título *</label>
                                     <input type="text" class="form-control" name="titulo" 
-                                           value="${eventoData?.titulo || ''}" required>
+                                           value="${titulo}" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -626,26 +647,26 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Descripción</label>
-                            <textarea class="form-control" name="descripcion" rows="3">${eventoData?.descripcion || ''}</textarea>
+                            <textarea class="form-control" name="descripcion" rows="3">${descripcion}</textarea>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Ubicación</label>
                             <input type="text" class="form-control" name="ubicacion" 
-                                   value="${eventoData?.ubicacion || ''}">
+                                   value="${ubicacion}">
                         </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Fecha/Hora Inicio *</label>
                                     <input type="datetime-local" class="form-control" name="fecha_inicio" 
-                                           value="${eventoData?.fecha_inicio ? new Date(eventoData.fecha_inicio).toISOString().slice(0, 16) : ''}" required>
+                                           value="${fechaInicio}" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Fecha/Hora Fin *</label>
                                     <input type="datetime-local" class="form-control" name="fecha_fin" 
-                                           value="${eventoData?.fecha_fin ? new Date(eventoData.fecha_fin).toISOString().slice(0, 16) : ''}" required>
+                                           value="${fechaFin}" required>
                                 </div>
                             </div>
                         </div>
@@ -654,14 +675,14 @@
                                 <div class="mb-3">
                                     <label class="form-label">Enlace Google Calendar</label>
                                     <input type="url" class="form-control" name="link_google_cal" 
-                                           value="${eventoData?.link_google_cal || ''}">
+                                           value="${linkGoogleCal}">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Enlace Reunión Virtual</label>
                                     <input type="url" class="form-control" name="link_reunion" 
-                                           value="${eventoData?.link_reunion || ''}">
+                                           value="${linkReunion}">
                                 </div>
                             </div>
                         </div>
@@ -670,7 +691,7 @@
                                 <div class="mb-3">
                                     <label class="form-label">Máximo Participantes</label>
                                     <input type="number" class="form-control" name="max_participantes" min="1" 
-                                           value="${eventoData?.max_participantes || ''}">
+                                           value="${maxParticipantes}">
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -936,8 +957,16 @@
             }
 
             const tipoOptions = tiposDocumento.map(tipo => 
-                `<option value="${tipo.id}" ${documentoData?.tipo_documento_id === tipo.id ? 'selected' : ''}>${tipo.nombre}</option>`
+                `<option value="${tipo.id}" ${documentoData?.tipo_documento_id === tipo.id ? 'selected' : ''}>${escapeHtml(tipo.nombre)}</option>`
             ).join('');
+
+            // Preparar valores escapados
+            const nombre = escapeHtml(documentoData?.nombre || '');
+            const descripcion = escapeHtml(documentoData?.descripcion || '');
+            const linkDrive = escapeHtml(documentoData?.link_drive || '');
+            const nombreArchivo = escapeHtml(documentoData?.nombre_archivo || '');
+            const fechaPublicacion = documentoData?.fecha_publicacion ? new Date(documentoData.fecha_publicacion).toISOString().split('T')[0] : '';
+            const fechaVencimiento = documentoData?.fecha_vencimiento ? new Date(documentoData.fecha_vencimiento).toISOString().split('T')[0] : '';
 
             Swal.fire({
                 title: documentoId ? 'Editar Documento' : 'Nuevo Documento',
@@ -948,7 +977,7 @@
                                 <div class="mb-3">
                                     <label class="form-label">Nombre *</label>
                                     <input type="text" class="form-control" name="nombre" 
-                                           value="${documentoData?.nombre || ''}" required>
+                                           value="${nombre}" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -963,21 +992,21 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Descripción</label>
-                            <textarea class="form-control" name="descripcion" rows="3">${documentoData?.descripcion || ''}</textarea>
+                            <textarea class="form-control" name="descripcion" rows="3">${descripcion}</textarea>
                         </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Link Google Drive *</label>
                                     <input type="url" class="form-control" name="link_drive" 
-                                           value="${documentoData?.link_drive || ''}" required>
+                                           value="${linkDrive}" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Nombre del Archivo</label>
                                     <input type="text" class="form-control" name="nombre_archivo" 
-                                           value="${documentoData?.nombre_archivo || ''}">
+                                           value="${nombreArchivo}">
                                 </div>
                             </div>
                         </div>
@@ -986,14 +1015,14 @@
                                 <div class="mb-3">
                                     <label class="form-label">Fecha de Publicación</label>
                                     <input type="date" class="form-control" name="fecha_publicacion" 
-                                           value="${documentoData?.fecha_publicacion ? new Date(documentoData.fecha_publicacion).toISOString().split('T')[0] : ''}">
+                                           value="${fechaPublicacion}">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Fecha de Vencimiento</label>
                                     <input type="date" class="form-control" name="fecha_vencimiento" 
-                                           value="${documentoData?.fecha_vencimiento ? new Date(documentoData.fecha_vencimiento).toISOString().split('T')[0] : ''}">
+                                           value="${fechaVencimiento}">
                                 </div>
                             </div>
                         </div>
