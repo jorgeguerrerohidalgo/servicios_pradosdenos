@@ -320,6 +320,7 @@
             console.log('VerDetalleDocumento llamada con ID:', documentoId);
             cargarDetalleDocumento(documentoId);
         }
+        window.verDetalleDocumento = verDetalleDocumento;
 
         // Cargar detalle específico del documento
         async function cargarDetalleDocumento(documentoId) {

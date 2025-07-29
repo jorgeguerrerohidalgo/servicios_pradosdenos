@@ -329,6 +329,7 @@
             console.log('VerDetalleEvento llamada con ID:', eventoId);
             cargarDetalleEvento(eventoId);
         }
+        window.verDetalleEvento = verDetalleEvento;
 
         // Cargar detalle específico del evento
         async function cargarDetalleEvento(eventoId) {

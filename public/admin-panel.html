@@ -423,6 +423,7 @@
                 link.classList.remove('active');
             });
         }
+        window.hideAllSections = hideAllSections;
 
         function showSection(sectionName) {
             console.log('🎯 Showing section:', sectionName);
@@ -485,6 +486,7 @@
                     break;
             }
         }
+        window.showSection = showSection;
 
         // ==================== FUNCIONES DE EVENTOS ====================
         async function loadTiposEvento() {
@@ -498,6 +500,7 @@
                 console.error('Error al cargar tipos de evento:', error);
             }
         }
+        window.loadTiposEvento = loadTiposEvento;
 
         async function loadEventos() {
             try {
@@ -515,6 +518,7 @@
                 console.error('Error al cargar eventos:', error);
             }
         }
+        window.loadEventos = loadEventos;
 
         function renderEventosTable() {
             const tbody = document.getElementById('eventosTableBody');
@@ -828,6 +832,7 @@
                 console.error('Error al cargar tipos de documento:', error);
             }
         }
+        window.loadTiposDocumento = loadTiposDocumento;
 
         async function loadDocumentos() {
             try {
@@ -847,6 +852,7 @@
                 console.error('Error al cargar documentos:', error);
             }
         }
+        window.loadDocumentos = loadDocumentos;
 
         function renderDocumentosTable() {
             const tbody = document.getElementById('documentosTableBody');
@@ -2066,6 +2072,7 @@
                 window.location.href = '/admin-login.html';
             }
         }
+        window.logout = logout;
 
         // ==================== INICIALIZACIÓN ====================
         document.addEventListener('DOMContentLoaded', async function() {
