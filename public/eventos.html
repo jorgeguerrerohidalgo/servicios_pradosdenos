@@ -510,8 +510,11 @@
                     `${formatearHora(evento.fecha_inicio)} - ${formatearHora(evento.fecha_fin)}` : 
                     'Horario por confirmar';
                 
+                const eventoId = evento.id || evento.evento_id || evento.uuid;
+                console.log('Renderizando evento:', evento, 'ID final:', eventoId);
+                
                 return `
-                    <div class="evento-card ver-detalle-evento-btn" data-evento-id="${evento.id}">
+                    <div class="evento-card ver-detalle-evento-btn" data-evento-id="${eventoId}">
                         <div class="d-flex justify-content-between align-items-start mb-3">
                             <div>
                                 <span class="badge-tipo">
@@ -558,7 +561,13 @@
             // Agregar event listeners para ver detalles
             container.querySelectorAll('.ver-detalle-evento-btn').forEach(card => {
                 card.addEventListener('click', () => {
-                    window.verDetalleEvento(parseInt(card.dataset.eventoId));
+                    const eventoId = card.dataset.eventoId;
+                    console.log('Ver detalle evento - Raw ID:', eventoId, 'Parsed:', parseInt(eventoId));
+                    if (eventoId && !isNaN(parseInt(eventoId))) {
+                        window.verDetalleEvento(parseInt(eventoId));
+                    } else {
+                        console.error('ID de evento inválido:', eventoId);
+                    }
                 });
             });
         }

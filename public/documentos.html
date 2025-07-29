@@ -494,8 +494,11 @@
                 const subidoPor = documento.subido_por_nombre ? 
                     `<small class="text-muted"><i class="fas fa-user me-1"></i>${documento.subido_por_nombre}</small>` : '';
                 
+                const documentoId = documento.id || documento.documento_id || documento.uuid;
+                console.log('Renderizando documento:', documento, 'ID final:', documentoId);
+                
                 return `
-                    <div class="documento-card ver-detalle-documento-btn" data-documento-id="${documento.id}">
+                    <div class="documento-card ver-detalle-documento-btn" data-documento-id="${documentoId}">
                         <div class="d-flex justify-content-between align-items-start mb-3">
                             <div>
                                 <span class="badge-tipo">
@@ -539,7 +542,13 @@
             // Agregar event listeners para ver detalles
             container.querySelectorAll('.ver-detalle-documento-btn').forEach(card => {
                 card.addEventListener('click', () => {
-                    window.verDetalleDocumento(parseInt(card.dataset.documentoId));
+                    const documentoId = card.dataset.documentoId;
+                    console.log('Ver detalle documento - Raw ID:', documentoId, 'Parsed:', parseInt(documentoId));
+                    if (documentoId && !isNaN(parseInt(documentoId))) {
+                        window.verDetalleDocumento(parseInt(documentoId));
+                    } else {
+                        console.error('ID de documento inválido:', documentoId);
+                    }
                 });
             });
         }

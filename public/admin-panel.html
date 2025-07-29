@@ -534,8 +534,12 @@
                 const visibleText = evento.visible ? 'Visible' : 'Oculto';
                 const maxParticipantes = evento.max_participantes ? ` / ${evento.max_participantes}` : '';
                 
+                // Debug: verificar estructura del evento
+                console.log('Evento estructura:', evento);
+                const eventoId = evento.id || evento.evento_id || evento.uuid;
+                
                 return `
-                    <tr data-evento-id="${evento.id}">
+                    <tr data-evento-id="${eventoId}">
                         <td>
                             ${escapeHtml(evento.titulo)}
                             ${destacadoBadge}
@@ -552,13 +556,13 @@
                             ${maxParticipantes}
                         </td>
                         <td>
-                            <button class="btn btn-sm btn-info me-1 edit-evento-btn" data-id="${evento.id}">
+                            <button class="btn btn-sm btn-info me-1 edit-evento-btn" data-id="${eventoId}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn btn-sm btn-success me-1 view-inscripciones-btn" data-id="${evento.id}">
+                            <button class="btn btn-sm btn-success me-1 view-inscripciones-btn" data-id="${eventoId}">
                                 <i class="fas fa-users"></i>
                             </button>
-                            <button class="btn btn-sm btn-danger delete-evento-btn" data-id="${evento.id}">
+                            <button class="btn btn-sm btn-danger delete-evento-btn" data-id="${eventoId}">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
@@ -568,13 +572,32 @@
 
             // Agregar event listeners para los botones
             tbody.querySelectorAll('.edit-evento-btn').forEach(btn => {
-                btn.addEventListener('click', () => editEvento(parseInt(btn.dataset.id)));
+                btn.addEventListener('click', () => {
+                    const id = btn.dataset.id;
+                    console.log('EditEvento - Raw ID:', id, 'Parsed:', parseInt(id));
+                    if (id && !isNaN(parseInt(id))) {
+                        editEvento(parseInt(id));
+                    } else {
+                        console.error('ID de evento inválido:', id);
+                        Swal.fire('Error', 'ID de evento no válido', 'error');
+                    }
+                });
             });
             tbody.querySelectorAll('.view-inscripciones-btn').forEach(btn => {
-                btn.addEventListener('click', () => viewInscripcionesEvento(parseInt(btn.dataset.id)));
+                btn.addEventListener('click', () => {
+                    const id = btn.dataset.id;
+                    if (id && !isNaN(parseInt(id))) {
+                        viewInscripcionesEvento(parseInt(id));
+                    }
+                });
             });
             tbody.querySelectorAll('.delete-evento-btn').forEach(btn => {
-                btn.addEventListener('click', () => deleteEvento(parseInt(btn.dataset.id)));
+                btn.addEventListener('click', () => {
+                    const id = btn.dataset.id;
+                    if (id && !isNaN(parseInt(id))) {
+                        deleteEvento(parseInt(id));
+                    }
+                });
             });
         }
 
@@ -906,8 +929,12 @@
                 const visibleBadge = doc.visible ? 'bg-success' : 'bg-secondary';
                 const visibleText = doc.visible ? 'Visible' : 'Oculto';
                 
+                // Debug: verificar estructura del documento
+                console.log('Documento estructura:', doc);
+                const docId = doc.id || doc.documento_id || doc.uuid;
+                
                 return `
-                    <tr data-documento-id="${doc.id}">
+                    <tr data-documento-id="${docId}">
                         <td>
                             ${escapeHtml(doc.nombre)}
                             ${destacadoBadge}
@@ -921,13 +948,13 @@
                         </td>
                         <td>${doc.total_descargas || 0}</td>
                         <td>
-                            <button class="btn btn-sm btn-info me-1 edit-documento-btn" data-id="${doc.id}">
+                            <button class="btn btn-sm btn-info me-1 edit-documento-btn" data-id="${docId}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn btn-sm btn-success me-1 view-descargas-btn" data-id="${doc.id}">
+                            <button class="btn btn-sm btn-success me-1 view-descargas-btn" data-id="${docId}">
                                 <i class="fas fa-download"></i>
                             </button>
-                            <button class="btn btn-sm btn-danger delete-documento-btn" data-id="${doc.id}">
+                            <button class="btn btn-sm btn-danger delete-documento-btn" data-id="${docId}">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
@@ -937,13 +964,32 @@
 
             // Agregar event listeners para los botones
             tbody.querySelectorAll('.edit-documento-btn').forEach(btn => {
-                btn.addEventListener('click', () => editDocumento(parseInt(btn.dataset.id)));
+                btn.addEventListener('click', () => {
+                    const id = btn.dataset.id;
+                    console.log('EditDocumento - Raw ID:', id, 'Parsed:', parseInt(id));
+                    if (id && !isNaN(parseInt(id))) {
+                        editDocumento(parseInt(id));
+                    } else {
+                        console.error('ID de documento inválido:', id);
+                        Swal.fire('Error', 'ID de documento no válido', 'error');
+                    }
+                });
             });
             tbody.querySelectorAll('.view-descargas-btn').forEach(btn => {
-                btn.addEventListener('click', () => viewDescargasDocumento(parseInt(btn.dataset.id)));
+                btn.addEventListener('click', () => {
+                    const id = btn.dataset.id;
+                    if (id && !isNaN(parseInt(id))) {
+                        viewDescargasDocumento(parseInt(id));
+                    }
+                });
             });
             tbody.querySelectorAll('.delete-documento-btn').forEach(btn => {
-                btn.addEventListener('click', () => deleteDocumento(parseInt(btn.dataset.id)));
+                btn.addEventListener('click', () => {
+                    const id = btn.dataset.id;
+                    if (id && !isNaN(parseInt(id))) {
+                        deleteDocumento(parseInt(id));
+                    }
+                });
             });
         }
 
