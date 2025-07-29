@@ -535,7 +535,6 @@
                 const maxParticipantes = evento.max_participantes ? ` / ${evento.max_participantes}` : '';
                 
                 // Debug: verificar estructura del evento
-                console.log('Evento estructura:', evento);
                 const eventoId = evento.id || evento.evento_id || evento.uuid;
                 
                 return `
@@ -574,9 +573,9 @@
             tbody.querySelectorAll('.edit-evento-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const id = btn.dataset.id;
-                    console.log('EditEvento - Raw ID:', id, 'Parsed:', parseInt(id));
-                    if (id && !isNaN(parseInt(id))) {
-                        editEvento(parseInt(id));
+                    console.log('EditEvento - Raw ID:', id);
+                    if (id && id.trim() !== '') {
+                        editEvento(id); // UUID como string
                     } else {
                         console.error('ID de evento inválido:', id);
                         Swal.fire('Error', 'ID de evento no válido', 'error');
@@ -586,16 +585,16 @@
             tbody.querySelectorAll('.view-inscripciones-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const id = btn.dataset.id;
-                    if (id && !isNaN(parseInt(id))) {
-                        viewInscripcionesEvento(parseInt(id));
+                    if (id && id.trim() !== '') {
+                        viewInscripcionesEvento(id); // UUID como string
                     }
                 });
             });
             tbody.querySelectorAll('.delete-evento-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const id = btn.dataset.id;
-                    if (id && !isNaN(parseInt(id))) {
-                        deleteEvento(parseInt(id));
+                    if (id && id.trim() !== '') {
+                        deleteEvento(id); // UUID como string
                     }
                 });
             });
@@ -833,7 +832,7 @@
         // Funciones globales para edición y eliminación
         function editEvento(eventoId) {
             console.log('EditEvento llamado con ID:', eventoId);
-            if (!eventoId) {
+            if (!eventoId || eventoId.trim() === '') {
                 console.error('ID de evento no válido');
                 Swal.fire('Error', 'ID de evento no válido', 'error');
                 return;
@@ -930,7 +929,6 @@
                 const visibleText = doc.visible ? 'Visible' : 'Oculto';
                 
                 // Debug: verificar estructura del documento
-                console.log('Documento estructura:', doc);
                 const docId = doc.id || doc.documento_id || doc.uuid;
                 
                 return `
@@ -966,9 +964,9 @@
             tbody.querySelectorAll('.edit-documento-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const id = btn.dataset.id;
-                    console.log('EditDocumento - Raw ID:', id, 'Parsed:', parseInt(id));
-                    if (id && !isNaN(parseInt(id))) {
-                        editDocumento(parseInt(id));
+                    console.log('EditDocumento - Raw ID:', id);
+                    if (id && id.trim() !== '') {
+                        editDocumento(id); // UUID como string
                     } else {
                         console.error('ID de documento inválido:', id);
                         Swal.fire('Error', 'ID de documento no válido', 'error');
@@ -978,16 +976,16 @@
             tbody.querySelectorAll('.view-descargas-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const id = btn.dataset.id;
-                    if (id && !isNaN(parseInt(id))) {
-                        viewDescargasDocumento(parseInt(id));
+                    if (id && id.trim() !== '') {
+                        viewDescargasDocumento(id); // UUID como string
                     }
                 });
             });
             tbody.querySelectorAll('.delete-documento-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const id = btn.dataset.id;
-                    if (id && !isNaN(parseInt(id))) {
-                        deleteDocumento(parseInt(id));
+                    if (id && id.trim() !== '') {
+                        deleteDocumento(id); // UUID como string
                     }
                 });
             });
@@ -1193,7 +1191,7 @@
 
         function editDocumento(documentoId) {
             console.log('EditDocumento llamado con ID:', documentoId);
-            if (!documentoId) {
+            if (!documentoId || documentoId.trim() === '') {
                 console.error('ID de documento no válido');
                 Swal.fire('Error', 'ID de documento no válido', 'error');
                 return;
@@ -1294,10 +1292,22 @@
 
             // Agregar event listeners para los botones
             tbody.querySelectorAll('.edit-guardia-btn').forEach(btn => {
-                btn.addEventListener('click', () => editGuardia(parseInt(btn.dataset.id)));
+                btn.addEventListener('click', () => {
+                    const id = btn.dataset.id;
+                    // Los guardias usan IDs enteros
+                    if (id && !isNaN(parseInt(id))) {
+                        editGuardia(parseInt(id));
+                    }
+                });
             });
             tbody.querySelectorAll('.delete-guardia-btn').forEach(btn => {
-                btn.addEventListener('click', () => deleteGuardia(parseInt(btn.dataset.id)));
+                btn.addEventListener('click', () => {
+                    const id = btn.dataset.id;
+                    // Los guardias usan IDs enteros
+                    if (id && !isNaN(parseInt(id))) {
+                        deleteGuardia(parseInt(id));
+                    }
+                });
             });
         }
 

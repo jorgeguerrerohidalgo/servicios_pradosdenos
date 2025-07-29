@@ -511,7 +511,6 @@
                     'Horario por confirmar';
                 
                 const eventoId = evento.id || evento.evento_id || evento.uuid;
-                console.log('Renderizando evento:', evento, 'ID final:', eventoId);
                 
                 return `
                     <div class="evento-card ver-detalle-evento-btn" data-evento-id="${eventoId}">
@@ -562,9 +561,9 @@
             container.querySelectorAll('.ver-detalle-evento-btn').forEach(card => {
                 card.addEventListener('click', () => {
                     const eventoId = card.dataset.eventoId;
-                    console.log('Ver detalle evento - Raw ID:', eventoId, 'Parsed:', parseInt(eventoId));
-                    if (eventoId && !isNaN(parseInt(eventoId))) {
-                        window.verDetalleEvento(parseInt(eventoId));
+                    console.log('Ver detalle evento - Raw ID:', eventoId);
+                    if (eventoId && eventoId.trim() !== '') {
+                        window.verDetalleEvento(eventoId); // UUID como string
                     } else {
                         console.error('ID de evento inválido:', eventoId);
                     }
