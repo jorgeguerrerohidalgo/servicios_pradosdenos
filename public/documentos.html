@@ -7,190 +7,193 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root {
-            --primary-color: #1a365d;
-            --secondary-color: #2c5282;
-            --accent-color: #38a169;
-            --light-bg: #f8fafc;
-            --border-color: #e2e8f0;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
-            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
         body {
-            background-color: var(--light-bg);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-
-        .navbar {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            box-shadow: var(--shadow-md);
+        
+        .container-main {
+            padding: 30px 0;
         }
-
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.3rem;
-        }
-
-        .main-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem 1rem;
-        }
-
+        
         .header-section {
-            background: white;
-            border-radius: 12px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: var(--shadow-sm);
-            border-left: 4px solid var(--accent-color);
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
         }
-
+        
         .header-section h1 {
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
             font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
-
-        .filter-section {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            box-shadow: var(--shadow-sm);
+        
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 50px;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
         }
-
-        .filter-section h5 {
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-            font-weight: 600;
+        
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            color: white;
+            transform: scale(1.05);
         }
-
-        .documento-card {
+        
+        .main-card {
             background: white;
             border-radius: 15px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            border: 1px solid var(--border-color);
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        
+        .filter-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .results-section {
+            min-height: 300px;
+        }
+        
+        .documento-item {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
             transition: all 0.3s ease;
+            border-left: 4px solid #667eea;
             cursor: pointer;
-            position: relative;
-            overflow: hidden;
         }
-
-        .documento-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        
+        .documento-item:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
         }
-
-        .documento-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: var(--accent-color);
-        }
-
-        .documento-title {
-            color: var(--primary-color);
-            font-weight: 700;
-            font-size: 1.4rem;
-            margin-bottom: 1rem;
-            line-height: 1.3;
-        }
-
-        .documento-meta {
-            color: #64748b;
-            font-size: 0.95rem;
-            margin-bottom: 1rem;
-        }
-
-        .documento-meta i {
-            width: 20px;
-            text-align: center;
-        }
-
-        .documento-description {
-            color: #475569;
-            margin-bottom: 1.5rem;
-            line-height: 1.6;
-            font-size: 1rem;
-        }
-
-        .documento-footer {
-            border-top: 1px solid #f1f5f9;
-            padding-top: 1rem;
+        
+        .documento-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 10px;
         }
-
+        
+        .documento-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+        
+        .fecha-publicacion {
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .documento-meta {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+        
+        .documento-description {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
         .badge-tipo {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             font-size: 0.85rem;
-            padding: 0.5rem 1rem;
-            border-radius: 25px;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
             font-weight: 600;
         }
-
-        .btn-ver-detalle {
-            background: var(--accent-color);
-            color: white;
-            border: none;
-            padding: 0.6rem 1.5rem;
-            border-radius: 25px;
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
             font-weight: 600;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
         }
-
-        .btn-ver-detalle:hover {
-            background: #2f855a;
-            color: white;
-            transform: translateY(-1px);
+        
+        .status-importante {
+            background: #fff3cd;
+            color: #856404;
         }
-
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+        
+        .no-results i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
         .btn-primary {
-            background: var(--accent-color);
-            border-color: var(--accent-color);
+            background: #667eea;
+            border-color: #667eea;
         }
-
+        
         .btn-primary:hover {
-            background: #2f855a;
-            border-color: #2f855a;
+            background: #5a6fd8;
+            border-color: #5a6fd8;
         }
-
+        
         .modal-header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
         }
-
-        .loading-spinner {
-            display: none;
-            text-align: center;
-            padding: 2rem;
+        
+        @media (max-width: 768px) {
+            .documento-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .container-main {
+                padding: 20px 10px;
+            }
+            
+            .main-card {
+                padding: 20px;
+            }
         }
-
-        .no-documentos {
-            text-align: center;
-            padding: 3rem;
-            color: #64748b;
-        }
+    </style>
     </style>
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top" style="background: rgba(0,0,0,0.2); backdrop-filter: blur(10px);">
         <div class="container">
-            <a class="navbar-brand" href="#">
+            <a class="navbar-brand" href="index.html">
                 <i class="fas fa-home me-2"></i>
                 Los Prados de Nos
             </a>
@@ -209,6 +212,82 @@
                             <i class="fas fa-calendar me-1"></i>Eventos
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="documentos.html">
+                            <i class="fas fa-file-text me-1"></i>Documentos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="login.html">
+                            <i class="fas fa-sign-in-alt me-1"></i>Admin
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container container-main">
+        <div class="header-section">
+            <h1><i class="fas fa-file-text"></i> Documentos Comunitarios</h1>
+            <p class="mb-0">Accede a todos los documentos oficiales de la comunidad</p>
+        </div>
+
+        <div class="main-card">
+            <div class="filter-section">
+                <h5><i class="fas fa-filter"></i> Filtros de búsqueda</h5>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Tipo de documento:</label>
+                        <select id="filtroTipo" class="form-select">
+                            <option value="">Todos los tipos</option>
+                            <option value="acta">Acta</option>
+                            <option value="reglamento">Reglamento</option>
+                            <option value="comunicado">Comunicado</option>
+                            <option value="convocatoria">Convocatoria</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Fecha desde:</label>
+                        <input type="date" id="filtroFechaDesde" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Fecha hasta:</label>
+                        <input type="date" id="filtroFechaHasta" class="form-control">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <button class="btn btn-primary" onclick="filtrarDocumentos()">
+                            <i class="fas fa-search"></i> Buscar
+                        </button>
+                        <button class="btn btn-outline-secondary ms-2" onclick="limpiarFiltros()">
+                            <i class="fas fa-times"></i> Limpiar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <div id="loadingDocumentos" class="loading" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-3">Cargando documentos...</p>
+                </div>
+
+                <div id="documentosContainer">
+                    <!-- Los documentos se cargarán aquí dinámicamente -->
+                </div>
+
+                <div id="noResultados" class="no-results" style="display: none;">
+                    <i class="fas fa-file-times"></i>
+                    <h5>No se encontraron documentos</h5>
+                    <p>No hay documentos que coincidan con los criterios de búsqueda.</p>
+                </div>
+            </div>
+        </div>
+    </div>
                     <li class="nav-item">
                         <a class="nav-link active" href="documentos.html">
                             <i class="fas fa-file-text me-1"></i>Documentos
@@ -423,18 +502,18 @@
         // Cargar documentos
         async function cargarDocumentos() {
             const container = document.getElementById('documentosContainer');
-            const loadingSpinner = document.getElementById('loadingSpinner');
-            const noDocumentos = document.getElementById('noDocumentos');
+            const loadingDocumentos = document.getElementById('loadingDocumentos');
+            const noResultados = document.getElementById('noResultados');
             
             try {
-                loadingSpinner.style.display = 'block';
+                loadingDocumentos.style.display = 'block';
                 container.innerHTML = '';
-                noDocumentos.style.display = 'none';
+                noResultados.style.display = 'none';
                 
                 const filtros = {
                     tipo: document.getElementById('filtroTipo').value,
-                    fecha: document.getElementById('filtroFecha').value,
-                    busqueda: document.getElementById('filtroBusqueda').value
+                    fecha_desde: document.getElementById('filtroFechaDesde').value,
+                    fecha_hasta: document.getElementById('filtroFechaHasta').value
                 };
                 
                 const params = new URLSearchParams();
@@ -445,18 +524,18 @@
                 const response = await fetch(`${API_BASE_URL}/documentos?${params.toString()}`);
                 const data = await response.json();
                 
-                loadingSpinner.style.display = 'none';
+                loadingDocumentos.style.display = 'none';
                 
                 if (data.success && data.data && data.data.length > 0) {
                     documentosData = data.data;
                     mostrarDocumentos(documentosData);
                 } else {
-                    noDocumentos.style.display = 'block';
+                    noResultados.style.display = 'block';
                 }
                 
             } catch (error) {
                 console.error('Error cargando documentos:', error);
-                loadingSpinner.style.display = 'none';
+                loadingDocumentos.style.display = 'none';
                 container.innerHTML = `
                     <div class="alert alert-danger" role="alert">
                         <i class="fas fa-exclamation-triangle me-2"></i>
@@ -465,102 +544,98 @@
                 `;
             }
         }
+        }
 
         // Mostrar documentos en el DOM
         function mostrarDocumentos(documentos) {
             const container = document.getElementById('documentosContainer');
             
             if (documentos.length === 0) {
-                document.getElementById('noDocumentos').style.display = 'block';
+                document.getElementById('noResultados').style.display = 'block';
                 return;
             }
             
             container.innerHTML = documentos.map(documento => {
                 const destacadoBadge = documento.destacado ? 
-                    '<span class="badge bg-warning text-dark"><i class="fas fa-star me-1"></i>Destacado</span>' : '';
+                    '<span class="status-badge status-importante"><i class="fas fa-star me-1"></i>Importante</span>' : '';
                 
                 const fechaVencimiento = documento.fecha_vencimiento ? 
-                    `<div class="col-md-6"><i class="fas fa-clock text-primary me-2"></i>Vence: ${formatearFecha(documento.fecha_vencimiento)}</div>` : '';
+                    `<div class="mt-1"><i class="fas fa-clock me-2"></i>Vence: ${formatearFecha(documento.fecha_vencimiento)}</div>` : '';
                 
                 const archivoInfo = documento.nombre_archivo ? 
-                    `<div class="mt-2"><i class="fas fa-file text-primary me-2"></i>${documento.nombre_archivo}${documento.tamaño_archivo ? ` (${formatearTamaño(documento.tamaño_archivo)})` : ''}</div>` : '';
+                    `<div class="mt-1"><i class="fas fa-file me-2"></i>${documento.nombre_archivo}${documento.tamaño_archivo ? ` (${formatearTamaño(documento.tamaño_archivo)})` : ''}</div>` : '';
                 
                 const descripcionTexto = documento.descripcion ? 
-                    (documento.descripcion.length > 200 ? 
-                        documento.descripcion.substring(0, 200) + '...' : 
+                    (documento.descripcion.length > 150 ? 
+                        documento.descripcion.substring(0, 150) + '...' : 
                         documento.descripcion
                     ) : 'Sin descripción disponible';
                 
                 const subidoPor = documento.subido_por_nombre ? 
-                    `<small class="text-muted"><i class="fas fa-user me-1"></i>${documento.subido_por_nombre}</small>` : '';
+                    `<small class="text-muted"><i class="fas fa-user me-1"></i>Subido por ${documento.subido_por_nombre}</small>` : '';
                 
                 const documentoId = documento.id || documento.documento_id || documento.uuid;
                 
                 return `
-                    <div class="documento-card ver-detalle-documento-btn" data-documento-id="${documentoId}">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div>
-                                <span class="badge-tipo">
-                                    <i class="${documento.tipo_icono || 'fas fa-file'} me-2"></i>
-                                    ${documento.tipo_nombre || 'Documento'}
-                                </span>
+                    <div class="documento-item ver-detalle-documento-btn" data-documento-id="${documentoId}">
+                        <div class="documento-header">
+                            <h4 class="documento-title">${documento.nombre || 'Sin título'}</h4>
+                            <div class="fecha-publicacion">
+                                <i class="fas fa-calendar me-1"></i>
+                                ${documento.fecha_publicacion ? formatearFecha(documento.fecha_publicacion) : 'Sin fecha'}
                             </div>
-                            ${destacadoBadge}
                         </div>
                         
-                        <h3 class="documento-title">${documento.nombre || 'Sin título'}</h3>
-                        
                         <div class="documento-meta">
-                            <div class="row g-2">
-                                <div class="col-md-6">
-                                    <i class="fas fa-calendar text-primary me-2"></i>
-                                    ${documento.fecha_publicacion ? formatearFecha(documento.fecha_publicacion) : 'Fecha por confirmar'}
-                                </div>
-                                ${fechaVencimiento}
-                            </div>
+                            <i class="fas fa-file me-2"></i>${documento.tipo_nombre || 'Documento'}
+                            ${fechaVencimiento}
                             ${archivoInfo}
+                            ${subidoPor ? `<div class="mt-1">${subidoPor}</div>` : ''}
                         </div>
                         
                         <div class="documento-description">
                             ${descripcionTexto}
                         </div>
                         
-                        <div class="documento-footer">
+                        <div class="d-flex justify-content-between align-items-center mt-3">
                             <div>
-                                ${subidoPor}
+                                <span class="badge-tipo">
+                                    <i class="${documento.tipo_icono || 'fas fa-file'} me-2"></i>
+                                    ${documento.tipo_nombre || 'Documento'}
+                                </span>
+                                ${destacadoBadge}
                             </div>
-                            <div class="btn-ver-detalle">
-                                <i class="fas fa-eye"></i>
-                                Ver detalles
-                            </div>
+                            <small class="text-muted">
+                                <i class="fas fa-eye me-1"></i>Ver detalles
+                            </small>
                         </div>
                     </div>
                 `;
             }).join('');
 
             // Agregar event listeners para ver detalles
-            container.querySelectorAll('.ver-detalle-documento-btn').forEach(card => {
-                card.addEventListener('click', () => {
-                    const documentoId = card.dataset.documentoId;
-                    console.log('Ver detalle documento - Raw ID:', documentoId);
-                    if (documentoId && documentoId.trim() !== '') {
-                        window.verDetalleDocumento(documentoId); // UUID como string
-                    } else {
-                        console.error('ID de documento inválido:', documentoId);
+            document.querySelectorAll('.ver-detalle-documento-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const documentoId = this.getAttribute('data-documento-id');
+                    if (documentoId) {
+                        verDetalleDocumento(documentoId);
                     }
                 });
             });
         }
 
+        // Función para filtrar documentos
+        function filtrarDocumentos() {
+            cargarDocumentos();
+        }
+
         // Limpiar filtros
         function limpiarFiltros() {
             document.getElementById('filtroTipo').value = '';
-            document.getElementById('filtroFecha').value = '';
-            document.getElementById('filtroBusqueda').value = '';
+            document.getElementById('filtroFechaDesde').value = '';
+            document.getElementById('filtroFechaHasta').value = '';
             cargarDocumentos();
         }
-        window.limpiarFiltros = limpiarFiltros;
-        window.cargarDocumentos = cargarDocumentos;
 
         // Formatear fecha
         function formatearFecha(fechaString) {
