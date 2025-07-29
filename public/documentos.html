@@ -187,7 +187,6 @@
             }
         }
     </style>
-    </style>
 </head>
 <body>
     <!-- Navbar -->
@@ -286,84 +285,6 @@
                     <p>No hay documentos que coincidan con los criterios de búsqueda.</p>
                 </div>
             </div>
-        </div>
-    </div>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="documentos.html">
-                            <i class="fas fa-file-text me-1"></i>Documentos
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="login.html">
-                            <i class="fas fa-sign-in-alt me-1"></i>Admin
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <div class="main-container">
-        <!-- Header -->
-        <div class="header-section">
-            <h1>
-                <i class="fas fa-file-alt me-3"></i>
-                Documentos Comunitarios
-            </h1>
-            <p>Accede a todos los documentos oficiales y recursos de nuestra comunidad</p>
-        </div>
-
-        <!-- Filtros -->
-        <div class="filter-section">
-            <h5>
-                <i class="fas fa-filter me-2"></i>
-                Filtrar Documentos
-            </h5>
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label for="filtroTipo" class="form-label">Tipo de Documento</label>
-                    <select class="form-select" id="filtroTipo">
-                        <option value="">Todos los tipos</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="filtroFecha" class="form-label">Desde Fecha</label>
-                    <input type="date" class="form-control" id="filtroFecha">
-                </div>
-                <div class="col-md-3">
-                    <label for="filtroBusqueda" class="form-label">Buscar</label>
-                    <input type="text" class="form-control" id="filtroBusqueda" placeholder="Buscar documentos...">
-                </div>
-                <div class="col-md-3 d-flex align-items-end">
-                    <button type="button" class="btn btn-secondary me-2" onclick="limpiarFiltros()">
-                        <i class="fas fa-times me-1"></i>Limpiar
-                    </button>
-                    <button type="button" class="btn btn-primary" onclick="cargarDocumentos()">
-                        <i class="fas fa-search me-1"></i>Buscar
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Loading -->
-        <div class="loading-spinner" id="loadingSpinner">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Cargando...</span>
-            </div>
-            <p class="mt-2">Cargando documentos...</p>
-        </div>
-
-        <!-- Lista de Documentos -->
-        <div id="documentosContainer">
-            <!-- Los documentos se cargarán aquí dinámicamente -->
-        </div>
-
-        <!-- Sin documentos -->
-        <div class="no-documentos" id="noDocumentos" style="display: none;">
-            <i class="fas fa-file-times fa-3x mb-3 text-muted"></i>
-            <h4>No hay documentos disponibles</h4>
-            <p>No se encontraron documentos que coincidan con los filtros seleccionados.</p>
         </div>
     </div>
 

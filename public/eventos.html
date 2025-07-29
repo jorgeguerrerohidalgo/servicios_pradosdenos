@@ -287,43 +287,6 @@
             </div>
         </div>
     </div>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="filtroFecha" class="form-label">Desde Fecha</label>
-                    <input type="date" class="form-control" id="filtroFecha">
-                </div>
-                <div class="col-md-3 d-flex align-items-end">
-                    <button type="button" class="btn btn-secondary me-2" onclick="limpiarFiltros()">
-                        <i class="fas fa-times me-1"></i>Limpiar
-                    </button>
-                    <button type="button" class="btn btn-primary" onclick="cargarEventos()">
-                        <i class="fas fa-search me-1"></i>Buscar
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Loading -->
-        <div class="loading-spinner" id="loadingSpinner">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Cargando...</span>
-            </div>
-            <p class="mt-2">Cargando eventos...</p>
-        </div>
-
-        <!-- Lista de Eventos -->
-        <div id="eventosContainer">
-            <!-- Los eventos se cargarán aquí dinámicamente -->
-        </div>
-
-        <!-- Sin eventos -->
-        <div class="no-eventos" id="noEventos" style="display: none;">
-            <i class="fas fa-calendar-times fa-3x mb-3 text-muted"></i>
-            <h4>No hay eventos disponibles</h4>
-            <p>No se encontraron eventos que coincidan con los filtros seleccionados.</p>
-        </div>
-    </div>
 
     <!-- Modal Detalle Evento -->
     <div class="modal fade" id="eventoModal" tabindex="-1">
