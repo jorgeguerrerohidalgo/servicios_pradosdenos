@@ -535,12 +535,12 @@
                 const maxParticipantes = evento.max_participantes ? ` / ${evento.max_participantes}` : '';
                 
                 return `
-                    <tr>
+                    <tr data-evento-id="${evento.id}">
                         <td>
-                            ${evento.titulo}
+                            ${escapeHtml(evento.titulo)}
                             ${destacadoBadge}
                         </td>
-                        <td>${evento.tipo_nombre || 'Sin tipo'}</td>
+                        <td>${escapeHtml(evento.tipo_nombre || 'Sin tipo')}</td>
                         <td>${new Date(evento.fecha_inicio).toLocaleDateString('es-CL')}</td>
                         <td>
                             <span class="badge ${visibleBadge}">
@@ -552,19 +552,30 @@
                             ${maxParticipantes}
                         </td>
                         <td>
-                            <button class="btn btn-sm btn-info me-1" onclick="editEvento(${evento.id})">
+                            <button class="btn btn-sm btn-info me-1 edit-evento-btn" data-id="${evento.id}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn btn-sm btn-success me-1" onclick="viewInscripcionesEvento(${evento.id})">
+                            <button class="btn btn-sm btn-success me-1 view-inscripciones-btn" data-id="${evento.id}">
                                 <i class="fas fa-users"></i>
                             </button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteEvento(${evento.id})">
+                            <button class="btn btn-sm btn-danger delete-evento-btn" data-id="${evento.id}">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
                     </tr>
                 `;
             }).join('');
+
+            // Agregar event listeners para los botones
+            tbody.querySelectorAll('.edit-evento-btn').forEach(btn => {
+                btn.addEventListener('click', () => editEvento(parseInt(btn.dataset.id)));
+            });
+            tbody.querySelectorAll('.view-inscripciones-btn').forEach(btn => {
+                btn.addEventListener('click', () => viewInscripcionesEvento(parseInt(btn.dataset.id)));
+            });
+            tbody.querySelectorAll('.delete-evento-btn').forEach(btn => {
+                btn.addEventListener('click', () => deleteEvento(parseInt(btn.dataset.id)));
+            });
         }
 
         // ==================== FUNCIONES DE EVENTOS ====================
@@ -896,12 +907,12 @@
                 const visibleText = doc.visible ? 'Visible' : 'Oculto';
                 
                 return `
-                    <tr>
+                    <tr data-documento-id="${doc.id}">
                         <td>
-                            ${doc.nombre}
+                            ${escapeHtml(doc.nombre)}
                             ${destacadoBadge}
                         </td>
-                        <td>${doc.tipo_nombre || 'Sin tipo'}</td>
+                        <td>${escapeHtml(doc.tipo_nombre || 'Sin tipo')}</td>
                         <td>${new Date(doc.fecha_publicacion).toLocaleDateString('es-CL')}</td>
                         <td>
                             <span class="badge ${visibleBadge}">
@@ -910,19 +921,30 @@
                         </td>
                         <td>${doc.total_descargas || 0}</td>
                         <td>
-                            <button class="btn btn-sm btn-info me-1" onclick="editDocumento(${doc.id})">
+                            <button class="btn btn-sm btn-info me-1 edit-documento-btn" data-id="${doc.id}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn btn-sm btn-success me-1" onclick="viewDescargasDocumento(${doc.id})">
+                            <button class="btn btn-sm btn-success me-1 view-descargas-btn" data-id="${doc.id}">
                                 <i class="fas fa-download"></i>
                             </button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteDocumento(${doc.id})">
+                            <button class="btn btn-sm btn-danger delete-documento-btn" data-id="${doc.id}">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
                     </tr>
                 `;
             }).join('');
+
+            // Agregar event listeners para los botones
+            tbody.querySelectorAll('.edit-documento-btn').forEach(btn => {
+                btn.addEventListener('click', () => editDocumento(parseInt(btn.dataset.id)));
+            });
+            tbody.querySelectorAll('.view-descargas-btn').forEach(btn => {
+                btn.addEventListener('click', () => viewDescargasDocumento(parseInt(btn.dataset.id)));
+            });
+            tbody.querySelectorAll('.delete-documento-btn').forEach(btn => {
+                btn.addEventListener('click', () => deleteDocumento(parseInt(btn.dataset.id)));
+            });
         }
 
         // ==================== FUNCIONES DE DOCUMENTOS ====================
@@ -1203,10 +1225,10 @@
             }
 
             tbody.innerHTML = guardiasGlobal.map(guardia => `
-                <tr>
-                    <td>${guardia.nombre} ${guardia.apellido_paterno || ''}</td>
-                    <td>${guardia.email}</td>
-                    <td>${guardia.telefono || 'N/A'}</td>
+                <tr data-guardia-id="${guardia.id}">
+                    <td>${escapeHtml(guardia.nombre)} ${escapeHtml(guardia.apellido_paterno || '')}</td>
+                    <td>${escapeHtml(guardia.email)}</td>
+                    <td>${escapeHtml(guardia.telefono || 'N/A')}</td>
                     <td>
                         <span class="badge ${guardia.activo ? 'bg-success' : 'bg-secondary'}">
                             ${guardia.activo ? 'Activo' : 'Inactivo'}
@@ -1214,15 +1236,23 @@
                     </td>
                     <td>${guardia.ultimo_login ? new Date(guardia.ultimo_login).toLocaleDateString('es-CL') : 'Nunca'}</td>
                     <td>
-                        <button class="btn btn-sm btn-info me-1" onclick="editGuardia(${guardia.id})">
+                        <button class="btn btn-sm btn-info me-1 edit-guardia-btn" data-id="${guardia.id}">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteGuardia(${guardia.id})">
+                        <button class="btn btn-sm btn-danger delete-guardia-btn" data-id="${guardia.id}">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
                 </tr>
             `).join('');
+
+            // Agregar event listeners para los botones
+            tbody.querySelectorAll('.edit-guardia-btn').forEach(btn => {
+                btn.addEventListener('click', () => editGuardia(parseInt(btn.dataset.id)));
+            });
+            tbody.querySelectorAll('.delete-guardia-btn').forEach(btn => {
+                btn.addEventListener('click', () => deleteGuardia(parseInt(btn.dataset.id)));
+            });
         }
 
         // ==================== FUNCIONES DE GUARDIAS ====================
@@ -1240,6 +1270,13 @@
                 }
             }
 
+            // Preparar valores escapados para el formulario
+            const nombre = escapeHtml(guardiaData?.nombre || '');
+            const rut = escapeHtml(guardiaData?.rut || '');
+            const email = escapeHtml(guardiaData?.email || '');
+            const telefono = escapeHtml(guardiaData?.telefono || '');
+            const validationCode = escapeHtml(guardiaData?.validation_code || 'N/A');
+
             Swal.fire({
                 title: guardiaId ? 'Editar Guardia' : 'Nuevo Guardia',
                 html: `
@@ -1249,14 +1286,14 @@
                                 <div class="mb-3">
                                     <label class="form-label">Nombre *</label>
                                     <input type="text" class="form-control" name="nombre" 
-                                           value="${guardiaData?.nombre || ''}" required>
+                                           value="${nombre}" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">RUT *</label>
                                     <input type="text" class="form-control" name="rut" 
-                                           value="${guardiaData?.rut || ''}" placeholder="12.345.678-9" required>
+                                           value="${rut}" placeholder="12.345.678-9" required>
                                 </div>
                             </div>
                         </div>
@@ -1265,14 +1302,14 @@
                                 <div class="mb-3">
                                     <label class="form-label">Email *</label>
                                     <input type="email" class="form-control" name="email" 
-                                           value="${guardiaData?.email || ''}" required>
+                                           value="${email}" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Teléfono</label>
                                     <input type="tel" class="form-control" name="telefono" 
-                                           value="${guardiaData?.telefono || ''}">
+                                           value="${telefono}">
                                 </div>
                             </div>
                         </div>
@@ -1292,10 +1329,10 @@
                             </div>
                             ${guardiaId ? `
                             <div class="col-md-6">
-                                <button type="button" class="btn btn-warning btn-sm" onclick="regenerarCodigoValidacion(${guardiaId})">
+                                <button type="button" class="btn btn-warning btn-sm regenerar-codigo-btn" data-guardia-id="${guardiaId}">
                                     🔄 Regenerar Código
                                 </button>
-                                <small class="text-muted d-block">Código actual: ${guardiaData?.validation_code || 'N/A'}</small>
+                                <small class="text-muted d-block">Código actual: ${validationCode}</small>
                             </div>
                             ` : ''}
                         </div>
@@ -1305,6 +1342,15 @@
                 confirmButtonText: 'Guardar',
                 cancelButtonText: 'Cancelar',
                 width: '700px',
+                didOpen: () => {
+                    // Agregar event listener para el botón de regenerar código
+                    const regenerarBtn = document.querySelector('.regenerar-codigo-btn');
+                    if (regenerarBtn) {
+                        regenerarBtn.addEventListener('click', () => {
+                            regenerarCodigoValidacion(parseInt(regenerarBtn.dataset.guardiaId));
+                        });
+                    }
+                },
                 preConfirm: () => {
                     const formData = new FormData(document.getElementById('guardiaForm'));
                     const data = {};
@@ -1432,9 +1478,9 @@
             }
 
             tbody.innerHTML = plazasGlobal.map(plaza => `
-                <tr>
-                    <td>${plaza.nombre}</td>
-                    <td>${plaza.direccion || 'N/A'}</td>
+                <tr data-plaza-id="${plaza.id}">
+                    <td>${escapeHtml(plaza.nombre)}</td>
+                    <td>${escapeHtml(plaza.direccion || 'N/A')}</td>
                     <td>${plaza.total_checkins || 0}</td>
                     <td>${plaza.ultimo_checkin ? new Date(plaza.ultimo_checkin).toLocaleDateString('es-CL') : 'Nunca'}</td>
                     <td>
@@ -1443,18 +1489,29 @@
                         </span>
                     </td>
                     <td>
-                        <button class="btn btn-sm btn-info me-1" onclick="editPlaza(${plaza.id})">
+                        <button class="btn btn-sm btn-info me-1 edit-plaza-btn" data-id="${plaza.id}">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-success me-1" onclick="viewPlazaCheckins(${plaza.id})">
+                        <button class="btn btn-sm btn-success me-1 view-checkins-btn" data-id="${plaza.id}">
                             <i class="fas fa-list"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="deletePlaza(${plaza.id})">
+                        <button class="btn btn-sm btn-danger delete-plaza-btn" data-id="${plaza.id}">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
                 </tr>
             `).join('');
+
+            // Agregar event listeners para los botones
+            tbody.querySelectorAll('.edit-plaza-btn').forEach(btn => {
+                btn.addEventListener('click', () => editPlaza(parseInt(btn.dataset.id)));
+            });
+            tbody.querySelectorAll('.view-checkins-btn').forEach(btn => {
+                btn.addEventListener('click', () => viewPlazaCheckins(parseInt(btn.dataset.id)));
+            });
+            tbody.querySelectorAll('.delete-plaza-btn').forEach(btn => {
+                btn.addEventListener('click', () => deletePlaza(parseInt(btn.dataset.id)));
+            });
         }
 
         async function showPlazaForm(plazaId = null) {
@@ -1616,10 +1673,10 @@
             }
 
             tbody.innerHTML = adminsGlobal.map(admin => `
-                <tr>
-                    <td>${admin.nombre} ${admin.apellido_paterno || ''}</td>
-                    <td>${admin.email}</td>
-                    <td>${admin.plaza_nombre || 'Sin asignar'}</td>
+                <tr data-admin-id="${admin.id}">
+                    <td>${escapeHtml(admin.nombre)} ${escapeHtml(admin.apellido_paterno || '')}</td>
+                    <td>${escapeHtml(admin.email)}</td>
+                    <td>${escapeHtml(admin.plaza_nombre || 'Sin asignar')}</td>
                     <td>
                         <span class="badge ${admin.activo ? 'bg-success' : 'bg-secondary'}">
                             ${admin.activo ? 'Activo' : 'Inactivo'}
@@ -1627,15 +1684,23 @@
                     </td>
                     <td>${admin.created_at ? new Date(admin.created_at).toLocaleDateString('es-CL') : 'N/A'}</td>
                     <td>
-                        <button class="btn btn-sm btn-info me-1" onclick="editAdmin(${admin.id})">
+                        <button class="btn btn-sm btn-info me-1 edit-admin-btn" data-id="${admin.id}">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteAdmin(${admin.id})">
+                        <button class="btn btn-sm btn-danger delete-admin-btn" data-id="${admin.id}">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
                 </tr>
             `).join('');
+
+            // Agregar event listeners para los botones
+            tbody.querySelectorAll('.edit-admin-btn').forEach(btn => {
+                btn.addEventListener('click', () => editAdmin(parseInt(btn.dataset.id)));
+            });
+            tbody.querySelectorAll('.delete-admin-btn').forEach(btn => {
+                btn.addEventListener('click', () => deleteAdmin(parseInt(btn.dataset.id)));
+            });
         }
 
         async function showAdminForm(adminId = null) {

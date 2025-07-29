@@ -495,7 +495,7 @@
                     `<small class="text-muted"><i class="fas fa-user me-1"></i>${documento.subido_por_nombre}</small>` : '';
                 
                 return `
-                    <div class="documento-card" onclick="verDetalleDocumento(${documento.id})">
+                    <div class="documento-card ver-detalle-documento-btn" data-documento-id="${documento.id}">
                         <div class="d-flex justify-content-between align-items-start mb-3">
                             <div>
                                 <span class="badge-tipo">
@@ -535,6 +535,13 @@
                     </div>
                 `;
             }).join('');
+
+            // Agregar event listeners para ver detalles
+            container.querySelectorAll('.ver-detalle-documento-btn').forEach(card => {
+                card.addEventListener('click', () => {
+                    window.verDetalleDocumento(parseInt(card.dataset.documentoId));
+                });
+            });
         }
 
         // Limpiar filtros
