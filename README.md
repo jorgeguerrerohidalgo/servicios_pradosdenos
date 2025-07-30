@@ -1,14 +1,36 @@
-# 🏢 Servicios Prados de Nos
+# 🏢 Portal de Vecinos - Los Prados de Nos
 
-Sistema de gestión de check-in para guardias de seguridad y administración de rondas.
+Portal comunitario integral para la gestión de check-in, eventos y documentos de la comunidad Los Prados de Nos.
+
+## 🎯 Versión Actual: v1.0 ✅
+
+**Estado**: En Producción | **Última actualización**: Enero 2025
 
 ## 🚀 Características Principales
 
-- **Sistema de Check-in**: Registro de entrada y salida de guardias
-- **Códigos QR**: Generación y validación de códigos QR para plazas
-- **Panel de Administración**: Gestión de usuarios y consulta de rondas
-- **Sistema de Autenticación**: Login seguro con roles diferenciados
-- **Seguridad Avanzada**: Rate limiting, logs de seguridad, validaciones
+### 🔐 Sistema de Check-in
+- Registro de entrada y salida de guardias
+- Códigos QR para plazas
+- Control de acceso vehicular y peatonal
+- Validación de placas y documentos
+
+### 📅 Gestión de Eventos
+- Visualización de eventos comunitarios
+- Filtros avanzados por tipo, fecha y ubicación
+- Modales de detalle con información completa
+- Sistema de inscripciones
+
+### 📄 Centro de Documentos
+- Repositorio de documentos oficiales
+- Filtros por tipo y fecha de publicación
+- Enlaces de descarga y visualización
+- Gestión de versiones
+
+### 🛡️ Panel de Administración
+- Gestión de usuarios y roles
+- Consulta de rondas de seguridad
+- Sistema de autenticación seguro
+- Rate limiting y logs de seguridad
 
 ## 📁 Estructura del Proyecto
 
