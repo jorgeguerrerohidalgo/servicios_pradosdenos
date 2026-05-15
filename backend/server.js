@@ -41,6 +41,16 @@ const eventosRoutes = require('./routes/eventos.routes');
 const documentosRoutes = require('./routes/documentos.routes');
 const initRoutes = require('./routes/init.routes');
 
+// Importar rutas de módulos de gestión residencial
+const casasRoutes = require('./routes/casas.routes');
+const residentesRoutes = require('./routes/residentes.routes');
+const mascotasRoutes = require('./routes/mascotas.routes');
+const pagosRoutes = require('./routes/pagos.routes');
+const vehiculosRoutes = require('./routes/vehiculos.routes');
+const accesoRoutes = require('./routes/acceso.routes');
+const vehiculosRoutes = require('./routes/vehiculos.routes');
+const accesoRoutes = require('./routes/acceso.routes');
+
 // Variables de entorno para producción
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -209,6 +219,15 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/eventos', eventosRoutes);
 app.use('/api/documentos', documentosRoutes);
 app.use('/api/init', initRoutes);
+
+// Rutas de módulos de gestión residencial
+app.use('/api/casas', casasRoutes);
+app.use('/api/residentes', residentesRoutes);
+app.use('/api/mascotas', mascotasRoutes);
+app.use('/api/pagos', pagosRoutes);
+app.use('/api/vehiculos', vehiculosRoutes);
+app.use('/api/acceso', accesoRoutes);
+
 app.use('/api', publicRoutes); // Esta debe ir al final para no interceptar otras rutas
 
 // Servir archivos estáticos desde public (primero local, luego padre)

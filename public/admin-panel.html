@@ -80,6 +80,24 @@
             <a class="nav-link" href="#" onclick="showSection('admins')">
                 <i class="fas fa-users-cog me-2"></i> Administradores
             </a>
+            <a class="nav-link" href="#" onclick="showSection('casas')">
+                <i class="fas fa-home me-2"></i> Casas
+            </a>
+            <a class="nav-link" href="#" onclick="showSection('residentes')">
+                <i class="fas fa-users me-2"></i> Residentes
+            </a>
+            <a class="nav-link" href="#" onclick="showSection('mascotas')">
+                <i class="fas fa-paw me-2"></i> Mascotas
+            </a>
+            <a class="nav-link" href="#" onclick="showSection('pagos')">
+                <i class="fas fa-money-bill-wave me-2"></i> Pagos
+            </a>
+            <a class="nav-link" href="#" onclick="showSection('vehiculos')">
+                <i class="fas fa-car me-2"></i> Vehículos
+            </a>
+            <a class="nav-link" href="#" onclick="showSection('acceso')">
+                <i class="fas fa-road-barrier me-2"></i> Control Acceso
+            </a>
             <a class="nav-link" href="#" onclick="showSection('reportes')">
                 <i class="fas fa-chart-line me-2"></i> Reportes
             </a>
@@ -264,6 +282,416 @@
             </div>
         </div>
 
+        <!-- Casas Section -->
+        <div id="casasSection" class="section-hidden">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-home"></i> Gestión de Casas</h2>
+                <button class="btn btn-success" onclick="showCasaForm()">
+                    <i class="fas fa-plus"></i> Nueva Casa
+                </button>
+            </div>
+            
+            <!-- Filtros -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="filterPlazaCasas" class="form-label">Filtrar por Plaza:</label>
+                            <select id="filterPlazaCasas" class="form-select" onchange="loadCasas()">
+                                <option value="">Todas las plazas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="filterActivoCasas" class="form-label">Estado:</label>
+                            <select id="filterActivoCasas" class="form-select" onchange="loadCasas()">
+                                <option value="true">Solo activas</option>
+                                <option value="all">Todas</option>
+                                <option value="false">Solo inactivas</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>N° Casa</th>
+                            <th>Dirección</th>
+                            <th>Plaza</th>
+                            <th>Cuota Social</th>
+                            <th>Junta Vecinos</th>
+                            <th>Total Mensual</th>
+                            <th>Residentes</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="casasTableBody">
+                        <tr><td colspan="9" class="text-center">Cargando casas...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Residentes Section -->
+        <div id="residentesSection" class="section-hidden">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-users"></i> Gestión de Residentes</h2>
+                <button class="btn btn-success" onclick="showResidenteForm()">
+                    <i class="fas fa-plus"></i> Nuevo Residente
+                </button>
+            </div>
+            
+            <!-- Filtros -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="filterCasaResidentes" class="form-label">Filtrar por Casa:</label>
+                            <select id="filterCasaResidentes" class="form-select" onchange="loadResidentes()">
+                                <option value="">Todas las casas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="filterActivoResidentes" class="form-label">Estado:</label>
+                            <select id="filterActivoResidentes" class="form-select" onchange="loadResidentes()">
+                                <option value="true">Solo activos</option>
+                                <option value="all">Todos</option>
+                                <option value="false">Solo inactivos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="searchResidentes" class="form-label">Buscar:</label>
+                            <input type="text" id="searchResidentes" class="form-control" placeholder="Nombre, RUN, casa..." onkeyup="loadResidentes()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>RUN</th>
+                            <th>Nombre Completo</th>
+                            <th>Casa</th>
+                            <th>Edad</th>
+                            <th>Email</th>
+                            <th>Teléfono</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="residentesTableBody">
+                        <tr><td colspan="8" class="text-center">Cargando residentes...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Mascotas Section -->
+        <div id="mascotasSection" class="section-hidden">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-paw"></i> Gestión de Mascotas</h2>
+                <button class="btn btn-success" onclick="showMascotaForm()">
+                    <i class="fas fa-plus"></i> Nueva Mascota
+                </button>
+            </div>
+            
+            <!-- Filtros -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label for="filterCasaMascotas" class="form-label">Filtrar por Casa:</label>
+                            <select id="filterCasaMascotas" class="form-select" onchange="loadMascotas()">
+                                <option value="">Todas las casas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="filterTipoMascotas" class="form-label">Tipo:</label>
+                            <select id="filterTipoMascotas" class="form-select" onchange="loadMascotas()">
+                                <option value="all">Todos</option>
+                                <option value="perro">Perros</option>
+                                <option value="gato">Gatos</option>
+                                <option value="otro">Otros</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="filterCertificadoMascotas" class="form-label">Vacunas:</label>
+                            <select id="filterCertificadoMascotas" class="form-select" onchange="loadMascotas()">
+                                <option value="all">Todas</option>
+                                <option value="true">Con certificado</option>
+                                <option value="false">Sin certificado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="filterActivoMascotas" class="form-label">Estado:</label>
+                            <select id="filterActivoMascotas" class="form-select" onchange="loadMascotas()">
+                                <option value="true">Solo activos</option>
+                                <option value="all">Todos</option>
+                                <option value="false">Solo inactivos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="searchMascotas" class="form-label">Buscar:</label>
+                            <input type="text" id="searchMascotas" class="form-control" placeholder="Nombre, dueño, raza..." onkeyup="loadMascotas()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Tipo</th>
+                            <th>Raza</th>
+                            <th>Casa</th>
+                            <th>Dueño</th>
+                            <th>Edad</th>
+                            <th>Vacunas</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mascotasTableBody">
+                        <tr><td colspan="9" class="text-center">Cargando mascotas...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagos Section -->
+        <div id="pagosSection" class="section-hidden">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-money-bill-wave"></i> Gestión de Pagos</h2>
+                <div>
+                    <button class="btn btn-success me-2" onclick="showPagoForm()">
+                        <i class="fas fa-plus"></i> Nuevo Pago Manual
+                    </button>
+                    <button class="btn btn-primary" onclick="showGenerarPagosForm()">
+                        <i class="fas fa-calendar-plus"></i> Generar Pagos Automáticos
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Filtros -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label for="filterCasaPagos" class="form-label">Filtrar por Casa:</label>
+                            <select id="filterCasaPagos" class="form-select" onchange="loadPagos()">
+                                <option value="">Todas las casas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="filterPeriodoPagos" class="form-label">Período:</label>
+                            <input type="month" id="filterPeriodoPagos" class="form-control" onchange="loadPagos()">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="filterTipoPagos" class="form-label">Tipo:</label>
+                            <select id="filterTipoPagos" class="form-select" onchange="loadPagos()">
+                                <option value="all">Todos</option>
+                                <option value="cuota_social">Cuota Social</option>
+                                <option value="junta_vecinos">Junta Vecinos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="filterEstadoPagos" class="form-label">Estado:</label>
+                            <select id="filterEstadoPagos" class="form-select" onchange="loadPagos()">
+                                <option value="all">Todos</option>
+                                <option value="pendiente">Pendientes</option>
+                                <option value="pagado">Pagados</option>
+                                <option value="vencido">Vencidos</option>
+                                <option value="anulado">Anulados</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-warning w-100" onclick="showCasasMorosas()">
+                                <i class="fas fa-exclamation-triangle"></i> Ver Casas Morosas
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Casa</th>
+                            <th>Período</th>
+                            <th>Tipo</th>
+                            <th>Monto</th>
+                            <th>Estado</th>
+                            <th>Vencimiento</th>
+                            <th>Fecha Pago</th>
+                            <th>Método</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pagosTableBody">
+                        <tr><td colspan="9" class="text-center">Cargando pagos...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Vehículos Section -->
+        <div id="vehiculosSection" class="section-hidden">
+            <h2><i class="fas fa-car"></i> Gestión de Vehículos</h2>
+            
+            <div class="mb-3">
+                <button class="btn btn-primary" onclick="showVehiculoForm()">
+                    <i class="fas fa-plus"></i> Nuevo Vehículo
+                </button>
+                <button class="btn btn-warning" onclick="showVehiculosBloqueados()">
+                    <i class="fas fa-ban"></i> Ver Vehículos Bloqueados
+                </button>
+            </div>
+
+            <!-- Filtros -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label>Filtrar por Casa</label>
+                            <select id="filterVehiculoCasa" class="form-select" onchange="loadVehiculos()">
+                                <option value="">Todas las casas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label>Filtrar por Tipo</label>
+                            <select id="filterVehiculoTipo" class="form-select" onchange="loadVehiculos()">
+                                <option value="">Todos los tipos</option>
+                                <option value="automovil">Automóvil</option>
+                                <option value="camioneta">Camioneta</option>
+                                <option value="motocicleta">Motocicleta</option>
+                                <option value="bicicleta">Bicicleta</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label>Estado</label>
+                            <select id="filterVehiculoActivo" class="form-select" onchange="loadVehiculos()">
+                                <option value="">Todos</option>
+                                <option value="true" selected>Activos</option>
+                                <option value="false">Inactivos</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Patente</th>
+                            <th>Marca / Modelo</th>
+                            <th>Color</th>
+                            <th>Año</th>
+                            <th>Tipo</th>
+                            <th>Casa</th>
+                            <th>Residente</th>
+                            <th>Estado Morosidad</th>
+                            <th>Acceso</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vehiculosTableBody">
+                        <tr><td colspan="10" class="text-center">Cargando vehículos...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Control de Acceso Section -->
+        <div id="accesoSection" class="section-hidden">
+            <h2><i class="fas fa-road-barrier"></i> Control de Acceso Vehicular</h2>
+            
+            <div class="mb-3">
+                <button class="btn btn-success" onclick="showRegistrarAccesoForm()">
+                    <i class="fas fa-car-side"></i> Registrar Entrada/Salida
+                </button>
+                <button class="btn btn-info" onclick="showVerificarAccesoForm()">
+                    <i class="fas fa-check-circle"></i> Verificar Acceso
+                </button>
+                <button class="btn btn-secondary" onclick="showEstadisticasAcceso()">
+                    <i class="fas fa-chart-pie"></i> Estadísticas
+                </button>
+            </div>
+
+            <!-- Filtros -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-2">
+                            <label>Patente</label>
+                            <input type="text" id="filterAccesoPatente" class="form-control" placeholder="AA1234" onchange="loadAccesos()">
+                        </div>
+                        <div class="col-md-2">
+                            <label>Casa</label>
+                            <select id="filterAccesoCasa" class="form-select" onchange="loadAccesos()">
+                                <option value="">Todas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label>Tipo</label>
+                            <select id="filterAccesoTipo" class="form-select" onchange="loadAccesos()">
+                                <option value="">Todos</option>
+                                <option value="entrada">Entrada</option>
+                                <option value="salida">Salida</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label>Desde</label>
+                            <input type="datetime-local" id="filterAccesoDesde" class="form-control" onchange="loadAccesos()">
+                        </div>
+                        <div class="col-md-2">
+                            <label>Hasta</label>
+                            <input type="datetime-local" id="filterAccesoHasta" class="form-control" onchange="loadAccesos()">
+                        </div>
+                        <div class="col-md-2">
+                            <label>Estado</label>
+                            <select id="filterAccesoPermitido" class="form-select" onchange="loadAccesos()">
+                                <option value="">Todos</option>
+                                <option value="true">Permitidos</option>
+                                <option value="false">Bloqueados</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Patente</th>
+                            <th>Marca / Modelo</th>
+                            <th>Casa</th>
+                            <th>Tipo</th>
+                            <th>Fecha/Hora</th>
+                            <th>Acceso</th>
+                            <th>Morosidad</th>
+                            <th>Deuda</th>
+                            <th>Usuario</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="accesosTableBody">
+                        <tr><td colspan="10" class="text-center">Cargando accesos...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Reports Section -->
         <div id="reportesSection" class="section-hidden">
             <h2><i class="fas fa-chart-line"></i> Reportes y Estadísticas</h2>
@@ -366,6 +794,689 @@
         </div>
     </div>
 
+    <!-- Modal para Crear/Editar Residente -->
+    <div class="modal fade" id="residenteModal" tabindex="-1" aria-labelledby="residenteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="residenteModalLabel">
+                        <i class="fas fa-users me-2"></i>
+                        <span id="residenteModalTitle">Nuevo Residente</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="residenteForm">
+                        <input type="hidden" id="residenteId">
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="residenteCasa" class="form-label">Casa <span class="text-danger">*</span></label>
+                                <select class="form-select" id="residenteCasa" required>
+                                    <option value="">Seleccione una casa...</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="residenteRun" class="form-label">RUN <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="residenteRun" required placeholder="12345678-9" maxlength="12">
+                                <small class="text-muted">Formato: 12345678-9 (sin puntos)</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="residenteNombre" class="form-label">Nombre <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="residenteNombre" required placeholder="Juan">
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="residenteApellidoPaterno" class="form-label">Apellido Paterno <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="residenteApellidoPaterno" required placeholder="Pérez">
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="residenteApellidoMaterno" class="form-label">Apellido Materno</label>
+                                <input type="text" class="form-control" id="residenteApellidoMaterno" placeholder="González">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="residenteFechaNacimiento" class="form-label">Fecha de Nacimiento <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="residenteFechaNacimiento" required>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="residenteEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="residenteEmail" placeholder="correo@email.com">
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="residenteTelefono" class="form-label">Teléfono</label>
+                                <input type="tel" class="form-control" id="residenteTelefono" placeholder="+56912345678">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="saveResidente()">
+                        <i class="fas fa-save me-1"></i>Guardar Residente
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Crear/Editar Mascota -->
+    <div class="modal fade" id="mascotaModal" tabindex="-1" aria-labelledby="mascotaModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="mascotaModalLabel">
+                        <i class="fas fa-paw me-2"></i>
+                        <span id="mascotaModalTitle">Nueva Mascota</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="mascotaForm">
+                        <input type="hidden" id="mascotaId">
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="mascotaCasa" class="form-label">Casa <span class="text-danger">*</span></label>
+                                <select class="form-select" id="mascotaCasa" required onchange="loadResidentesPorCasa()">
+                                    <option value="">Seleccione una casa...</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="mascotaResidente" class="form-label">Dueño (Opcional - Comunitaria si está vacío)</label>
+                                <select class="form-select" id="mascotaResidente">
+                                    <option value="">Mascota Comunitaria</option>
+                                </select>
+                                <small class="text-muted">Dejar vacío para mascotas comunitarias</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="mascotaNombre" class="form-label">Nombre <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="mascotaNombre" required placeholder="Max">
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="mascotaTipo" class="form-label">Tipo <span class="text-danger">*</span></label>
+                                <select class="form-select" id="mascotaTipo" required>
+                                    <option value="">Seleccione...</option>
+                                    <option value="perro">Perro</option>
+                                    <option value="gato">Gato</option>
+                                    <option value="otro">Otro</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="mascotaRaza" class="form-label">Raza</label>
+                                <input type="text" class="form-control" id="mascotaRaza" placeholder="Golden Retriever">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label for="mascotaFechaNacimiento" class="form-label">Fecha de Nacimiento</label>
+                                <input type="date" class="form-control" id="mascotaFechaNacimiento">
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <label for="mascotaGenero" class="form-label">Género</label>
+                                <select class="form-select" id="mascotaGenero">
+                                    <option value="">No especificado</option>
+                                    <option value="macho">Macho</option>
+                                    <option value="hembra">Hembra</option>
+                                    <option value="desconocido">Desconocido</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <label for="mascotaColor" class="form-label">Color</label>
+                                <input type="text" class="form-control" id="mascotaColor" placeholder="Dorado">
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <label for="mascotaFechaVacuna" class="form-label">Última Vacuna</label>
+                                <input type="date" class="form-control" id="mascotaFechaVacuna">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="mascotaCertificado">
+                                    <label class="form-check-label" for="mascotaCertificado">
+                                        Tiene certificado de vacunas al día
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="mascotaObservaciones" class="form-label">Observaciones</label>
+                                <textarea class="form-control" id="mascotaObservaciones" rows="3" placeholder="Notas adicionales sobre la mascota..."></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="saveMascota()">
+                        <i class="fas fa-save me-1"></i>Guardar Mascota
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Crear Pago Manual -->
+    <div class="modal fade" id="pagoModal" tabindex="-1" aria-labelledby="pagoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="pagoModalLabel">
+                        <i class="fas fa-money-bill-wave me-2"></i>Nuevo Pago Manual
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="pagoForm">
+                        <div class="mb-3">
+                            <label for="pagoCasa" class="form-label">Casa <span class="text-danger">*</span></label>
+                            <select class="form-select" id="pagoCasa" required>
+                                <option value="">Seleccione una casa...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="pagoPeriodo" class="form-label">Período <span class="text-danger">*</span></label>
+                                <input type="month" class="form-control" id="pagoPeriodo" required>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="pagoTipo" class="form-label">Tipo <span class="text-danger">*</span></label>
+                                <select class="form-select" id="pagoTipo" required>
+                                    <option value="">Seleccione...</option>
+                                    <option value="cuota_social">Cuota Social</option>
+                                    <option value="junta_vecinos">Junta de Vecinos</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="pagoMonto" class="form-label">Monto <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="pagoMonto" required min="0" step="100" placeholder="50000">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="pagoVencimiento" class="form-label">Vencimiento <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="pagoVencimiento" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="savePago()">
+                        <i class="fas fa-save me-1"></i>Crear Pago
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Generar Pagos Automáticos -->
+    <div class="modal fade" id="generarPagosModal" tabindex="-1" aria-labelledby="generarPagosModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="generarPagosModalLabel">
+                        <i class="fas fa-calendar-plus me-2"></i>Generar Pagos Automáticos
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="generarPagosForm">
+                        <div class="mb-3">
+                            <label for="generarPeriodo" class="form-label">Período <span class="text-danger">*</span></label>
+                            <input type="month" class="form-control" id="generarPeriodo" required>
+                            <small class="text-muted">Se generarán pagos para todas las casas activas</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="generarVencimiento" class="form-label">Fecha de Vencimiento</label>
+                            <input type="date" class="form-control" id="generarVencimiento">
+                            <small class="text-muted">Si no se especifica, se usará el último día del mes</small>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Se generarán automáticamente pagos de <strong>Cuota Social</strong> y <strong>Junta de Vecinos</strong> 
+                            para todas las casas activas que tengan montos configurados.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="generarPagosAutomaticos()">
+                        <i class="fas fa-cogs me-1"></i>Generar Pagos
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Registrar Pago -->
+    <div class="modal fade" id="registrarPagoModal" tabindex="-1" aria-labelledby="registrarPagoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="registrarPagoModalLabel">
+                        <i class="fas fa-check-circle me-2"></i>Registrar Pago
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="registrarPagoForm">
+                        <input type="hidden" id="registrarPagoId">
+                        
+                        <div id="registrarPagoInfo" class="mb-3">
+                            <!-- Se llenará dinámicamente -->
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="registrarMetodo" class="form-label">Método de Pago <span class="text-danger">*</span></label>
+                            <select class="form-select" id="registrarMetodo" required>
+                                <option value="">Seleccione...</option>
+                                <option value="efectivo">Efectivo</option>
+                                <option value="transferencia">Transferencia</option>
+                                <option value="cheque">Cheque</option>
+                                <option value="tarjeta">Tarjeta</option>
+                                <option value="webpay">Webpay</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="registrarComprobante" class="form-label">Número de Comprobante</label>
+                            <input type="text" class="form-control" id="registrarComprobante" placeholder="Ej: 12345678">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="registrarFecha" class="form-label">Fecha de Pago</label>
+                            <input type="datetime-local" class="form-control" id="registrarFecha">
+                            <small class="text-muted">Si no se especifica, se usará la fecha y hora actual</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="confirmarRegistroPago()">
+                        <i class="fas fa-check me-1"></i>Confirmar Pago
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Ver Casas Morosas -->
+    <div class="modal fade" id="casasMorosasModal" tabindex="-1" aria-labelledby="casasMorosasModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title" id="casasMorosasModalLabel">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Casas Morosas
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Casa</th>
+                                    <th>Pagos Vencidos</th>
+                                    <th>Deuda Total</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="casasMorosasTableBody">
+                                <tr><td colspan="4" class="text-center">Cargando...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Crear/Editar Vehículo -->
+    <div class="modal fade" id="vehiculoModal" tabindex="-1" aria-labelledby="vehiculoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="vehiculoModalLabel">Nuevo Vehículo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="vehiculoForm">
+                        <input type="hidden" id="vehiculoPatenteOriginal">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="vehiculoPatente" class="form-label">Patente *</label>
+                                <input type="text" class="form-control text-uppercase" id="vehiculoPatente" required maxlength="10" placeholder="AA1234">
+                                <small class="text-muted">4-10 caracteres alfanuméricos</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="vehiculoCasa" class="form-label">Casa *</label>
+                                <select class="form-select" id="vehiculoCasa" required>
+                                    <option value="">Seleccionar casa</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="vehiculoResidente" class="form-label">Residente (opcional)</label>
+                                <select class="form-select" id="vehiculoResidente">
+                                    <option value="">Sin residente asignado</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="vehiculoTipo" class="form-label">Tipo *</label>
+                                <select class="form-select" id="vehiculoTipo" required>
+                                    <option value="automovil">Automóvil</option>
+                                    <option value="camioneta">Camioneta</option>
+                                    <option value="motocicleta">Motocicleta</option>
+                                    <option value="bicicleta">Bicicleta</option>
+                                    <option value="otro">Otro</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="vehiculoMarca" class="form-label">Marca *</label>
+                                <input type="text" class="form-control" id="vehiculoMarca" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="vehiculoModelo" class="form-label">Modelo *</label>
+                                <input type="text" class="form-control" id="vehiculoModelo" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="vehiculoColor" class="form-label">Color</label>
+                                <input type="text" class="form-control" id="vehiculoColor">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="vehiculoAnio" class="form-label">Año</label>
+                                <input type="number" class="form-control" id="vehiculoAnio" min="1900" max="2026">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="vehiculoObservaciones" class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="vehiculoObservaciones" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="saveVehiculo()">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Vehículos Bloqueados -->
+    <div class="modal fade" id="vehiculosBloqueadosModal" tabindex="-1" aria-labelledby="vehiculosBloqueadosModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="vehiculosBloqueadosModalLabel">
+                        <i class="fas fa-ban"></i> Vehículos Bloqueados por Morosidad
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Política de Bloqueo:</strong> Vehículos con 3 o más meses de morosidad tienen acceso bloqueado.
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Patente</th>
+                                    <th>Marca/Modelo</th>
+                                    <th>Casa</th>
+                                    <th>Meses Vencidos</th>
+                                    <th>Deuda Total</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vehiculosBloqueadosTableBody">
+                                <tr><td colspan="6" class="text-center">Cargando...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Registrar Acceso -->
+    <div class="modal fade" id="registrarAccesoModal" tabindex="-1" aria-labelledby="registrarAccesoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="registrarAccesoModalLabel">
+                        <i class="fas fa-car-side"></i> Registrar Entrada/Salida
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="registrarAccesoForm">
+                        <div class="mb-3">
+                            <label for="accesoPatente" class="form-label">Patente del Vehículo *</label>
+                            <input type="text" class="form-control text-uppercase" id="accesoPatente" required placeholder="AA1234">
+                        </div>
+                        <div class="mb-3">
+                            <label for="accesoTipo" class="form-label">Tipo de Acceso *</label>
+                            <select class="form-select" id="accesoTipo" required>
+                                <option value="entrada">Entrada</option>
+                                <option value="salida">Salida</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="accesoUsuario" class="form-label">Guardia de Turno</label>
+                            <input type="text" class="form-control" id="accesoUsuario" placeholder="Nombre del guardia">
+                        </div>
+                        <div class="mb-3">
+                            <label for="accesoObservaciones" class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="accesoObservaciones" rows="2"></textarea>
+                        </div>
+                        <div id="accesoPreview" class="alert alert-info d-none">
+                            <strong>Vista Previa:</strong>
+                            <div id="accesoPreviewContent"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="registrarAcceso()">Registrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Verificar Acceso -->
+    <div class="modal fade" id="verificarAccesoModal" tabindex="-1" aria-labelledby="verificarAccesoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="verificarAccesoModalLabel">
+                        <i class="fas fa-check-circle"></i> Verificar Acceso
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="verificarAccesoForm">
+                        <div class="mb-3">
+                            <label for="verificarPatente" class="form-label">Patente del Vehículo *</label>
+                            <input type="text" class="form-control text-uppercase" id="verificarPatente" required placeholder="AA1234">
+                        </div>
+                        <button type="button" class="btn btn-info w-100" onclick="verificarAccesoVehiculo()">
+                            <i class="fas fa-search"></i> Verificar
+                        </button>
+                    </form>
+                    <div id="verificacionResultado" class="mt-3"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Estadísticas Acceso -->
+    <div class="modal fade" id="estadisticasAccesoModal" tabindex="-1" aria-labelledby="estadisticasAccesoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-secondary text-white">
+                    <h5 class="modal-title" id="estadisticasAccesoModalLabel">
+                        <i class="fas fa-chart-pie"></i> Estadísticas de Acceso
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="estadisticasForm" class="mb-3">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="estadFechaDesde" class="form-label">Desde</label>
+                                <input type="datetime-local" class="form-control" id="estadFechaDesde" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="estadFechaHasta" class="form-label">Hasta</label>
+                                <input type="datetime-local" class="form-control" id="estadFechaHasta" required>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary w-100" onclick="cargarEstadisticasAcceso()">
+                            <i class="fas fa-sync"></i> Actualizar Estadísticas
+                        </button>
+                    </form>
+                    <div id="estadisticasContenido">
+                        <p class="text-muted text-center">Seleccione un rango de fechas y click en "Actualizar Estadísticas"</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Crear/Editar Casa -->
+    <div class="modal fade" id="casaModal" tabindex="-1" aria-labelledby="casaModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="casaModalLabel">
+                        <i class="fas fa-home me-2"></i>
+                        <span id="casaModalTitle">Nueva Casa</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="casaForm">
+                        <input type="hidden" id="casaId">
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="casaNumero" class="form-label">Número de Casa <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="casaNumero" required placeholder="Ej: 101, A-5, Casa 23">
+                                <small class="text-muted">Identificador único de la casa</small>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="casaPlaza" class="form-label">Plaza Asociada <span class="text-danger">*</span></label>
+                                <select class="form-select" id="casaPlaza" required>
+                                    <option value="">Seleccione una plaza...</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="casaDireccion" class="form-label">Dirección <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="casaDireccion" required placeholder="Ej: Calle La Coruña #123">
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="casaMontoCuotaSocial" class="form-label">Cuota Social (CLP)</label>
+                                <input type="number" class="form-control" id="casaMontoCuotaSocial" min="0" step="100" value="0" placeholder="25000">
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="casaMontoJuntaVecinos" class="form-label">Junta de Vecinos (CLP)</label>
+                                <input type="number" class="form-control" id="casaMontoJuntaVecinos" min="0" step="100" value="0" placeholder="5000">
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="casaMetrosCuadrados" class="form-label">Metros Cuadrados</label>
+                                <input type="number" class="form-control" id="casaMetrosCuadrados" min="0" step="0.01" placeholder="120.50">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="casaObservaciones" class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="casaObservaciones" rows="3" placeholder="Notas adicionales sobre la casa..."></textarea>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Total Mensual:</strong> $<span id="casaMontoTotalPreview">0</span> CLP
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="saveCasa()">
+                        <i class="fas fa-save me-1"></i>Guardar Casa
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ==================== UTILIDADES DE AUTENTICACIÓN ====================
         
@@ -410,7 +1521,7 @@
 
         // ==================== FUNCIONES DE NAVEGACIÓN ====================
         function hideAllSections() {
-            const sections = ['dashboardSection', 'eventosSection', 'documentosSection', 'guardiasSection', 'plazasSection', 'adminsSection', 'reportesSection', 'qr-plazasSection', 'generar-tokensSection'];
+            const sections = ['dashboardSection', 'eventosSection', 'documentosSection', 'guardiasSection', 'plazasSection', 'adminsSection', 'casasSection', 'residentesSection', 'mascotasSection', 'pagosSection', 'vehiculosSection', 'accesoSection', 'reportesSection', 'qr-plazasSection', 'generar-tokensSection'];
             sections.forEach(section => {
                 const element = document.getElementById(section);
                 if (element) {
@@ -436,6 +1547,12 @@
                 'guardias': 'guardiasSection',
                 'plazas': 'plazasSection',
                 'admins': 'adminsSection',
+                'casas': 'casasSection',
+                'residentes': 'residentesSection',
+                'mascotas': 'mascotasSection',
+                'pagos': 'pagosSection',
+                'vehiculos': 'vehiculosSection',
+                'acceso': 'accesoSection',
                 'reportes': 'reportesSection',
                 'qr-plazas': 'qr-plazasSection',
                 'generar-tokens': 'generar-tokensSection'
@@ -477,6 +1594,30 @@
                 case 'admins':
                     loadPlazas(); // Load plazas first for admin form
                     loadAdmins();
+                    break;
+                case 'casas':
+                    loadPlazas(); // Cargar plazas para filtros y formulario
+                    loadCasas();
+                    break;
+                case 'residentes':
+                    loadCasas(); // Cargar casas para filtros y formulario
+                    loadResidentes();
+                    break;
+                case 'mascotas':
+                    loadCasas(); // Cargar casas para filtros y formulario
+                    loadMascotas();
+                    break;
+                case 'pagos':
+                    loadCasas(); // Cargar casas para filtros y formulario
+                    loadPagos();
+                    break;
+                case 'vehiculos':
+                    loadCasas(); // Cargar casas para filtros y formulario
+                    loadVehiculos();
+                    break;
+                case 'acceso':
+                    loadCasas(); // Cargar casas para filtros
+                    loadAccesos();
                     break;
                 case 'reportes':
                     loadReportes();
@@ -2190,6 +3331,1980 @@
 
             } catch (error) {
                 console.error('❌ Error cargando estadísticas:', error);
+            }
+        }
+
+        // ==================== FUNCIONES DE CASAS ====================
+        let casasGlobal = [];
+
+        async function loadCasas() {
+            try {
+                console.log('📦 Cargando casas...');
+                
+                const plazaId = document.getElementById('filterPlazaCasas')?.value || '';
+                const activo = document.getElementById('filterActivoCasas')?.value || 'true';
+                
+                let url = '/api/casas?';
+                if (plazaId) url += `plaza_id=${plazaId}&`;
+                if (activo !== 'all') url += `activo=${activo}`;
+                
+                const response = await authenticatedFetch(url);
+                if (!response) return;
+                
+                if (!response.ok) {
+                    throw new Error('Error al cargar casas');
+                }
+                
+                const data = await response.json();
+                casasGlobal = data.data || [];
+                
+                console.log('✅ Casas cargadas:', casasGlobal.length);
+                renderCasasTable(casasGlobal);
+                
+                // Cargar plazas para dropdown de filtros si no está cargado
+                if (!document.getElementById('filterPlazaCasas').options.length > 1) {
+                    await loadPlazasForFilter();
+                }
+                
+            } catch (error) {
+                console.error('Error al cargar casas:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudieron cargar las casas'
+                });
+            }
+        }
+
+        async function loadPlazasForFilter() {
+            if (plazasGlobal.length === 0) {
+                await loadPlazas();
+            }
+            
+            const filterSelect = document.getElementById('filterPlazaCasas');
+            const modalSelect = document.getElementById('casaPlaza');
+            
+            // Limpiar opciones existentes
+            filterSelect.innerHTML = '<option value="">Todas las plazas</option>';
+            modalSelect.innerHTML = '<option value="">Seleccione una plaza...</option>';
+            
+            plazasGlobal.forEach(plaza => {
+                const option1 = document.createElement('option');
+                option1.value = plaza.id;
+                option1.textContent = plaza.nombre;
+                filterSelect.appendChild(option1);
+                
+                const option2 = document.createElement('option');
+                option2.value = plaza.id;
+                option2.textContent = plaza.nombre;
+                modalSelect.appendChild(option2);
+            });
+        }
+
+        function renderCasasTable(casas) {
+            const tbody = document.getElementById('casasTableBody');
+            
+            if (!casas || casas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">No hay casas registradas</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = casas.map(casa => `
+                <tr>
+                    <td><strong>${casa.numero_casa}</strong></td>
+                    <td>${casa.direccion}</td>
+                    <td><span class="badge bg-info">${casa.plaza_nombre || 'N/A'}</span></td>
+                    <td class="text-end">$${parseInt(casa.monto_cuota_social || 0).toLocaleString('es-CL')}</td>
+                    <td class="text-end">$${parseInt(casa.monto_junta_vecinos || 0).toLocaleString('es-CL')}</td>
+                    <td class="text-end"><strong>$${parseInt(casa.monto_total_mensual || 0).toLocaleString('es-CL')}</strong></td>
+                    <td class="text-center">
+                        <span class="badge bg-secondary">${casa.total_residentes || 0}</span>
+                    </td>
+                    <td>
+                        <span class="badge ${casa.activo ? 'bg-success' : 'bg-danger'}">
+                            ${casa.activo ? 'Activa' : 'Inactiva'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button class="btn btn-outline-primary" onclick="showCasaForm(${casa.id})" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="deleteCasa(${casa.id}, '${casa.numero_casa}')" title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function showCasaForm(casaId = null) {
+            try {
+                // Cargar plazas si no están cargadas
+                await loadPlazasForFilter();
+                
+                const modal = new bootstrap.Modal(document.getElementById('casaModal'));
+                const form = document.getElementById('casaForm');
+                form.reset();
+                
+                if (casaId) {
+                    // Modo edición
+                    document.getElementById('casaModalTitle').textContent = 'Editar Casa';
+                    
+                    const response = await authenticatedFetch(`/api/casas/${casaId}`);
+                    if (!response || !response.ok) {
+                        throw new Error('Error al cargar datos de la casa');
+                    }
+                    
+                    const result = await response.json();
+                    const casa = result.data;
+                    
+                    document.getElementById('casaId').value = casa.id;
+                    document.getElementById('casaNumero').value = casa.numero_casa;
+                    document.getElementById('casaDireccion').value = casa.direccion;
+                    document.getElementById('casaPlaza').value = casa.plaza_id;
+                    document.getElementById('casaMontoCuotaSocial').value = casa.monto_cuota_social || 0;
+                    document.getElementById('casaMontoJuntaVecinos').value = casa.monto_junta_vecinos || 0;
+                    document.getElementById('casaMetrosCuadrados').value = casa.metros_cuadrados || '';
+                    document.getElementById('casaObservaciones').value = casa.observaciones || '';
+                    
+                    updateMontoTotal();
+                } else {
+                    // Modo creación
+                    document.getElementById('casaModalTitle').textContent = 'Nueva Casa';
+                    document.getElementById('casaId').value = '';
+                    updateMontoTotal();
+                }
+                
+                modal.show();
+                
+                // Agregar listeners para actualizar total automáticamente
+                ['casaMontoCuotaSocial', 'casaMontoJuntaVecinos'].forEach(id => {
+                    document.getElementById(id).addEventListener('input', updateMontoTotal);
+                });
+                
+            } catch (error) {
+                console.error('Error al abrir formulario de casa:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo cargar el formulario'
+                });
+            }
+        }
+
+        function updateMontoTotal() {
+            const cuotaSocial = parseFloat(document.getElementById('casaMontoCuotaSocial').value) || 0;
+            const juntaVecinos = parseFloat(document.getElementById('casaMontoJuntaVecinos').value) || 0;
+            const total = cuotaSocial + juntaVecinos;
+            document.getElementById('casaMontoTotalPreview').textContent = total.toLocaleString('es-CL');
+        }
+
+        async function saveCasa() {
+            try {
+                const casaId = document.getElementById('casaId').value;
+                const data = {
+                    numero_casa: document.getElementById('casaNumero').value.trim(),
+                    direccion: document.getElementById('casaDireccion').value.trim(),
+                    plaza_id: parseInt(document.getElementById('casaPlaza').value),
+                    monto_cuota_social: parseFloat(document.getElementById('casaMontoCuotaSocial').value) || 0,
+                    monto_junta_vecinos: parseFloat(document.getElementById('casaMontoJuntaVecinos').value) || 0,
+                    metros_cuadrados: parseFloat(document.getElementById('casaMetrosCuadrados').value) || null,
+                    observaciones: document.getElementById('casaObservaciones').value.trim() || null
+                };
+                
+                // Validaciones
+                if (!data.numero_casa || !data.direccion || !data.plaza_id) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Campos requeridos',
+                        text: 'Debe completar todos los campos obligatorios'
+                    });
+                    return;
+                }
+                
+                const url = casaId ? `/api/casas/${casaId}` : '/api/casas';
+                const method = casaId ? 'PUT' : 'POST';
+                
+                const response = await authenticatedFetch(url, {
+                    method: method,
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response) return;
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Éxito',
+                        text: result.message || 'Casa guardada correctamente',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    
+                    // Cerrar modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('casaModal'));
+                    modal.hide();
+                    
+                    // Recargar tabla
+                    loadCasas();
+                } else {
+                    throw new Error(result.message || 'Error al guardar casa');
+                }
+                
+            } catch (error) {
+                console.error('Error al guardar casa:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo guardar la casa'
+                });
+            }
+        }
+
+        async function deleteCasa(casaId, numeroCasa) {
+            try {
+                const result = await Swal.fire({
+                    title: '¿Eliminar casa?',
+                    html: `¿Está seguro de que desea eliminar la casa <strong>${numeroCasa}</strong>?<br><small class="text-muted">Esta acción desactivará la casa.</small>`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                });
+                
+                if (!result.isConfirmed) return;
+                
+                const response = await authenticatedFetch(`/api/casas/${casaId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response) return;
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Eliminada',
+                        text: 'Casa eliminada correctamente',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    
+                    loadCasas();
+                } else {
+                    throw new Error(data.message || 'Error al eliminar casa');
+                }
+                
+            } catch (error) {
+                console.error('Error al eliminar casa:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo eliminar la casa. Verifique que no tenga residentes activos.'
+                });
+            }
+        }
+
+        // ==================== FUNCIONES DE RESIDENTES ====================
+
+        async function loadResidentes() {
+            try {
+                const casaId = document.getElementById('filterCasaResidentes').value;
+                const activo = document.getElementById('filterActivoResidentes').value;
+                const search = document.getElementById('searchResidentes').value;
+                
+                const params = new URLSearchParams();
+                if (casaId) params.append('casa_id', casaId);
+                if (activo !== 'all') params.append('activo', activo);
+                if (search) params.append('search', search);
+                
+                const response = await authenticatedFetch(`/api/residentes?${params.toString()}`);
+                if (!response) return;
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    renderResidentesTable(data.data);
+                } else {
+                    throw new Error(data.message || 'Error al cargar residentes');
+                }
+                
+            } catch (error) {
+                console.error('Error al cargar residentes:', error);
+                document.getElementById('residentesTableBody').innerHTML = 
+                    '<tr><td colspan="8" class="text-center text-danger">Error al cargar residentes</td></tr>';
+            }
+        }
+
+        function renderResidentesTable(residentes) {
+            const tbody = document.getElementById('residentesTableBody');
+            
+            if (residentes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">No hay residentes registrados</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = residentes.map(residente => {
+                const nombreCompleto = `${residente.nombre} ${residente.apellido_paterno} ${residente.apellido_materno || ''}`.trim();
+                const edad = residente.edad !== null ? `${residente.edad} años` : 'N/A';
+                
+                return `
+                    <tr>
+                        <td>${escapeHtml(residente.run)}</td>
+                        <td>${escapeHtml(nombreCompleto)}</td>
+                        <td>${escapeHtml(residente.numero_casa || 'N/A')}</td>
+                        <td>${edad}</td>
+                        <td>${escapeHtml(residente.email || 'N/A')}</td>
+                        <td>${escapeHtml(residente.telefono || 'N/A')}</td>
+                        <td>
+                            <span class="badge ${residente.activo ? 'bg-success' : 'bg-secondary'}">
+                                ${residente.activo ? 'Activo' : 'Inactivo'}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-info me-1" onclick="showResidenteForm(${residente.id})" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteResidente(${residente.id}, '${escapeHtml(nombreCompleto)}')" title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function showResidenteForm(residenteId = null) {
+            // Limpiar el formulario
+            document.getElementById('residenteForm').reset();
+            document.getElementById('residenteId').value = '';
+            document.getElementById('residenteModalTitle').textContent = residenteId ? 'Editar Residente' : 'Nuevo Residente';
+            
+            // Cargar casas en el dropdown
+            try {
+                const response = await authenticatedFetch('/api/casas/simple');
+                if (response && response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        const selectCasa = document.getElementById('residenteCasa');
+                        selectCasa.innerHTML = '<option value="">Seleccione una casa...</option>' +
+                            data.data.map(casa => `<option value="${casa.id}">${casa.numero_casa}</option>`).join('');
+                        
+                        // Poblar el filtro de casas también
+                        const filterCasa = document.getElementById('filterCasaResidentes');
+                        filterCasa.innerHTML = '<option value="">Todas las casas</option>' +
+                            data.data.map(casa => `<option value="${casa.id}">${casa.numero_casa}</option>`).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Error al cargar casas:', error);
+            }
+            
+            // Si es edición, cargar datos del residente
+            if (residenteId) {
+                try {
+                    const response = await authenticatedFetch(`/api/residentes?id=${residenteId}`);
+                    if (response && response.ok) {
+                        const data = await response.json();
+                        if (data.success && data.data.length > 0) {
+                            const residente = data.data[0];
+                            document.getElementById('residenteId').value = residente.id;
+                            document.getElementById('residenteCasa').value = residente.casa_id;
+                            document.getElementById('residenteRun').value = residente.run;
+                            document.getElementById('residenteNombre').value = residente.nombre;
+                            document.getElementById('residenteApellidoPaterno').value = residente.apellido_paterno;
+                            document.getElementById('residenteApellidoMaterno').value = residente.apellido_materno || '';
+                            document.getElementById('residenteFechaNacimiento').value = residente.fecha_nacimiento;
+                            document.getElementById('residenteEmail').value = residente.email || '';
+                            document.getElementById('residenteTelefono').value = residente.telefono || '';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error al cargar residente:', error);
+                }
+            }
+            
+            // Mostrar modal
+            const modal = new bootstrap.Modal(document.getElementById('residenteModal'));
+            modal.show();
+        }
+
+        async function saveResidente() {
+            const form = document.getElementById('residenteForm');
+            
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            const residenteId = document.getElementById('residenteId').value;
+            const data = {
+                casa_id: parseInt(document.getElementById('residenteCasa').value),
+                run: document.getElementById('residenteRun').value.trim(),
+                nombre: document.getElementById('residenteNombre').value.trim(),
+                apellido_paterno: document.getElementById('residenteApellidoPaterno').value.trim(),
+                apellido_materno: document.getElementById('residenteApellidoMaterno').value.trim() || null,
+                fecha_nacimiento: document.getElementById('residenteFechaNacimiento').value,
+                email: document.getElementById('residenteEmail').value.trim() || null,
+                telefono: document.getElementById('residenteTelefono').value.trim() || null
+            };
+            
+            try {
+                const url = residenteId ? `/api/residentes/${residenteId}` : '/api/residentes';
+                const method = residenteId ? 'PUT' : 'POST';
+                
+                const response = await authenticatedFetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response) return;
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: residenteId ? 'Residente actualizado' : 'Residente creado',
+                        text: result.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    
+                    bootstrap.Modal.getInstance(document.getElementById('residenteModal')).hide();
+                    loadResidentes();
+                } else {
+                    throw new Error(result.message || 'Error al guardar residente');
+                }
+                
+            } catch (error) {
+                console.error('Error al guardar residente:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo guardar el residente'
+                });
+            }
+        }
+
+        async function deleteResidente(residenteId, nombreCompleto) {
+            try {
+                const result = await Swal.fire({
+                    title: '¿Eliminar residente?',
+                    html: `¿Está seguro de que desea eliminar a <strong>${nombreCompleto}</strong>?<br><small class="text-muted">Esta acción desactivará al residente.</small>`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                });
+                
+                if (!result.isConfirmed) return;
+                
+                const response = await authenticatedFetch(`/api/residentes/${residenteId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response) return;
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Eliminado',
+                        text: 'Residente eliminado correctamente',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    
+                    loadResidentes();
+                } else {
+                    throw new Error(data.message || 'Error al eliminar residente');
+                }
+                
+            } catch (error) {
+                console.error('Error al eliminar residente:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo eliminar el residente'
+                });
+            }
+        }
+
+        // ==================== FUNCIONES DE MASCOTAS ====================
+
+        async function loadMascotas() {
+            try {
+                const casaId = document.getElementById('filterCasaMascotas').value;
+                const tipo = document.getElementById('filterTipoMascotas').value;
+                const certificado = document.getElementById('filterCertificadoMascotas').value;
+                const activo = document.getElementById('filterActivoMascotas').value;
+                const search = document.getElementById('searchMascotas').value;
+                
+                const params = new URLSearchParams();
+                if (casaId) params.append('casa_id', casaId);
+                if (tipo !== 'all') params.append('tipo', tipo);
+                if (certificado !== 'all') params.append('certificado_vacunas', certificado);
+                if (activo !== 'all') params.append('activo', activo);
+                if (search) params.append('search', search);
+                
+                const response = await authenticatedFetch(`/api/mascotas?${params.toString()}`);
+                if (!response) return;
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    renderMascotasTable(data.data);
+                } else {
+                    throw new Error(data.message || 'Error al cargar mascotas');
+                }
+                
+            } catch (error) {
+                console.error('Error al cargar mascotas:', error);
+                document.getElementById('mascotasTableBody').innerHTML = 
+                    '<tr><td colspan="9" class="text-center text-danger">Error al cargar mascotas</td></tr>';
+            }
+        }
+
+        function renderMascotasTable(mascotas) {
+            const tbody = document.getElementById('mascotasTableBody');
+            
+            if (mascotas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center">No hay mascotas registradas</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = mascotas.map(mascota => {
+                const edad = mascota.edad_anos !== null ? `${mascota.edad_anos} años` : 'N/A';
+                const tipoIcono = mascota.tipo === 'perro' ? 'fa-dog' : mascota.tipo === 'gato' ? 'fa-cat' : 'fa-paw';
+                const duenoTexto = mascota.dueno_nombre === 'COMUNITARIA' ? '<span class="badge bg-info">Comunitaria</span>' : escapeHtml(mascota.dueno_nombre);
+                
+                return `
+                    <tr>
+                        <td>
+                            <i class="fas ${tipoIcono} me-1"></i>
+                            ${escapeHtml(mascota.mascota_nombre)}
+                        </td>
+                        <td><span class="badge bg-secondary">${escapeHtml(mascota.tipo)}</span></td>
+                        <td>${escapeHtml(mascota.raza || 'N/A')}</td>
+                        <td>${escapeHtml(mascota.numero_casa || 'N/A')}</td>
+                        <td>${duenoTexto}</td>
+                        <td>${edad}</td>
+                        <td>
+                            ${mascota.certificado_vacunas 
+                                ? '<span class="badge bg-success"><i class="fas fa-check"></i> Al día</span>' 
+                                : '<span class="badge bg-warning"><i class="fas fa-exclamation-triangle"></i> Pendiente</span>'}
+                        </td>
+                        <td>
+                            <span class="badge ${mascota.activo ? 'bg-success' : 'bg-secondary'}">
+                                ${mascota.activo ? 'Activo' : 'Inactivo'}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-info me-1" onclick="showMascotaForm(${mascota.id})" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteMascota(${mascota.id}, '${escapeHtml(mascota.mascota_nombre)}')" title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function showMascotaForm(mascotaId = null) {
+            // Limpiar el formulario
+            document.getElementById('mascotaForm').reset();
+            document.getElementById('mascotaId').value = '';
+            document.getElementById('mascotaModalTitle').textContent = mascotaId ? 'Editar Mascota' : 'Nueva Mascota';
+            
+            // Cargar casas en el dropdown
+            try {
+                const response = await authenticatedFetch('/api/casas/simple');
+                if (response && response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        const selectCasa = document.getElementById('mascotaCasa');
+                        selectCasa.innerHTML = '<option value="">Seleccione una casa...</option>' +
+                            data.data.map(casa => `<option value="${casa.id}">${casa.numero_casa}</option>`).join('');
+                        
+                        // Poblar el filtro de casas también
+                        const filterCasa = document.getElementById('filterCasaMascotas');
+                        filterCasa.innerHTML = '<option value="">Todas las casas</option>' +
+                            data.data.map(casa => `<option value="${casa.id}">${casa.numero_casa}</option>`).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Error al cargar casas:', error);
+            }
+            
+            // Si es edición, cargar datos de la mascota
+            if (mascotaId) {
+                try {
+                    const response = await authenticatedFetch(`/api/mascotas?id=${mascotaId}`);
+                    if (response && response.ok) {
+                        const data = await response.json();
+                        if (data.success && data.data.length > 0) {
+                            const mascota = data.data[0];
+                            document.getElementById('mascotaId').value = mascota.id;
+                            document.getElementById('mascotaCasa').value = mascota.casa_id;
+                            
+                            // Cargar residentes de la casa seleccionada
+                            await loadResidentesPorCasa();
+                            
+                            document.getElementById('mascotaResidente').value = mascota.residente_id || '';
+                            document.getElementById('mascotaNombre').value = mascota.mascota_nombre;
+                            document.getElementById('mascotaTipo').value = mascota.tipo;
+                            document.getElementById('mascotaRaza').value = mascota.raza || '';
+                            document.getElementById('mascotaFechaNacimiento').value = mascota.fecha_nacimiento || '';
+                            document.getElementById('mascotaGenero').value = mascota.genero || '';
+                            document.getElementById('mascotaColor').value = mascota.color || '';
+                            document.getElementById('mascotaFechaVacuna').value = mascota.fecha_ultima_vacuna || '';
+                            document.getElementById('mascotaCertificado').checked = mascota.certificado_vacunas || false;
+                            document.getElementById('mascotaObservaciones').value = mascota.observaciones || '';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error al cargar mascota:', error);
+                }
+            }
+            
+            // Mostrar modal
+            const modal = new bootstrap.Modal(document.getElementById('mascotaModal'));
+            modal.show();
+        }
+
+        async function loadResidentesPorCasa() {
+            const casaId = document.getElementById('mascotaCasa').value;
+            const selectResidente = document.getElementById('mascotaResidente');
+            
+            if (!casaId) {
+                selectResidente.innerHTML = '<option value="">Mascota Comunitaria</option>';
+                return;
+            }
+            
+            try {
+                const response = await authenticatedFetch(`/api/residentes/casa/${casaId}`);
+                if (response && response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        selectResidente.innerHTML = '<option value="">Mascota Comunitaria</option>' +
+                            data.data.map(residente => 
+                                `<option value="${residente.id}">${residente.nombre} ${residente.apellido_paterno}</option>`
+                            ).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Error al cargar residentes por casa:', error);
+                selectResidente.innerHTML = '<option value="">Mascota Comunitaria</option>';
+            }
+        }
+
+        async function saveMascota() {
+            const form = document.getElementById('mascotaForm');
+            
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            const mascotaId = document.getElementById('mascotaId').value;
+            const residenteValue = document.getElementById('mascotaResidente').value;
+            
+            const data = {
+                casa_id: parseInt(document.getElementById('mascotaCasa').value),
+                residente_id: residenteValue ? parseInt(residenteValue) : null,
+                nombre: document.getElementById('mascotaNombre').value.trim(),
+                tipo: document.getElementById('mascotaTipo').value,
+                raza: document.getElementById('mascotaRaza').value.trim() || null,
+                fecha_nacimiento: document.getElementById('mascotaFechaNacimiento').value || null,
+                genero: document.getElementById('mascotaGenero').value || null,
+                color: document.getElementById('mascotaColor').value.trim() || null,
+                certificado_vacunas: document.getElementById('mascotaCertificado').checked,
+                fecha_ultima_vacuna: document.getElementById('mascotaFechaVacuna').value || null,
+                observaciones: document.getElementById('mascotaObservaciones').value.trim() || null
+            };
+            
+            try {
+                const url = mascotaId ? `/api/mascotas/${mascotaId}` : '/api/mascotas';
+                const method = mascotaId ? 'PUT' : 'POST';
+                
+                const response = await authenticatedFetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response) return;
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: mascotaId ? 'Mascota actualizada' : 'Mascota creada',
+                        text: result.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    
+                    bootstrap.Modal.getInstance(document.getElementById('mascotaModal')).hide();
+                    loadMascotas();
+                } else {
+                    throw new Error(result.message || 'Error al guardar mascota');
+                }
+                
+            } catch (error) {
+                console.error('Error al guardar mascota:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo guardar la mascota'
+                });
+            }
+        }
+
+        async function deleteMascota(mascotaId, nombreMascota) {
+            try {
+                const result = await Swal.fire({
+                    title: '¿Eliminar mascota?',
+                    html: `¿Está seguro de que desea eliminar a <strong>${nombreMascota}</strong>?<br><small class="text-muted">Esta acción desactivará a la mascota.</small>`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                });
+                
+                if (!result.isConfirmed) return;
+                
+                const response = await authenticatedFetch(`/api/mascotas/${mascotaId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response) return;
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Eliminada',
+                        text: 'Mascota eliminada correctamente',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    
+                    loadMascotas();
+                } else {
+                    throw new Error(data.message || 'Error al eliminar mascota');
+                }
+                
+            } catch (error) {
+                console.error('Error al eliminar mascota:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo eliminar la mascota'
+                });
+            }
+        }
+
+        // ==================== FUNCIONES DE PAGOS ====================
+
+        async function loadPagos() {
+            try {
+                const casaId = document.getElementById('filterCasaPagos').value;
+                const periodoInput = document.getElementById('filterPeriodoPagos').value;
+                const tipo = document.getElementById('filterTipoPagos').value;
+                const estado = document.getElementById('filterEstadoPagos').value;
+                
+                // Convertir formato del input month (YYYY-MM) al formato del backend
+                const periodo = periodoInput ? periodoInput : '';
+                
+                const params = new URLSearchParams();
+                if (casaId) params.append('casa_id', casaId);
+                if (periodo) params.append('periodo', periodo);
+                if (tipo !== 'all') params.append('tipo_pago', tipo);
+                if (estado !== 'all') params.append('estado', estado);
+                
+                const response = await authenticatedFetch(`/api/pagos?${params.toString()}`);
+                if (!response) return;
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    renderPagosTable(data.data);
+                } else {
+                    throw new Error(data.message || 'Error al cargar pagos');
+                }
+                
+            } catch (error) {
+                console.error('Error al cargar pagos:', error);
+                document.getElementById('pagosTableBody').innerHTML = 
+                    '<tr><td colspan="9" class="text-center text-danger">Error al cargar pagos</td></tr>';
+            }
+        }
+
+        function renderPagosTable(pagos) {
+            const tbody = document.getElementById('pagosTableBody');
+            
+            if (pagos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center">No hay pagos registrados</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = pagos.map(pago => {
+                const estadoBadge = {
+                    'pendiente': '<span class="badge bg-warning text-dark">Pendiente</span>',
+                    'pagado': '<span class="badge bg-success">Pagado</span>',
+                    'vencido': '<span class="badge bg-danger">Vencido</span>',
+                    'anulado': '<span class="badge bg-secondary">Anulado</span>'
+                }[pago.estado] || '<span class="badge bg-secondary">Desconocido</span>';
+                
+                const tipoBadge = pago.tipo_pago === 'cuota_social' 
+                    ? '<span class="badge bg-info">Cuota Social</span>'
+                    : '<span class="badge bg-primary">Junta Vecinos</span>';
+                
+                const fechaPago = pago.fecha_pago 
+                    ? new Date(pago.fecha_pago).toLocaleDateString('es-CL') 
+                    : '<span class="text-muted">-</span>';
+                    
+                const metodo = pago.metodo_pago || '<span class="text-muted">-</span>';
+                
+                const montoFormateado = new Intl.NumberFormat('es-CL', { 
+                    style: 'currency', 
+                    currency: 'CLP' 
+                }).format(pago.monto);
+                
+                const acciones = pago.estado === 'pendiente' || pago.estado === 'vencido'
+                    ? `<button class="btn btn-sm btn-success me-1" onclick="showRegistrarPagoForm(${pago.id}, '${escapeHtml(pago.numero_casa)}', '${pago.periodo}', '${pago.tipo_pago}', ${pago.monto})" title="Registrar Pago">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deletePago(${pago.id})" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>`
+                    : `<span class="text-muted">-</span>`;
+                
+                return `
+                    <tr>
+                        <td>${escapeHtml(pago.numero_casa)}</td>
+                        <td>${pago.periodo}</td>
+                        <td>${tipoBadge}</td>
+                        <td class="text-end"><strong>${montoFormateado}</strong></td>
+                        <td>${estadoBadge}</td>
+                        <td>${new Date(pago.fecha_vencimiento).toLocaleDateString('es-CL')}</td>
+                        <td>${fechaPago}</td>
+                        <td>${metodo}</td>
+                        <td>${acciones}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function showPagoForm() {
+            // Limpiar el formulario
+            document.getElementById('pagoForm').reset();
+            
+            // Cargar casas en el dropdown
+            try {
+                const response = await authenticatedFetch('/api/casas/simple');
+                if (response && response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        const selectCasa = document.getElementById('pagoCasa');
+                        selectCasa.innerHTML = '<option value="">Seleccione una casa...</option>' +
+                            data.data.map(casa => `<option value="${casa.id}">${casa.numero_casa}</option>`).join('');
+                        
+                        // Poblar también el filtro de casas
+                        const filterCasa = document.getElementById('filterCasaPagos');
+                        filterCasa.innerHTML = '<option value="">Todas las casas</option>' +
+                            data.data.map(casa => `<option value="${casa.id}">${casa.numero_casa}</option>`).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Error al cargar casas:', error);
+            }
+            
+            // Configurar período actual por defecto
+            const now = new Date();
+            const mesActual = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            document.getElementById('pagoPeriodo').value = mesActual;
+            
+            // Configurar vencimiento último día del mes por defecto
+            const ultimoDia = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            const vencimientoDefault = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${ultimoDia}`;
+            document.getElementById('pagoVencimiento').value = vencimientoDefault;
+            
+            // Mostrar modal
+            const modal = new bootstrap.Modal(document.getElementById('pagoModal'));
+            modal.show();
+        }
+
+        async function savePago() {
+            const form = document.getElementById('pagoForm');
+            
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            const periodoInput = document.getElementById('pagoPeriodo').value; // formato YYYY-MM
+            
+            const data = {
+                casa_id: parseInt(document.getElementById('pagoCasa').value),
+                periodo: periodoInput,
+                tipo_pago: document.getElementById('pagoTipo').value,
+                monto: parseFloat(document.getElementById('pagoMonto').value),
+                fecha_vencimiento: document.getElementById('pagoVencimiento').value
+            };
+            
+            try {
+                const response = await authenticatedFetch('/api/pagos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response) return;
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Pago creado',
+                        text: result.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    
+                    bootstrap.Modal.getInstance(document.getElementById('pagoModal')).hide();
+                    loadPagos();
+                } else {
+                    throw new Error(result.message || 'Error al crear pago');
+                }
+                
+            } catch (error) {
+                console.error('Error al guardar pago:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo crear el pago'
+                });
+            }
+        }
+
+        async function showGenerarPagosForm() {
+            // Configurar período actual por defecto
+            const now = new Date();
+            const mesActual = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            document.getElementById('generarPeriodo').value = mesActual;
+            
+            // Configurar vencimiento último día del mes por defecto
+            const ultimoDia = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            const vencimientoDefault = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${ultimoDia}`;
+            document.getElementById('generarVencimiento').value = vencimientoDefault;
+            
+            // Mostrar modal
+            const modal = new bootstrap.Modal(document.getElementById('generarPagosModal'));
+            modal.show();
+        }
+
+        async function generarPagosAutomaticos() {
+            const form = document.getElementById('generarPagosForm');
+            
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            const periodoInput = document.getElementById('generarPeriodo').value;
+            const vencimiento = document.getElementById('generarVencimiento').value || null;
+            
+            const confirmacion = await Swal.fire({
+                title: '¿Generar pagos automáticos?',
+                html: `Se generarán pagos para <strong>TODAS las casas activas</strong> en el período <strong>${periodoInput}</strong>.<br><br>¿Desea continuar?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, generar',
+                cancelButtonText: 'Cancelar'
+            });
+            
+            if (!confirmacion.isConfirmed) return;
+            
+            try {
+                const response = await authenticatedFetch('/api/pagos/generar-periodo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        periodo: periodoInput,
+                        fecha_vencimiento: vencimiento
+                    })
+                });
+                
+                if (!response) return;
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Pagos generados',
+                        html: `
+                            <p>${result.message}</p>
+                            <ul class="text-start">
+                                <li>Casas procesadas: <strong>${result.data.casas_procesadas}</strong></li>
+                                <li>Pagos generados: <strong>${result.data.pagos_generados}</strong></li>
+                                <li>Pagos saltados (ya existían): <strong>${result.data.pagos_saltados}</strong></li>
+                            </ul>
+                        `,
+                        confirmButtonText: 'Entendido'
+                    });
+                    
+                    bootstrap.Modal.getInstance(document.getElementById('generarPagosModal')).hide();
+                    loadPagos();
+                } else {
+                    throw new Error(result.message || 'Error al generar pagos');
+                }
+                
+            } catch (error) {
+                console.error('Error al generar pagos automáticos:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudieron generar los pagos'
+                });
+            }
+        }
+
+        async function showRegistrarPagoForm(pagoId, casa, periodo, tipo, monto) {
+            document.getElementById('registrarPagoId').value = pagoId;
+            
+            const tipoTexto = tipo === 'cuota_social' ? 'Cuota Social' : 'Junta de Vecinos';
+            const montoFormateado = new Intl.NumberFormat('es-CL', { 
+                style: 'currency', 
+                currency: 'CLP' 
+            }).format(monto);
+            
+            document.getElementById('registrarPagoInfo').innerHTML = `
+                <div class="alert alert-info">
+                    <h6 class="mb-2"><i class="fas fa-info-circle me-2"></i>Información del Pago</h6>
+                    <p class="mb-1"><strong>Casa:</strong> ${casa}</p>
+                    <p class="mb-1"><strong>Período:</strong> ${periodo}</p>
+                    <p class="mb-1"><strong>Tipo:</strong> ${tipoTexto}</p>
+                    <p class="mb-0"><strong>Monto:</strong> ${montoFormateado}</p>
+                </div>
+            `;
+            
+            // Limpiar campos
+            document.getElementById('registrarMetodo').value = '';
+            document.getElementById('registrarComprobante').value = '';
+            
+            // Configurar fecha actual
+            const now = new Date();
+            const fechaActual = now.toISOString().slice(0, 16);
+            document.getElementById('registrarFecha').value = fechaActual;
+            
+            // Mostrar modal
+            const modal = new bootstrap.Modal(document.getElementById('registrarPagoModal'));
+            modal.show();
+        }
+
+        async function confirmarRegistroPago() {
+            const form = document.getElementById('registrarPagoForm');
+            
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            const pagoId = document.getElementById('registrarPagoId').value;
+            const metodo = document.getElementById('registrarMetodo').value;
+            const comprobante = document.getElementById('registrarComprobante').value || null;
+            const fecha = document.getElementById('registrarFecha').value || null;
+            
+            try {
+                const response = await authenticatedFetch(`/api/pagos/${pagoId}/registrar`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        metodo_pago: metodo,
+                        numero_comprobante: comprobante,
+                        fecha_pago: fecha
+                    })
+                });
+                
+                if (!response) return;
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Pago registrado',
+                        text: result.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    
+                    bootstrap.Modal.getInstance(document.getElementById('registrarPagoModal')).hide();
+                    loadPagos();
+                } else {
+                    throw new Error(result.message || 'Error al registrar pago');
+                }
+                
+            } catch (error) {
+                console.error('Error al registrar pago:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo registrar el pago'
+                });
+            }
+        }
+
+        async function showCasasMorosas() {
+            try {
+                const response = await authenticatedFetch('/api/pagos/morosas');
+                if (!response) return;
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    const tbody = document.getElementById('casasMorosasTableBody');
+                    
+                    if (data.data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-success"><i class="fas fa-check-circle me-2"></i>¡No hay casas morosas!</td></tr>';
+                    } else {
+                        tbody.innerHTML = data.data.map(casa => {
+                            const deuda = new Intl.NumberFormat('es-CL', { 
+                                style: 'currency', 
+                                currency: 'CLP' 
+                            }).format(casa.deuda_total);
+                            
+                            return `
+                                <tr>
+                                    <td><strong>${escapeHtml(casa.numero_casa)}</strong></td>
+                                    <td><span class="badge bg-danger">${casa.pagos_vencidos}</span></td>
+                                    <td class="text-end"><strong>${deuda}</strong></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info" onclick="filterPagosByCasa(${casa.casa_id})">
+                                            <i class="fas fa-eye"></i> Ver Pagos
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('');
+                    }
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('casasMorosasModal'));
+                    modal.show();
+                } else {
+                    throw new Error(data.message || 'Error al cargar casas morosas');
+                }
+                
+            } catch (error) {
+                console.error('Error al cargar casas morosas:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudieron cargar las casas morosas'
+                });
+            }
+        }
+
+        function filterPagosByCasa(casaId) {
+            // Cerrar modal de casas morosas
+            bootstrap.Modal.getInstance(document.getElementById('casasMorosasModal')).hide();
+            
+            // Aplicar filtro y recargar pagos
+            document.getElementById('filterCasaPagos').value = casaId;
+            document.getElementById('filterEstadoPagos').value = 'vencido';
+            loadPagos();
+        }
+
+        async function deletePago(pagoId) {
+            try {
+                const result = await Swal.fire({
+                    title: '¿Eliminar pago?',
+                    text: '¿Está seguro de que desea eliminar este pago?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                });
+                
+                if (!result.isConfirmed) return;
+                
+                const response = await authenticatedFetch(`/api/pagos/${pagoId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response) return;
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Eliminado',
+                        text: 'Pago eliminado correctamente',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    
+                    loadPagos();
+                } else {
+                    throw new Error(data.message || 'Error al eliminar pago');
+                }
+                
+            } catch (error) {
+                console.error('Error al eliminar pago:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo eliminar el pago'
+                });
+            }
+        }
+
+        // ========== FUNCIONES DE VEHÍCULOS ==========
+
+        async function loadVehiculos() {
+            try {
+                const casaId = document.getElementById('filterVehiculoCasa').value;
+                const tipo = document.getElementById('filterVehiculoTipo').value;
+                const activo = document.getElementById('filterVehiculoActivo').value;
+                
+                const params = new URLSearchParams();
+                if (casaId) params.append('casa_id', casaId);
+                if (tipo) params.append('tipo', tipo);
+                if (activo) params.append('activo', activo);
+                
+                const response = await authenticatedFetch(`/api/vehiculos?${params.toString()}`);
+                if (!response) return;
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    renderVehiculosTable(data.data);
+                } else {
+                    throw new Error(data.message || 'Error al cargar vehículos');
+                }
+                
+            } catch (error) {
+                console.error('Error al cargar vehículos:', error);
+                document.getElementById('vehiculosTableBody').innerHTML = 
+                    '<tr><td colspan="10" class="text-center text-danger">Error al cargar vehículos</td></tr>';
+            }
+        }
+
+        function renderVehiculosTable(vehiculos) {
+            const tbody = document.getElementById('vehiculosTableBody');
+            
+            if (vehiculos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center">No hay vehículos registrados</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = vehiculos.map(v => {
+                const estadoMorosidadBadge = {
+                    'al_dia': '<span class="badge bg-success">Al Día</span>',
+                    'mora_leve': '<span class="badge bg-warning">Mora Leve</span>',
+                    'mora_moderada': '<span class="badge bg-orange">Mora Moderada</span>',
+                    'mora_grave': '<span class="badge bg-danger">Mora Grave</span>'
+                };
+                
+                const accesoPermitidoBadge = v.acceso_permitido
+                    ? '<span class="badge bg-success"><i class="fas fa-check"></i> Permitido</span>'
+                    : '<span class="badge bg-danger"><i class="fas fa-ban"></i> Bloqueado</span>';
+                
+                const deudaFormatted = v.deuda_total > 0 
+                    ? new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(v.deuda_total)
+                    : '-';
+                
+                return `
+                    <tr>
+                        <td><strong>${v.patente}</strong></td>
+                        <td>${v.marca} ${v.modelo}</td>
+                        <td>${v.color || '-'}</td>
+                        <td>${v.anio || '-'}</td>
+                        <td><span class="badge bg-secondary">${v.tipo}</span></td>
+                        <td>${v.numero_casa} - ${v.casa_direccion}</td>
+                        <td>
+                            ${v.residente_nombre}
+                            ${v.residente_rut ? `<br><small class="text-muted">${v.residente_rut}</small>` : ''}
+                        </td>
+                        <td>
+                            ${estadoMorosidadBadge[v.estado_morosidad] || '-'}
+                            ${v.pagos_vencidos > 0 ? `<br><small class="text-danger">${v.pagos_vencidos} mes(es) vencido(s)</small>` : ''}
+                            ${v.deuda_total > 0 ? `<br><small class="text-danger">Deuda: ${deudaFormatted}</small>` : ''}
+                        </td>
+                        <td>${accesoPermitidoBadge}</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning" onclick='editVehiculo("${v.patente}")' title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick='deleteVehiculo("${v.patente}")' title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function showVehiculoForm(patente = null) {
+            try {
+                // Limpiar formulario
+                document.getElementById('vehiculoForm').reset();
+                document.getElementById('vehiculoPatenteOriginal').value = '';
+                document.getElementById('vehiculoModalLabel').textContent = patente ? 'Editar Vehículo' : 'Nuevo Vehículo';
+                
+                // Cargar dropdown de casas
+                const casasSelect = document.getElementById('vehiculoCasa');
+                const response = await authenticatedFetch('/api/casas?activo=true');
+                if (!response) return;
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    casasSelect.innerHTML = '<option value="">Seleccionar casa</option>' +
+                        data.data.map(c => `<option value="${c.id}">${c.numero_casa} - ${c.direccion}</option>`).join('');
+                }
+                
+                // Si es edición, cargar datos del vehículo
+                if (patente) {
+                    const vResponse = await authenticatedFetch(`/api/vehiculos/${patente}`);
+                    if (!vResponse) return;
+                    const vData = await vResponse.json();
+                    
+                    if (vResponse.ok && vData.success) {
+                        const v = vData.data;
+                        document.getElementById('vehiculoPatenteOriginal').value = v.patente;
+                        document.getElementById('vehiculoPatente').value = v.patente;
+                        document.getElementById('vehiculoPatente').disabled = true; // No permitir cambiar patente
+                        document.getElementById('vehiculoCasa').value = v.casa_id;
+                        document.getElementById('vehiculoMarca').value = v.marca;
+                        document.getElementById('vehiculoModelo').value = v.modelo;
+                        document.getElementById('vehiculoColor').value = v.color || '';
+                        document.getElementById('vehiculoAnio').value = v.anio || '';
+                        document.getElementById('vehiculoTipo').value = v.tipo;
+                        document.getElementById('vehiculoObservaciones').value = v.observaciones || '';
+                        
+                        // Cargar residentes de la casa seleccionada
+                        await loadResidentesPorCasa(v.casa_id, v.residente_id);
+                    }
+                } else {
+                    document.getElementById('vehiculoPatente').disabled = false;
+                }
+                
+                // Evento para cargar residentes cuando se selecciona una casa
+                document.getElementById('vehiculoCasa').onchange = async function() {
+                    await loadResidentesPorCasa(this.value);
+                };
+                
+                const modal = new bootstrap.Modal(document.getElementById('vehiculoModal'));
+                modal.show();
+                
+            } catch (error) {
+                console.error('Error al abrir formulario de vehículo:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo cargar el formulario'
+                });
+            }
+        }
+
+        async function loadResidentesPorCasa(casaId, selectedResidenteId = null) {
+            const residenteSelect = document.getElementById('vehiculoResidente');
+            residenteSelect.innerHTML = '<option value="">Sin residente asignado</option>';
+            
+            if (!casaId) return;
+            
+            try {
+                const response = await authenticatedFetch(`/api/residentes/casa/${casaId}`);
+                if (!response) return;
+                const data = await response.json();
+                
+                if (response.ok && data.success && data.data.length > 0) {
+                    residenteSelect.innerHTML = '<option value="">Sin residente asignado</option>' +
+                        data.data.map(r => `<option value="${r.id}" ${r.id === selectedResidenteId ? 'selected' : ''}>${r.nombres} ${r.apellidos}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('Error al cargar residentes:', error);
+            }
+        }
+
+        async function saveVehiculo() {
+            try {
+                const patenteOriginal = document.getElementById('vehiculoPatenteOriginal').value;
+                const isEditing = !!patenteOriginal;
+                
+                const vehiculoData = {
+                    patente: document.getElementById('vehiculoPatente').value.toUpperCase(),
+                    casa_id: parseInt(document.getElementById('vehiculoCasa').value),
+                    residente_id: document.getElementById('vehiculoResidente').value || null,
+                    marca: document.getElementById('vehiculoMarca').value,
+                    modelo: document.getElementById('vehiculoModelo').value,
+                    color: document.getElementById('vehiculoColor').value || null,
+                    anio: parseInt(document.getElementById('vehiculoAnio').value) || null,
+                    tipo: document.getElementById('vehiculoTipo').value,
+                    observaciones: document.getElementById('vehiculoObservaciones').value || null
+                };
+                
+                // Validaciones
+                if (!vehiculoData.patente || !vehiculoData.casa_id || !vehiculoData.marca || !vehiculoData.modelo || !vehiculoData.tipo) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Campos requeridos',
+                        text: 'Por favor complete todos los campos obligatorios'
+                    });
+                    return;
+                }
+                
+                const url = isEditing ? `/api/vehiculos/${patenteOriginal}` : '/api/vehiculos';
+                const method = isEditing ? 'PUT' : 'POST';
+                
+                const response = await authenticatedFetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(vehiculoData)
+                });
+                
+                if (!response) return;
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: isEditing ? 'Actualizado' : 'Registrado',
+                        text: data.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    
+                    bootstrap.Modal.getInstance(document.getElementById('vehiculoModal')).hide();
+                    loadVehiculos();
+                } else {
+                    throw new Error(data.message || 'Error al guardar vehículo');
+                }
+                
+            } catch (error) {
+                console.error('Error al guardar vehículo:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo guardar el vehículo'
+                });
+            }
+        }
+
+        async function editVehiculo(patente) {
+            await showVehiculoForm(patente);
+        }
+
+        async function deleteVehiculo(patente) {
+            try {
+                const result = await Swal.fire({
+                    title: '¿Eliminar vehículo?',
+                    text: `¿Está seguro de que desea eliminar el vehículo con patente ${patente}?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                });
+                
+                if (!result.isConfirmed) return;
+                
+                const response = await authenticatedFetch(`/api/vehiculos/${patente}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response) return;
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Eliminado',
+                        text: 'Vehículo eliminado correctamente',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    
+                    loadVehiculos();
+                } else {
+                    throw new Error(data.message || 'Error al eliminar vehículo');
+                }
+                
+            } catch (error) {
+                console.error('Error al eliminar vehículo:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo eliminar el vehículo'
+                });
+            }
+        }
+
+        async function showVehiculosBloqueados() {
+            try {
+                const response = await authenticatedFetch('/api/vehiculos/bloqueados');
+                if (!response) return;
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    const tbody = document.getElementById('vehiculosBloqueadosTableBody');
+                    
+                    if (data.data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-success"><i class="fas fa-check-circle"></i> No hay vehículos bloqueados</td></tr>';
+                    } else {
+                        tbody.innerHTML = data.data.map(v => {
+                            const deudaFormatted = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(v.deuda_total);
+                            return `
+                                <tr>
+                                    <td><strong>${v.patente}</strong></td>
+                                    <td>${v.marca} ${v.modelo}</td>
+                                    <td>${v.numero_casa}</td>
+                                    <td><span class="badge bg-danger">${v.pagos_vencidos}</span></td>
+                                    <td class="text-danger"><strong>${deudaFormatted}</strong></td>
+                                    <td><span class="badge bg-danger">${v.estado_morosidad.replace('_', ' ')}</span></td>
+                                </tr>
+                            `;
+                        }).join('');
+                    }
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('vehiculosBloqueadosModal'));
+                    modal.show();
+                } else {
+                    throw new Error(data.message || 'Error al cargar vehículos bloqueados');
+                }
+                
+            } catch (error) {
+                console.error('Error al cargar vehículos bloqueados:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo cargar la lista de vehículos bloqueados'
+                });
+            }
+        }
+
+        // ========== FUNCIONES DE CONTROL DE ACCESO ==========
+
+        async function loadAccesos() {
+            try {
+                const patente = document.getElementById('filterAccesoPatente').value;
+                const casaId = document.getElementById('filterAccesoCasa').value;
+                const tipo = document.getElementById('filterAccesoTipo').value;
+                const desde = document.getElementById('filterAccesoDesde').value;
+                const hasta = document.getElementById('filterAccesoHasta').value;
+                const permitido = document.getElementById('filterAccesoPermitido').value;
+                
+                const params = new URLSearchParams();
+                if (patente) params.append('vehiculo_patente', patente.toUpperCase());
+                if (casaId) params.append('casa_id', casaId);
+                if (tipo) params.append('tipo_acceso', tipo);
+                if (desde) params.append('fecha_desde', desde);
+                if (hasta) params.append('fecha_hasta', hasta);
+                if (permitido) params.append('acceso_permitido', permitido);
+                params.append('limit', 100);
+                
+                const response = await authenticatedFetch(`/api/acceso?${params.toString()}`);
+                if (!response) return;
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    renderAccesosTable(data.data);
+                } else {
+                    throw new Error(data.message || 'Error al cargar accesos');
+                }
+                
+            } catch (error) {
+                console.error('Error al cargar accesos:', error);
+                document.getElementById('accesosTableBody').innerHTML = 
+                    '<tr><td colspan="10" class="text-center text-danger">Error al cargar accesos</td></tr>';
+            }
+        }
+
+        function renderAccesosTable(accesos) {
+            const tbody = document.getElementById('accesosTableBody');
+            
+            if (accesos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center">No hay accesos registrados</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = accesos.map(a => {
+                const tipoIcono = a.tipo_acceso === 'entrada' 
+                    ? '<i class="fas fa-arrow-right text-success"></i>' 
+                    : '<i class="fas fa-arrow-left text-primary"></i>';
+                
+                const tipoBadge = a.tipo_acceso === 'entrada'
+                    ? '<span class="badge bg-success">Entrada</span>'
+                    : '<span class="badge bg-primary">Salida</span>';
+                
+                const accesoBadge = a.acceso_permitido
+                    ? '<span class="badge bg-success"><i class="fas fa-check"></i> Permitido</span>'
+                    : `<span class="badge bg-danger"><i class="fas fa-ban"></i> Bloqueado</span>`;
+                
+                const morosidadBadge = a.tiene_morosidad
+                    ? '<span class="badge bg-warning">Con Morosidad</span>'
+                    : '<span class="badge bg-success">Al Día</span>';
+                
+                const deudaFormatted = a.monto_deuda > 0
+                    ? new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(a.monto_deuda)
+                    : '-';
+                
+                const fechaFormatted = new Date(a.fecha_hora).toLocaleString('es-CL');
+                
+                return `
+                    <tr>
+                        <td><strong>${a.vehiculo_patente}</strong></td>
+                        <td>${a.marca} ${a.modelo}<br><small class="text-muted">${a.color || ''}</small></td>
+                        <td>${a.numero_casa}</td>
+                        <td>${tipoIcono} ${tipoBadge}</td>
+                        <td><small>${fechaFormatted}</small></td>
+                        <td>${accesoBadge}${a.motivo_bloqueo ? `<br><small class="text-danger">${a.motivo_bloqueo}</small>` : ''}</td>
+                        <td>${morosidadBadge}</td>
+                        <td>${deudaFormatted}</td>
+                        <td><small>${a.usuario_registro || 'Sistema'}</small></td>
+                        <td>
+                            <button class="btn btn-sm btn-danger" onclick='deleteAcceso(${a.id})' title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function showRegistrarAccesoForm() {
+            document.getElementById('registrarAccesoForm').reset();
+            document.getElementById('accesoPreview').classList.add('d-none');
+            
+            const modal = new bootstrap.Modal(document.getElementById('registrarAccesoModal'));
+            modal.show();
+        }
+
+        async function registrarAcceso() {
+            try {
+                const patente = document.getElementById('accesoPatente').value.toUpperCase();
+                const tipo = document.getElementById('accesoTipo').value;
+                const usuario = document.getElementById('accesoUsuario').value || 'Sistema';
+                const observaciones = document.getElementById('accesoObservaciones').value || null;
+                
+                if (!patente || !tipo) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Campos requeridos',
+                        text: 'Debe ingresar la patente y seleccionar el tipo de acceso'
+                    });
+                    return;
+                }
+                
+                const response = await authenticatedFetch('/api/acceso/registrar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        patente,
+                        tipo_acceso: tipo,
+                        usuario_registro: usuario,
+                        observaciones
+                    })
+                });
+                
+                if (!response) return;
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    const acceso = data.data;
+                    
+                    Swal.fire({
+                        icon: acceso.acceso_permitido ? 'success' : 'warning',
+                        title: acceso.acceso_permitido ? `${tipo.charAt(0).toUpperCase() + tipo.slice(1)} Registrada` : 'Acceso Bloqueado',
+                        html: `
+                            <div class="text-start">
+                                <p><strong>Patente:</strong> ${acceso.vehiculo_patente}</p>
+                                <p><strong>Vehículo:</strong> ${acceso.marca} ${acceso.modelo}</p>
+                                <p><strong>Casa:</strong> ${acceso.numero_casa}</p>
+                                ${acceso.residente_nombre !== 'Sin residente asignado' ? `<p><strong>Residente:</strong> ${acceso.residente_nombre}</p>` : ''}
+                                <p><strong>Estado:</strong> ${acceso.acceso_permitido ? '<span class="badge bg-success">Permitido</span>' : '<span class="badge bg-danger">Bloqueado</span>'}</p>
+                                ${acceso.tiene_morosidad ? `<p class="text-warning"><i class="fas fa-exclamation-triangle"></i> Casa con morosidad (${new Intl.NumberFormat('es-CL', {style: 'currency', currency: 'CLP'}).format(acceso.monto_deuda)})</p>` : ''}
+                                ${acceso.motivo_bloqueo ? `<p class="text-danger"><strong>Motivo:</strong> ${acceso.motivo_bloqueo}</p>` : ''}
+                            </div>
+                        `,
+                        timer: 5000,
+                        showConfirmButton: true
+                    });
+                    
+                    bootstrap.Modal.getInstance(document.getElementById('registrarAccesoModal')).hide();
+                    loadAccesos();
+                } else {
+                    throw new Error(data.message || 'Error al registrar acceso');
+                }
+                
+            } catch (error) {
+                console.error('Error al registrar acceso:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo registrar el acceso'
+                });
+            }
+        }
+
+        async function showVerificarAccesoForm() {
+            document.getElementById('verificarAccesoForm').reset();
+            document.getElementById('verificacionResultado').innerHTML = '';
+            
+            const modal = new bootstrap.Modal(document.getElementById('verificarAccesoModal'));
+            modal.show();
+        }
+
+        async function verificarAccesoVehiculo() {
+            try {
+                const patente = document.getElementById('verificarPatente').value.toUpperCase();
+                
+                if (!patente) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Patente requerida',
+                        text: 'Debe ingresar la patente del vehículo'
+                    });
+                    return;
+                }
+                
+                const response = await authenticatedFetch('/api/acceso/verificar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ patente })
+                });
+                
+                if (!response) return;
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    const verificacion = data.data;
+                    const resultadoDiv = document.getElementById('verificacionResultado');
+                    
+                    const iconoEstado = verificacion.permitido 
+                        ? '<i class="fas fa-check-circle fa-3x text-success"></i>'
+                        : '<i class="fas fa-times-circle fa-3x text-danger"></i>';
+                    
+                    const deudaFormatted = verificacion.deuda > 0
+                        ? new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(verificacion.deuda)
+                        : '$0';
+                    
+                    resultadoDiv.innerHTML = `
+                        <div class="alert alert-${verificacion.permitido ? 'success' : 'danger'} text-center">
+                            ${iconoEstado}
+                            <h5 class="mt-3">${verificacion.permitido ? 'ACCESO PERMITIDO' : 'ACCESO BLOQUEADO'}</h5>
+                            <hr>
+                            <div class="text-start">
+                                <p><strong>Patente:</strong> ${patente}</p>
+                                <p><strong>Morosidad:</strong> ${verificacion.morosidad ? '<span class="badge bg-warning">Con Morosidad</span>' : '<span class="badge bg-success">Al Día</span>'}</p>
+                                ${verificacion.pagos_vencidos ? `<p><strong>Pagos Vencidos:</strong> ${verificacion.pagos_vencidos} mes(es)</p>` : ''}
+                                <p><strong>Deuda Total:</strong> ${deudaFormatted}</p>
+                                <hr>
+                                <p class="mb-0"><strong>Detalle:</strong> ${verificacion.motivo}</p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.message || 'Error al verificar acceso');
+                }
+                
+            } catch (error) {
+                console.error('Error al verificar acceso:', error);
+                document.getElementById('verificacionResultado').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> ${error.message || 'Error al verificar acceso'}
+                    </div>
+                `;
+            }
+        }
+
+        async function showEstadisticasAcceso() {
+            // Prellenar con últimos 30 días
+            const hoy = new Date();
+            const hace30Dias = new Date();
+            hace30Dias.setDate(hoy.getDate() - 30);
+            
+            document.getElementById('estadFechaDesde').value = hace30Dias.toISOString().slice(0, 16);
+            document.getElementById('estadFechaHasta').value = hoy.toISOString().slice(0, 16);
+            
+            const modal = new bootstrap.Modal(document.getElementById('estadisticasAccesoModal'));
+            modal.show();
+            
+            // Cargar estadísticas automáticamente
+            await cargarEstadisticasAcceso();
+        }
+
+        async function cargarEstadisticasAcceso() {
+            try {
+                const desde = document.getElementById('estadFechaDesde').value;
+                const hasta = document.getElementById('estadFechaHasta').value;
+                
+                if (!desde || !hasta) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Fechas requeridas',
+                        text: 'Debe seleccionar ambas fechas'
+                    });
+                    return;
+                }
+                
+                const response = await authenticatedFetch(`/api/acceso/estadisticas?fecha_desde=${desde}&fecha_hasta=${hasta}`);
+                if (!response) return;
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    const stats = data.data;
+                    const contenidoDiv = document.getElementById('estadisticasContenido');
+                    
+                    contenidoDiv.innerHTML = `
+                        <div class="row text-center">
+                            <div class="col-md-6 mb-3">
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body">
+                                        <h3>${stats.total_accesos}</h3>
+                                        <p class="mb-0">Total Accesos</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body">
+                                        <h3>${stats.total_entradas}</h3>
+                                        <p class="mb-0">Entradas</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card bg-info text-white">
+                                    <div class="card-body">
+                                        <h3>${stats.total_salidas}</h3>
+                                        <p class="mb-0">Salidas</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card bg-secondary text-white">
+                                    <div class="card-body">
+                                        <h3>${stats.vehiculos_unicos}</h3>
+                                        <p class="mb-0">Vehículos Únicos</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card bg-danger text-white">
+                                    <div class="card-body">
+                                        <h3>${stats.accesos_bloqueados}</h3>
+                                        <p class="mb-0">Accesos Bloqueados</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card bg-warning text-dark">
+                                    <div class="card-body">
+                                        <h3>${stats.casas_con_morosidad}</h3>
+                                        <p class="mb-0">Casas con Morosidad</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alert alert-info">
+                            <strong>Tasa de Bloqueo:</strong> ${stats.tasa_bloqueo}%
+                            ${stats.tasa_bloqueo > 10 ? '<br><small class="text-warning"><i class="fas fa-exclamation-triangle"></i> Tasa de bloqueo elevada. Revisar morosidad general.</small>' : ''}
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.message || 'Error al cargar estadísticas');
+                }
+                
+            } catch (error) {
+                console.error('Error al cargar estadísticas:', error);
+                document.getElementById('estadisticasContenido').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> ${error.message || 'Error al cargar estadísticas'}
+                    </div>
+                `;
+            }
+        }
+
+        async function deleteAcceso(id) {
+            try {
+                const result = await Swal.fire({
+                    title: '¿Eliminar registro?',
+                    text: '¿Está seguro de que desea eliminar este registro de acceso?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                });
+                
+                if (!result.isConfirmed) return;
+                
+                const response = await authenticatedFetch(`/api/acceso/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response) return;
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Eliminado',
+                        text: 'Registro de acceso eliminado correctamente',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    
+                    loadAccesos();
+                } else {
+                    throw new Error(data.message || 'Error al eliminar registro');
+                }
+                
+            } catch (error) {
+                console.error('Error al eliminar acceso:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo eliminar el registro'
+                });
             }
         }
 
