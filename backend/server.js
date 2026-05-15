@@ -48,8 +48,6 @@ const mascotasRoutes = require('./routes/mascotas.routes');
 const pagosRoutes = require('./routes/pagos.routes');
 const vehiculosRoutes = require('./routes/vehiculos.routes');
 const accesoRoutes = require('./routes/acceso.routes');
-const vehiculosRoutes = require('./routes/vehiculos.routes');
-const accesoRoutes = require('./routes/acceso.routes');
 
 // Variables de entorno para producción
 const PORT = process.env.PORT || 3000;
