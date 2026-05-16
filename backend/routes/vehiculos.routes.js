@@ -7,7 +7,7 @@
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../config/database');
-const { requireAuthAdmin } = require('../middleware/auth');
+const { requireAuthAdmin } = require('../middleware/sessionAuth');
 
 // Aplicar middleware de autenticación a todas las rutas
 router.use(requireAuthAdmin);
