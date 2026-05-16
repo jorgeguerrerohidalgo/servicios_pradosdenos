@@ -348,13 +348,19 @@
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
+                            <label for="filterPlazaResidentes" class="form-label">Filtrar por Plaza:</label>
+                            <select id="filterPlazaResidentes" class="form-select" onchange="onPlazaResidentesFilterChange()">
+                                <option value="">Todas las plazas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
                             <label for="filterCasaResidentes" class="form-label">Filtrar por Casa:</label>
                             <select id="filterCasaResidentes" class="form-select" onchange="loadResidentes()">
                                 <option value="">Todas las casas</option>
                             </select>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label for="filterActivoResidentes" class="form-label">Estado:</label>
                             <select id="filterActivoResidentes" class="form-select" onchange="loadResidentes()">
                                 <option value="true">Solo activos</option>
@@ -362,7 +368,7 @@
                                 <option value="false">Solo inactivos</option>
                             </select>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label for="searchResidentes" class="form-label">Buscar:</label>
                             <input type="text" id="searchResidentes" class="form-control" placeholder="Nombre, RUN, casa..." onkeyup="loadResidentes()">
                         </div>
@@ -376,6 +382,7 @@
                         <tr>
                             <th>RUN</th>
                             <th>Nombre Completo</th>
+                            <th>Plaza</th>
                             <th>Casa</th>
                             <th>Edad</th>
                             <th>Email</th>
@@ -385,7 +392,7 @@
                         </tr>
                     </thead>
                     <tbody id="residentesTableBody">
-                        <tr><td colspan="8" class="text-center">Cargando residentes...</td></tr>
+                        <tr><td colspan="9" class="text-center">Cargando residentes...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -1783,6 +1790,7 @@
                     loadCasas();
                     break;
                 case 'residentes':
+                    loadPlazasForFilter(); // Cargar plazas para filtros
                     loadCasas(); // Cargar casas para filtros y formulario
                     loadResidentes();
                     break;
@@ -3564,24 +3572,41 @@
                 await loadPlazas();
             }
             
-            const filterSelect = document.getElementById('filterPlazaCasas');
+            // Actualizar filtro de Casas
+            const filterSelectCasas = document.getElementById('filterPlazaCasas');
             const modalSelect = document.getElementById('casaPlaza');
             
-            // Limpiar opciones existentes
-            filterSelect.innerHTML = '<option value="">Todas las plazas</option>';
-            modalSelect.innerHTML = '<option value="">Seleccione una plaza...</option>';
+            if (filterSelectCasas) {
+                filterSelectCasas.innerHTML = '<option value="">Todas las plazas</option>';
+                plazasGlobal.forEach(plaza => {
+                    const option = document.createElement('option');
+                    option.value = plaza.id;
+                    option.textContent = plaza.nombre;
+                    filterSelectCasas.appendChild(option);
+                });
+            }
             
-            plazasGlobal.forEach(plaza => {
-                const option1 = document.createElement('option');
-                option1.value = plaza.id;
-                option1.textContent = plaza.nombre;
-                filterSelect.appendChild(option1);
-                
-                const option2 = document.createElement('option');
-                option2.value = plaza.id;
-                option2.textContent = plaza.nombre;
-                modalSelect.appendChild(option2);
-            });
+            if (modalSelect) {
+                modalSelect.innerHTML = '<option value="">Seleccione una plaza...</option>';
+                plazasGlobal.forEach(plaza => {
+                    const option = document.createElement('option');
+                    option.value = plaza.id;
+                    option.textContent = plaza.nombre;
+                    modalSelect.appendChild(option);
+                });
+            }
+            
+            // Actualizar filtro de Residentes
+            const filterSelectResidentes = document.getElementById('filterPlazaResidentes');
+            if (filterSelectResidentes) {
+                filterSelectResidentes.innerHTML = '<option value="">Todas las plazas</option>';
+                plazasGlobal.forEach(plaza => {
+                    const option = document.createElement('option');
+                    option.value = plaza.id;
+                    option.textContent = plaza.nombre;
+                    filterSelectResidentes.appendChild(option);
+                });
+            }
         }
 
         function renderCasasTable(casas) {
@@ -3807,6 +3832,33 @@
 
         // ==================== FUNCIONES DE RESIDENTES ====================
 
+        async function onPlazaResidentesFilterChange() {
+            const plazaId = document.getElementById('filterPlazaResidentes').value;
+            const casaSelect = document.getElementById('filterCasaResidentes');
+            
+            // Resetear selector de casas
+            casaSelect.innerHTML = '<option value="">Todas las casas</option>';
+            
+            if (plazaId) {
+                // Cargar casas de la plaza seleccionada
+                try {
+                    const response = await authenticatedFetch(`/api/casas?plaza_id=${plazaId}&activo=true`);
+                    if (!response) return;
+                    const data = await response.json();
+                    
+                    if (response.ok && data.success) {
+                        casaSelect.innerHTML = '<option value="">Todas las casas</option>' +
+                            data.data.map(c => `<option value="${c.id}">${c.direccion}</option>`).join('');
+                    }
+                } catch (error) {
+                    console.error('Error al cargar casas:', error);
+                }
+            }
+            
+            // Ejecutar búsqueda
+            loadResidentes();
+        }
+
         async function loadResidentes() {
             try {
                 const casaId = document.getElementById('filterCasaResidentes').value;
@@ -3832,7 +3884,7 @@
             } catch (error) {
                 console.error('Error al cargar residentes:', error);
                 document.getElementById('residentesTableBody').innerHTML = 
-                    '<tr><td colspan="8" class="text-center text-danger">Error al cargar residentes</td></tr>';
+                    '<tr><td colspan="9" class="text-center text-danger">Error al cargar residentes</td></tr>';
             }
         }
 
@@ -3840,7 +3892,7 @@
             const tbody = document.getElementById('residentesTableBody');
             
             if (residentes.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center">No hay residentes registrados</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center">No hay residentes registrados</td></tr>';
                 return;
             }
             
@@ -3852,7 +3904,8 @@
                     <tr>
                         <td>${escapeHtml(residente.run)}</td>
                         <td>${escapeHtml(nombreCompleto)}</td>
-                        <td>${escapeHtml(residente.numero_casa || 'N/A')}</td>
+                        <td><span class="badge bg-info">${escapeHtml(residente.plaza_nombre || 'N/A')}</span></td>
+                        <td>${escapeHtml(residente.casa_direccion || residente.numero_casa || 'N/A')}</td>
                         <td>${edad}</td>
                         <td>${escapeHtml(residente.email || 'N/A')}</td>
                         <td>${escapeHtml(residente.telefono || 'N/A')}</td>
