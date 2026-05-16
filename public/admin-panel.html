@@ -1419,9 +1419,11 @@
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="casaNumero" class="form-label">Número de Casa <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="casaNumero" required placeholder="Ej: 101, A-5, Casa 23">
-                                <small class="text-muted">Identificador único de la casa</small>
+                                <label for="casaNumero" class="form-label">Número de Casa</label>
+                                <input type="text" class="form-control" id="casaNumero" readonly 
+                                       style="background-color: #e9ecef; cursor: not-allowed;"
+                                       placeholder="Se generará automáticamente">
+                                <small class="text-muted">Se asignará automáticamente al guardar</small>
                             </div>
                             
                             <div class="col-md-6 mb-3">
@@ -3461,7 +3463,7 @@
                     const casa = result.data;
                     
                     document.getElementById('casaId').value = casa.id;
-                    document.getElementById('casaNumero').value = casa.numero_casa;
+                    document.getElementById('casaNumero').value = casa.numero_casa; // Mostrar pero readonly
                     document.getElementById('casaDireccion').value = casa.direccion;
                     document.getElementById('casaPlaza').value = casa.plaza_id;
                     document.getElementById('casaMontoCuotaSocial').value = casa.monto_cuota_social || 0;
@@ -3474,6 +3476,7 @@
                     // Modo creación
                     document.getElementById('casaModalTitle').textContent = 'Nueva Casa';
                     document.getElementById('casaId').value = '';
+                    document.getElementById('casaNumero').value = ''; // Vacío para auto-generar
                     updateMontoTotal();
                 }
                 
@@ -3504,8 +3507,17 @@
         async function saveCasa() {
             try {
                 const casaId = document.getElementById('casaId').value;
+                
+                // Auto-generar número de casa si no existe (modo creación)
+                let numeroCasa = document.getElementById('casaNumero').value.trim();
+                if (!numeroCasa) {
+                    // Generar número secuencial basado en total de casas + 1
+                    const totalCasas = casasGlobal.length + 1;
+                    numeroCasa = totalCasas.toString().padStart(3, '0'); // Formato: 001, 002, 003...
+                }
+                
                 const data = {
-                    numero_casa: document.getElementById('casaNumero').value.trim(),
+                    numero_casa: numeroCasa,
                     direccion: document.getElementById('casaDireccion').value.trim(),
                     plaza_id: parseInt(document.getElementById('casaPlaza').value),
                     monto_cuota_social: parseFloat(document.getElementById('casaMontoCuotaSocial').value) || 0,
@@ -3515,7 +3527,7 @@
                 };
                 
                 // Validaciones
-                if (!data.numero_casa || !data.direccion || !data.plaza_id) {
+                if (!data.direccion || !data.plaza_id) {
                     Swal.fire({
                         icon: 'warning',
                         title: 'Campos requeridos',
