@@ -13,8 +13,11 @@ ADD COLUMN IF NOT EXISTS foto_url TEXT;
 -- Comentario para documentar el campo
 COMMENT ON COLUMN mascotas.foto_url IS 'URL o path de la foto de la mascota para identificación visual';
 
--- Actualizar vista v_mascotas_completo para incluir foto_url
-CREATE OR REPLACE VIEW v_mascotas_completo AS
+-- Eliminar vista existente para recrearla con foto_url
+DROP VIEW IF EXISTS v_mascotas_completo;
+
+-- Recrear vista v_mascotas_completo para incluir foto_url
+CREATE VIEW v_mascotas_completo AS
 SELECT 
   m.id,
   m.casa_id,
