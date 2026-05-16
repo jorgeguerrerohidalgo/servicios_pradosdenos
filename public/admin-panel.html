@@ -4329,9 +4329,13 @@
                                 ).join('');
                             
                             // Agregar event listener para cargar residentes cuando se selecciona una casa
-                            selectCasa.onchange = function() {
+                            selectCasa.onchange = async function() {
                                 console.log('🔔 Casa seleccionada - disparando loadResidentesPorCasa()');
-                                loadResidentesPorCasa();
+                                try {
+                                    await loadResidentesPorCasa();
+                                } catch (error) {
+                                    console.error('❌ Error en event listener onchange:', error);
+                                }
                             };
                         } else {
                             console.log('⚠️ No hay casas en esta plaza');
@@ -4376,19 +4380,20 @@
         }
 
         async function loadResidentesPorCasa() {
-            const casaId = document.getElementById('mascotaCasa').value;
-            const selectResidente = document.getElementById('mascotaResidente');
-            
-            console.log('🏠 loadResidentesPorCasa() ejecutado - casa_id:', casaId);
-            
-            if (!casaId) {
-                console.log('⚠️ No hay casa_id seleccionado');
-                selectResidente.disabled = true;
-                selectResidente.innerHTML = '<option value="">Primero seleccione casa...</option>';
-                return;
-            }
-            
             try {
+                console.log('🏠 loadResidentesPorCasa() INICIADA');
+                const casaId = document.getElementById('mascotaCasa').value;
+                const selectResidente = document.getElementById('mascotaResidente');
+                
+                console.log('🏠 loadResidentesPorCasa() ejecutado - casa_id:', casaId);
+                
+                if (!casaId) {
+                    console.log('⚠️ No hay casa_id seleccionado');
+                    selectResidente.disabled = true;
+                    selectResidente.innerHTML = '<option value="">Primero seleccione casa...</option>';
+                    return;
+                }
+                
                 console.log(`📡 Consultando residentes: /api/residentes/casa/${casaId}`);
                 const response = await authenticatedFetch(`/api/residentes/casa/${casaId}`);
                 console.log('📥 Respuesta recibida:', response ? response.status : 'null');
@@ -4415,9 +4420,14 @@
                     selectResidente.innerHTML = '<option value="">Error al cargar residentes</option>';
                 }
             } catch (error) {
-                console.error('❌ Error al cargar residentes por casa:', error);
-                selectResidente.disabled = true;
-                selectResidente.innerHTML = '<option value="">Error al cargar residentes</option>';
+                console.error('❌ ERROR CRÍTICO en loadResidentesPorCasa:', error);
+                const selectResidente = document.getElementById('mascotaResidente');
+                if (selectResidente) {
+                    selectResidente.disabled = true;
+                    selectResidente.innerHTML = '<option value="">Error al cargar residentes</option>';
+                }
+            }
+        }
             }
         }
 
