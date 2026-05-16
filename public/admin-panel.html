@@ -1114,8 +1114,8 @@
                                     <small>
                                         <i class="fas fa-info-circle"></i>
                                         <strong>Montos configurados:</strong><br>
-                                        Mensual: $<span id="pagoMontoMensualInfo">0</span> | 
-                                        Trimestral: $<span id="pagoMontoTrimestralInfo">0</span>
+                                        Cuota Social: $<span id="pagoMontoMensualInfo">0</span> | 
+                                        Junta Vecinos: $<span id="pagoMontoTrimestralInfo">0</span>
                                     </small>
                                 </div>
                             </div>
@@ -4850,8 +4850,8 @@
                 
                 if (response.ok && data.success && data.data) {
                     const casa = data.data;
-                    casaMontos.mensual = casa.monto_alicuota_mensual || 0;
-                    casaMontos.trimestral = casa.monto_alicuota_trimestral || 0;
+                    casaMontos.mensual = casa.monto_cuota_social || 0;
+                    casaMontos.trimestral = casa.monto_junta_vecinos || 0;
                     
                     // Mostrar información de montos
                     document.getElementById('pagoMontoMensualInfo').textContent = casaMontos.mensual.toLocaleString('es-CL');
@@ -4870,13 +4870,15 @@
             const tipo = document.getElementById('pagoTipo').value;
             const montoInput = document.getElementById('pagoMonto');
             
-            if (!tipo || casaMontos.mensual === 0) {
+            if (!tipo) {
                 return;
             }
             
-            // Asignar monto según tipo (por ahora solo usamos mensual, trimestral podría agregarse)
-            if (tipo === 'cuota_social' || tipo === 'junta_vecinos') {
+            // Asignar monto según tipo seleccionado
+            if (tipo === 'cuota_social') {
                 montoInput.value = casaMontos.mensual;
+            } else if (tipo === 'junta_vecinos') {
+                montoInput.value = casaMontos.trimestral;
             }
         }
 

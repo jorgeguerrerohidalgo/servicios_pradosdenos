@@ -30,7 +30,7 @@ router.get('/', async (req, res) => {
                 plaza_nombre,
                 residente_id,
                 residente_nombre,
-                residente_rut,
+                residente_run,
                 marca,
                 modelo,
                 color,
