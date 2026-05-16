@@ -1271,60 +1271,91 @@
                 <div class="modal-body">
                     <form id="vehiculoForm">
                         <input type="hidden" id="vehiculoPatenteOriginal">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="vehiculoPatente" class="form-label">Patente *</label>
-                                <input type="text" class="form-control text-uppercase" id="vehiculoPatente" required maxlength="10" placeholder="AA1234">
-                                <small class="text-muted">4-10 caracteres alfanuméricos</small>
+                        
+                        <!-- Paso 1: Seleccionar Plaza -->
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="badge bg-primary me-2">Paso 1</span>
+                                <h6 class="mb-0">Seleccionar Plaza</h6>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="vehiculoCasa" class="form-label">Casa *</label>
-                                <select class="form-select" id="vehiculoCasa" required>
-                                    <option value="">Seleccionar casa</option>
-                                </select>
-                            </div>
+                            <select class="form-select" id="vehiculoPlaza" onchange="onVehiculoPlazaChange()" required>
+                                <option value="">Seleccionar plaza</option>
+                            </select>
                         </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="vehiculoResidente" class="form-label">Residente (opcional)</label>
-                                <select class="form-select" id="vehiculoResidente">
-                                    <option value="">Sin residente asignado</option>
-                                </select>
+
+                        <!-- Paso 2: Seleccionar Casa -->
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="badge bg-primary me-2">Paso 2</span>
+                                <h6 class="mb-0">Seleccionar Casa</h6>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="vehiculoTipo" class="form-label">Tipo *</label>
-                                <select class="form-select" id="vehiculoTipo" required>
-                                    <option value="automovil">Automóvil</option>
-                                    <option value="camioneta">Camioneta</option>
-                                    <option value="motocicleta">Motocicleta</option>
-                                    <option value="bicicleta">Bicicleta</option>
-                                    <option value="otro">Otro</option>
-                                </select>
-                            </div>
+                            <select class="form-select" id="vehiculoCasa" onchange="onVehiculoCasaChange()" disabled required>
+                                <option value="">Primero seleccione una plaza</option>
+                            </select>
                         </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="vehiculoMarca" class="form-label">Marca *</label>
-                                <input type="text" class="form-control" id="vehiculoMarca" required>
+
+                        <!-- Paso 3: Seleccionar Residente (Opcional) -->
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="badge bg-secondary me-2">Paso 3</span>
+                                <h6 class="mb-0">Seleccionar Residente (Opcional)</h6>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="vehiculoModelo" class="form-label">Modelo *</label>
-                                <input type="text" class="form-control" id="vehiculoModelo" required>
-                            </div>
+                            <select class="form-select" id="vehiculoResidente" disabled>
+                                <option value="">Primero seleccione una casa</option>
+                            </select>
+                            <small class="text-muted">El vehículo puede registrarse sin residente específico</small>
                         </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="vehiculoColor" class="form-label">Color</label>
-                                <input type="text" class="form-control" id="vehiculoColor">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="vehiculoAnio" class="form-label">Año</label>
-                                <input type="number" class="form-control" id="vehiculoAnio" min="1900" max="2026">
-                            </div>
-                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Datos del Vehículo -->
                         <div class="mb-3">
-                            <label for="vehiculoObservaciones" class="form-label">Observaciones</label>
-                            <textarea class="form-control" id="vehiculoObservaciones" rows="2"></textarea>
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="badge bg-success me-2"><i class="fas fa-car"></i></span>
+                                <h6 class="mb-0">Datos del Vehículo</h6>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="vehiculoPatente" class="form-label">Patente *</label>
+                                    <input type="text" class="form-control text-uppercase" id="vehiculoPatente" required maxlength="10" placeholder="AA1234">
+                                    <small class="text-muted">4-10 caracteres alfanuméricos</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="vehiculoTipo" class="form-label">Tipo *</label>
+                                    <select class="form-select" id="vehiculoTipo" required>
+                                        <option value="automovil">Automóvil</option>
+                                        <option value="camioneta">Camioneta</option>
+                                        <option value="motocicleta">Motocicleta</option>
+                                        <option value="bicicleta">Bicicleta</option>
+                                        <option value="otro">Otro</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="vehiculoMarca" class="form-label">Marca *</label>
+                                    <input type="text" class="form-control" id="vehiculoMarca" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="vehiculoModelo" class="form-label">Modelo *</label>
+                                    <input type="text" class="form-control" id="vehiculoModelo" required>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="vehiculoColor" class="form-label">Color</label>
+                                    <input type="text" class="form-control" id="vehiculoColor">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="vehiculoAnio" class="form-label">Año</label>
+                                    <input type="number" class="form-control" id="vehiculoAnio" min="1900" max="2026">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="vehiculoObservaciones" class="form-label">Observaciones</label>
+                                <textarea class="form-control" id="vehiculoObservaciones" rows="2"></textarea>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -5041,15 +5072,24 @@
                 document.getElementById('vehiculoPatenteOriginal').value = '';
                 document.getElementById('vehiculoModalLabel').textContent = patente ? 'Editar Vehículo' : 'Nuevo Vehículo';
                 
-                // Cargar dropdown de casas
-                const casasSelect = document.getElementById('vehiculoCasa');
-                const response = await authenticatedFetch('/api/casas?activo=true');
-                if (!response) return;
-                const data = await response.json();
+                // Resetear selectores condicionales
+                const plazaSelect = document.getElementById('vehiculoPlaza');
+                const casaSelect = document.getElementById('vehiculoCasa');
+                const residenteSelect = document.getElementById('vehiculoResidente');
                 
-                if (response.ok && data.success) {
-                    casasSelect.innerHTML = '<option value="">Seleccionar casa</option>' +
-                        data.data.map(c => `<option value="${c.id}">${c.numero_casa} - ${c.direccion}</option>`).join('');
+                casaSelect.disabled = true;
+                casaSelect.innerHTML = '<option value="">Primero seleccione una plaza</option>';
+                residenteSelect.disabled = true;
+                residenteSelect.innerHTML = '<option value="">Primero seleccione una casa</option>';
+                
+                // Cargar dropdown de plazas
+                const plazasResponse = await authenticatedFetch('/api/plazas?activo=true');
+                if (!plazasResponse) return;
+                const plazasData = await plazasResponse.json();
+                
+                if (plazasResponse.ok && plazasData.success) {
+                    plazaSelect.innerHTML = '<option value="">Seleccionar plaza</option>' +
+                        plazasData.data.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
                 }
                 
                 // Si es edición, cargar datos del vehículo
@@ -5060,28 +5100,45 @@
                     
                     if (vResponse.ok && vData.success) {
                         const v = vData.data;
+                        
+                        // Obtener la plaza_id de la casa
+                        const casaResponse = await authenticatedFetch(`/api/casas/${v.casa_id}`);
+                        if (casaResponse && casaResponse.ok) {
+                            const casaData = await casaResponse.json();
+                            if (casaData.success && casaData.data) {
+                                // Pre-seleccionar plaza
+                                plazaSelect.value = casaData.data.plaza_id;
+                                
+                                // Cargar casas de esa plaza
+                                await onVehiculoPlazaChange();
+                                
+                                // Pre-seleccionar casa
+                                casaSelect.value = v.casa_id;
+                                
+                                // Cargar residentes de esa casa
+                                await onVehiculoCasaChange();
+                                
+                                // Pre-seleccionar residente si existe
+                                if (v.residente_id) {
+                                    residenteSelect.value = v.residente_id;
+                                }
+                            }
+                        }
+                        
+                        // Cargar datos del vehículo
                         document.getElementById('vehiculoPatenteOriginal').value = v.patente;
                         document.getElementById('vehiculoPatente').value = v.patente;
                         document.getElementById('vehiculoPatente').disabled = true; // No permitir cambiar patente
-                        document.getElementById('vehiculoCasa').value = v.casa_id;
                         document.getElementById('vehiculoMarca').value = v.marca;
                         document.getElementById('vehiculoModelo').value = v.modelo;
                         document.getElementById('vehiculoColor').value = v.color || '';
                         document.getElementById('vehiculoAnio').value = v.anio || '';
                         document.getElementById('vehiculoTipo').value = v.tipo;
                         document.getElementById('vehiculoObservaciones').value = v.observaciones || '';
-                        
-                        // Cargar residentes de la casa seleccionada
-                        await loadResidentesPorCasa(v.casa_id, v.residente_id);
                     }
                 } else {
                     document.getElementById('vehiculoPatente').disabled = false;
                 }
-                
-                // Evento para cargar residentes cuando se selecciona una casa
-                document.getElementById('vehiculoCasa').onchange = async function() {
-                    await loadResidentesPorCasa(this.value);
-                };
                 
                 const modal = new bootstrap.Modal(document.getElementById('vehiculoModal'));
                 modal.show();
@@ -5096,11 +5153,55 @@
             }
         }
 
-        async function loadResidentesPorCasa(casaId, selectedResidenteId = null) {
+        async function onVehiculoPlazaChange() {
+            const plazaId = document.getElementById('vehiculoPlaza').value;
+            const casaSelect = document.getElementById('vehiculoCasa');
+            const residenteSelect = document.getElementById('vehiculoResidente');
+            
+            // Resetear casa y residente
+            casaSelect.innerHTML = '<option value="">Seleccionar casa</option>';
+            casaSelect.disabled = true;
+            residenteSelect.innerHTML = '<option value="">Primero seleccione una casa</option>';
+            residenteSelect.disabled = true;
+            
+            if (!plazaId) return;
+            
+            try {
+                const response = await authenticatedFetch(`/api/casas?activo=true`);
+                if (!response) return;
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    // Filtrar casas por plaza_id
+                    const casasFiltradas = data.data.filter(c => c.plaza_id == plazaId);
+                    
+                    if (casasFiltradas.length > 0) {
+                        casaSelect.innerHTML = '<option value="">Seleccionar casa</option>' +
+                            casasFiltradas.map(c => `<option value="${c.id}">${c.numero_casa} - ${c.direccion}</option>`).join('');
+                        casaSelect.disabled = false;
+                    } else {
+                        casaSelect.innerHTML = '<option value="">No hay casas en esta plaza</option>';
+                    }
+                }
+            } catch (error) {
+                console.error('Error al cargar casas:', error);
+            }
+        }
+
+        async function onVehiculoCasaChange() {
+            const casaId = document.getElementById('vehiculoCasa').value;
+            await loadResidentesPorCasaVehiculo(casaId);
+        }
+
+        async function loadResidentesPorCasaVehiculo(casaId, selectedResidenteId = null) {
             const residenteSelect = document.getElementById('vehiculoResidente');
             residenteSelect.innerHTML = '<option value="">Sin residente asignado</option>';
+            residenteSelect.disabled = true;
             
-            if (!casaId) return;
+            if (!casaId) {
+                residenteSelect.innerHTML = '<option value="">Primero seleccione una casa</option>';
+                return;
+            }
             
             try {
                 const response = await authenticatedFetch(`/api/residentes/casa/${casaId}`);
@@ -5109,17 +5210,37 @@
                 
                 if (response.ok && data.success && data.data.length > 0) {
                     residenteSelect.innerHTML = '<option value="">Sin residente asignado</option>' +
-                        data.data.map(r => `<option value="${r.id}" ${r.id === selectedResidenteId ? 'selected' : ''}>${r.nombres} ${r.apellidos}</option>`).join('');
+                        data.data.map(r => `<option value="${r.id}" ${r.id === selectedResidenteId ? 'selected' : ''}>${r.nombre} ${r.apellido_paterno}</option>`).join('');
+                    residenteSelect.disabled = false;
+                } else {
+                    residenteSelect.innerHTML = '<option value="">No hay residentes en esta casa</option>';
+                    residenteSelect.disabled = false; // Permitir guardar sin residente
                 }
             } catch (error) {
                 console.error('Error al cargar residentes:', error);
             }
         }
 
+        async function loadResidentesPorCasa(casaId, selectedResidenteId = null) {
+            // Mantener compatibilidad con código existente
+            await loadResidentesPorCasaVehiculo(casaId, selectedResidenteId);
+        }
+
         async function saveVehiculo() {
             try {
                 const patenteOriginal = document.getElementById('vehiculoPatenteOriginal').value;
                 const isEditing = !!patenteOriginal;
+                
+                // Validar que se haya seleccionado plaza
+                const plazaId = document.getElementById('vehiculoPlaza').value;
+                if (!plazaId) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Plaza requerida',
+                        text: 'Por favor seleccione una plaza'
+                    });
+                    return;
+                }
                 
                 const vehiculoData = {
                     patente: document.getElementById('vehiculoPatente').value.toUpperCase(),
@@ -5138,7 +5259,7 @@
                     Swal.fire({
                         icon: 'warning',
                         title: 'Campos requeridos',
-                        text: 'Por favor complete todos los campos obligatorios'
+                        text: 'Por favor complete todos los campos obligatorios (Plaza, Casa, Patente, Marca, Modelo, Tipo)'
                     });
                     return;
                 }
