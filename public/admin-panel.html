@@ -4552,21 +4552,6 @@
                 `;
             }).join('');
         }
-                                ${mascota.activo ? 'Activo' : 'Inactivo'}
-                            </span>
-                        </td>
-                        <td>
-                            <button class="btn btn-sm btn-info me-1" onclick="showMascotaForm(${mascota.id})" title="Editar">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteMascota(${mascota.id}, '${escapeHtml(mascota.mascota_nombre)}')" title="Eliminar">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
 
         async function showMascotaForm(mascotaId = null) {
             // Limpiar el formulario
