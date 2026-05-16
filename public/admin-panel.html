@@ -4318,7 +4318,7 @@
                             selectCasa.disabled = false;
                             selectCasa.innerHTML = '<option value="">Seleccione una casa...</option>' +
                                 data.data.map(casa => 
-                                    `<option value="${casa.id}">${casa.numero_casa} - ${casa.direccion}</option>`
+                                    `<option value="${casa.id}">${casa.direccion}</option>`
                                 ).join('');
                         } else {
                             selectCasa.disabled = true;
