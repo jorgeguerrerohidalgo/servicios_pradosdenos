@@ -1070,7 +1070,7 @@
 
     <!-- Modal para Crear Pago Manual -->
     <div class="modal fade" id="pagoModal" tabindex="-1" aria-labelledby="pagoModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header bg-success text-white">
                     <h5 class="modal-title" id="pagoModalLabel">
@@ -1080,38 +1080,77 @@
                 </div>
                 <div class="modal-body">
                     <form id="pagoForm">
-                        <div class="mb-3">
-                            <label for="pagoCasa" class="form-label">Casa <span class="text-danger">*</span></label>
-                            <select class="form-select" id="pagoCasa" required>
-                                <option value="">Seleccione una casa...</option>
+                        
+                        <!-- Paso 1: Seleccionar Plaza -->
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="badge bg-primary me-2">Paso 1</span>
+                                <h6 class="mb-0">Seleccionar Plaza</h6>
+                            </div>
+                            <select class="form-select" id="pagoPlaza" onchange="onPagoPlazaChange()" required>
+                                <option value="">Seleccionar plaza</option>
                             </select>
                         </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="pagoPeriodo" class="form-label">Período <span class="text-danger">*</span></label>
-                                <input type="month" class="form-control" id="pagoPeriodo" required>
+
+                        <!-- Paso 2: Seleccionar Casa -->
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="badge bg-primary me-2">Paso 2</span>
+                                <h6 class="mb-0">Seleccionar Casa</h6>
                             </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label for="pagoTipo" class="form-label">Tipo <span class="text-danger">*</span></label>
-                                <select class="form-select" id="pagoTipo" required>
-                                    <option value="">Seleccione...</option>
-                                    <option value="cuota_social">Cuota Social</option>
-                                    <option value="junta_vecinos">Junta de Vecinos</option>
-                                </select>
+                            <select class="form-select" id="pagoCasa" onchange="onPagoCasaChange()" disabled required>
+                                <option value="">Primero seleccione una plaza</option>
+                            </select>
+                            <div id="pagoMontosInfo" class="mt-2" style="display: none;">
+                                <div class="alert alert-info mb-0 py-2">
+                                    <small>
+                                        <i class="fas fa-info-circle"></i>
+                                        <strong>Montos configurados:</strong><br>
+                                        Mensual: $<span id="pagoMontoMensualInfo">0</span> | 
+                                        Trimestral: $<span id="pagoMontoTrimestralInfo">0</span>
+                                    </small>
+                                </div>
                             </div>
                         </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="pagoMonto" class="form-label">Monto <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="pagoMonto" required min="0" step="100" placeholder="50000">
+
+                        <hr class="my-4">
+
+                        <!-- Datos del Pago -->
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="badge bg-success me-2"><i class="fas fa-money-bill-wave"></i></span>
+                                <h6 class="mb-0">Datos del Pago</h6>
                             </div>
                             
-                            <div class="col-md-6 mb-3">
-                                <label for="pagoVencimiento" class="form-label">Vencimiento <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" id="pagoVencimiento" required>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="pagoPeriodo" class="form-label">Período <span class="text-danger">*</span></label>
+                                    <input type="month" class="form-control" id="pagoPeriodo" onchange="onPagoPeriodoChange()" required>
+                                    <small class="text-muted">Seleccione mes y año</small>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="pagoTipo" class="form-label">Tipo <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="pagoTipo" onchange="onPagoTipoChange()" required>
+                                        <option value="">Seleccione...</option>
+                                        <option value="cuota_social">Cuota Social</option>
+                                        <option value="junta_vecinos">Junta de Vecinos</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="pagoMonto" class="form-label">Monto <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="pagoMonto" required min="0" step="100" placeholder="50000">
+                                    <small class="text-muted">Calculado automáticamente según tipo</small>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="pagoVencimiento" class="form-label">Vencimiento <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="pagoVencimiento" readonly required>
+                                    <small class="text-muted">Último día del mes seleccionado</small>
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -4608,28 +4647,51 @@
             }).join('');
         }
 
+        // Variable global para almacenar montos de la casa seleccionada
+        let casaMontos = {
+            mensual: 0,
+            trimestral: 0
+        };
+
         async function showPagoForm() {
             // Limpiar el formulario
             document.getElementById('pagoForm').reset();
+            casaMontos = { mensual: 0, trimestral: 0 };
             
-            // Cargar casas en el dropdown
+            // Resetear selectores condicionales
+            const plazaSelect = document.getElementById('pagoPlaza');
+            const casaSelect = document.getElementById('pagoCasa');
+            const montosInfo = document.getElementById('pagoMontosInfo');
+            
+            casaSelect.disabled = true;
+            casaSelect.innerHTML = '<option value="">Primero seleccione una plaza</option>';
+            montosInfo.style.display = 'none';
+            
+            // Cargar plazas
             try {
+                const plazasResponse = await authenticatedFetch('/api/plazas?activo=true');
+                if (plazasResponse && plazasResponse.ok) {
+                    const plazasData = await plazasResponse.json();
+                    if (plazasData.success) {
+                        plazaSelect.innerHTML = '<option value="">Seleccionar plaza</option>' +
+                            plazasData.data.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+                    }
+                }
+                
+                // Cargar todas las casas para el filtro de la tabla
                 const response = await authenticatedFetch('/api/casas/simple');
                 if (response && response.ok) {
                     const data = await response.json();
                     if (data.success) {
-                        const selectCasa = document.getElementById('pagoCasa');
-                        selectCasa.innerHTML = '<option value="">Seleccione una casa...</option>' +
-                            data.data.map(casa => `<option value="${casa.id}">${casa.numero_casa}</option>`).join('');
-                        
-                        // Poblar también el filtro de casas
                         const filterCasa = document.getElementById('filterCasaPagos');
-                        filterCasa.innerHTML = '<option value="">Todas las casas</option>' +
-                            data.data.map(casa => `<option value="${casa.id}">${casa.numero_casa}</option>`).join('');
+                        if (filterCasa) {
+                            filterCasa.innerHTML = '<option value="">Todas las casas</option>' +
+                                data.data.map(casa => `<option value="${casa.id}">${casa.numero_casa}</option>`).join('');
+                        }
                     }
                 }
             } catch (error) {
-                console.error('Error al cargar casas:', error);
+                console.error('Error al cargar plazas:', error);
             }
             
             // Configurar período actual por defecto
@@ -4637,14 +4699,109 @@
             const mesActual = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
             document.getElementById('pagoPeriodo').value = mesActual;
             
-            // Configurar vencimiento último día del mes por defecto
-            const ultimoDia = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-            const vencimientoDefault = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${ultimoDia}`;
-            document.getElementById('pagoVencimiento').value = vencimientoDefault;
+            // Calcular vencimiento automáticamente
+            onPagoPeriodoChange();
             
             // Mostrar modal
             const modal = new bootstrap.Modal(document.getElementById('pagoModal'));
             modal.show();
+        }
+
+        async function onPagoPlazaChange() {
+            const plazaId = document.getElementById('pagoPlaza').value;
+            const casaSelect = document.getElementById('pagoCasa');
+            const montosInfo = document.getElementById('pagoMontosInfo');
+            
+            // Resetear casa y montos
+            casaSelect.innerHTML = '<option value="">Seleccionar casa</option>';
+            casaSelect.disabled = true;
+            montosInfo.style.display = 'none';
+            document.getElementById('pagoMonto').value = '';
+            casaMontos = { mensual: 0, trimestral: 0 };
+            
+            if (!plazaId) return;
+            
+            try {
+                const response = await authenticatedFetch('/api/casas?activo=true');
+                if (!response) return;
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    const casasFiltradas = data.data.filter(c => c.plaza_id == plazaId);
+                    
+                    if (casasFiltradas.length > 0) {
+                        casaSelect.innerHTML = '<option value="">Seleccionar casa</option>' +
+                            casasFiltradas.map(c => `<option value="${c.id}">${c.numero_casa} - ${c.direccion}</option>`).join('');
+                        casaSelect.disabled = false;
+                    } else {
+                        casaSelect.innerHTML = '<option value="">No hay casas en esta plaza</option>';
+                    }
+                }
+            } catch (error) {
+                console.error('Error al cargar casas:', error);
+            }
+        }
+
+        async function onPagoCasaChange() {
+            const casaId = document.getElementById('pagoCasa').value;
+            const montosInfo = document.getElementById('pagoMontosInfo');
+            
+            if (!casaId) {
+                montosInfo.style.display = 'none';
+                document.getElementById('pagoMonto').value = '';
+                casaMontos = { mensual: 0, trimestral: 0 };
+                return;
+            }
+            
+            try {
+                const response = await authenticatedFetch(`/api/casas/${casaId}`);
+                if (!response) return;
+                const data = await response.json();
+                
+                if (response.ok && data.success && data.data) {
+                    const casa = data.data;
+                    casaMontos.mensual = casa.monto_alicuota_mensual || 0;
+                    casaMontos.trimestral = casa.monto_alicuota_trimestral || 0;
+                    
+                    // Mostrar información de montos
+                    document.getElementById('pagoMontoMensualInfo').textContent = casaMontos.mensual.toLocaleString('es-CL');
+                    document.getElementById('pagoMontoTrimestralInfo').textContent = casaMontos.trimestral.toLocaleString('es-CL');
+                    montosInfo.style.display = 'block';
+                    
+                    // Si ya se seleccionó un tipo, actualizar el monto
+                    onPagoTipoChange();
+                }
+            } catch (error) {
+                console.error('Error al cargar datos de casa:', error);
+            }
+        }
+
+        function onPagoTipoChange() {
+            const tipo = document.getElementById('pagoTipo').value;
+            const montoInput = document.getElementById('pagoMonto');
+            
+            if (!tipo || casaMontos.mensual === 0) {
+                return;
+            }
+            
+            // Asignar monto según tipo (por ahora solo usamos mensual, trimestral podría agregarse)
+            if (tipo === 'cuota_social' || tipo === 'junta_vecinos') {
+                montoInput.value = casaMontos.mensual;
+            }
+        }
+
+        function onPagoPeriodoChange() {
+            const periodoInput = document.getElementById('pagoPeriodo').value;
+            if (!periodoInput) return;
+            
+            // Formato: YYYY-MM
+            const [year, month] = periodoInput.split('-').map(Number);
+            
+            // Calcular último día del mes
+            const ultimoDia = new Date(year, month, 0).getDate();
+            const vencimiento = `${year}-${String(month).padStart(2, '0')}-${String(ultimoDia).padStart(2, '0')}`;
+            
+            document.getElementById('pagoVencimiento').value = vencimiento;
         }
 
         async function savePago() {
@@ -4652,6 +4809,17 @@
             
             if (!form.checkValidity()) {
                 form.reportValidity();
+                return;
+            }
+            
+            // Validar plaza seleccionada
+            const plazaId = document.getElementById('pagoPlaza').value;
+            if (!plazaId) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Plaza requerida',
+                    text: 'Por favor seleccione una plaza'
+                });
                 return;
             }
             
