@@ -918,22 +918,74 @@
                     <form id="mascotaForm">
                         <input type="hidden" id="mascotaId">
                         
+                        <!-- Paso 1: Seleccionar Plaza -->
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="mascotaCasa" class="form-label">Casa <span class="text-danger">*</span></label>
-                                <select class="form-select" id="mascotaCasa" required onchange="loadResidentesPorCasa()">
-                                    <option value="">Seleccione una casa...</option>
+                            <div class="col-12 mb-3">
+                                <label for="mascotaPlaza" class="form-label">
+                                    <span class="badge bg-primary me-2">Paso 1</span>
+                                    Plaza <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="mascotaPlaza" required onchange="loadCasasPorPlazaMascota()">
+                                    <option value="">Seleccione primero una plaza...</option>
                                 </select>
-                            </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label for="mascotaResidente" class="form-label">Dueño (Opcional - Comunitaria si está vacío)</label>
-                                <select class="form-select" id="mascotaResidente">
-                                    <option value="">Mascota Comunitaria</option>
-                                </select>
-                                <small class="text-muted">Dejar vacío para mascotas comunitarias</small>
+                                <small class="text-muted">Seleccione la plaza donde está la mascota</small>
                             </div>
                         </div>
+                        
+                        <!-- Paso 2: Seleccionar Casa -->
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="mascotaCasa" class="form-label">
+                                    <span class="badge bg-secondary me-2">Paso 2</span>
+                                    Casa <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="mascotaCasa" required disabled onchange="loadResidentesPorCasaMascota()">
+                                    <option value="">Primero seleccione una plaza...</option>
+                                </select>
+                                <small class="text-muted">Se mostrará la dirección de la casa</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Paso 3: Tipo de Mascota -->
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label class="form-label">
+                                    <span class="badge bg-info me-2">Paso 3</span>
+                                    Tipo de Mascota <span class="text-danger">*</span>
+                                </label>
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" class="btn-check" name="tipoMascota" id="tipoComunitaria" 
+                                           value="comunitaria" onchange="toggleDuenoMascota()" checked>
+                                    <label class="btn btn-outline-success" for="tipoComunitaria">
+                                        <i class="fas fa-users me-2"></i>Mascota Comunitaria
+                                    </label>
+                                    
+                                    <input type="radio" class="btn-check" name="tipoMascota" id="tipoConDueno" 
+                                           value="con_dueno" onchange="toggleDuenoMascota()">
+                                    <label class="btn btn-outline-primary" for="tipoConDueno">
+                                        <i class="fas fa-user me-2"></i>Con Dueño Específico
+                                    </label>
+                                </div>
+                                <small class="text-muted">Las mascotas comunitarias no tienen dueño asignado</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Selector de Dueño (solo si es con dueño) -->
+                        <div class="row" id="selectorDueno" style="display: none;">
+                            <div class="col-12 mb-3">
+                                <label for="mascotaResidente" class="form-label">Dueño (Residente) <span class="text-danger">*</span></label>
+                                <select class="form-select" id="mascotaResidente">
+                                    <option value="">Seleccione un residente...</option>
+                                </select>
+                                <small class="text-muted">Residentes de la casa seleccionada</small>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        <h6 class="text-muted mb-3">
+                            <span class="badge bg-success me-2">Paso 4</span>
+                            Datos de la Mascota
+                        </h6>
                         
                         <div class="row">
                             <div class="col-md-4 mb-3">
@@ -4098,24 +4150,25 @@
             document.getElementById('mascotaId').value = '';
             document.getElementById('mascotaModalTitle').textContent = mascotaId ? 'Editar Mascota' : 'Nueva Mascota';
             
-            // Cargar casas en el dropdown
+            // Reset tipo de mascota a comunitaria
+            document.getElementById('tipoComunitaria').checked = true;
+            document.getElementById('selectorDueno').style.display = 'none';
+            
+            // Deshabilitar selectores hasta que se seleccione plaza
+            document.getElementById('mascotaCasa').disabled = true;
+            document.getElementById('mascotaCasa').innerHTML = '<option value="">Primero seleccione una plaza...</option>';
+            document.getElementById('mascotaResidente').innerHTML = '<option value="">Seleccione un residente...</option>';
+            
+            // Cargar plazas en el dropdown
             try {
-                const response = await authenticatedFetch('/api/casas/simple');
-                if (response && response.ok) {
-                    const data = await response.json();
-                    if (data.success) {
-                        const selectCasa = document.getElementById('mascotaCasa');
-                        selectCasa.innerHTML = '<option value="">Seleccione una casa...</option>' +
-                            data.data.map(casa => `<option value="${casa.id}">${casa.numero_casa}</option>`).join('');
-                        
-                        // Poblar el filtro de casas también
-                        const filterCasa = document.getElementById('filterCasaMascotas');
-                        filterCasa.innerHTML = '<option value="">Todas las casas</option>' +
-                            data.data.map(casa => `<option value="${casa.id}">${casa.numero_casa}</option>`).join('');
-                    }
-                }
+                await loadPlazasForFilter();
+                const selectPlaza = document.getElementById('mascotaPlaza');
+                selectPlaza.innerHTML = '<option value="">Seleccione primero una plaza...</option>' +
+                    plazasGlobal.filter(p => p.activo).map(plaza => 
+                        `<option value="${plaza.id}">${plaza.nombre}</option>`
+                    ).join('');
             } catch (error) {
-                console.error('Error al cargar casas:', error);
+                console.error('Error al cargar plazas:', error);
             }
             
             // Si es edición, cargar datos de la mascota
@@ -4127,12 +4180,26 @@
                         if (data.success && data.data.length > 0) {
                             const mascota = data.data[0];
                             document.getElementById('mascotaId').value = mascota.id;
+                            
+                            // Cargar plaza de la casa
+                            if (mascota.plaza_id) {
+                                document.getElementById('mascotaPlaza').value = mascota.plaza_id;
+                                await loadCasasPorPlazaMascota();
+                            }
+                            
                             document.getElementById('mascotaCasa').value = mascota.casa_id;
+                            await loadResidentesPorCasaMascota();
                             
-                            // Cargar residentes de la casa seleccionada
-                            await loadResidentesPorCasa();
+                            // Determinar tipo de mascota y configurar radio buttons
+                            if (mascota.residente_id) {
+                                document.getElementById('tipoConDueno').checked = true;
+                                toggleDuenoMascota();
+                                document.getElementById('mascotaResidente').value = mascota.residente_id;
+                            } else {
+                                document.getElementById('tipoComunitaria').checked = true;
+                            }
                             
-                            document.getElementById('mascotaResidente').value = mascota.residente_id || '';
+                            // Cargar datos de la mascota
                             document.getElementById('mascotaNombre').value = mascota.mascota_nombre;
                             document.getElementById('mascotaTipo').value = mascota.tipo;
                             document.getElementById('mascotaRaza').value = mascota.raza || '';
@@ -4154,12 +4221,46 @@
             modal.show();
         }
 
-        async function loadResidentesPorCasa() {
+        // Cargar casas filtradas por plaza para mascotas
+        async function loadCasasPorPlazaMascota() {
+            const plazaId = document.getElementById('mascotaPlaza').value;
+            const selectCasa = document.getElementById('mascotaCasa');
+            
+            if (!plazaId) {
+                selectCasa.disabled = true;
+                selectCasa.innerHTML = '<option value="">Primero seleccione una plaza...</option>';
+                return;
+            }
+            
+            try {
+                const response = await authenticatedFetch(`/api/casas?plaza_id=${plazaId}&activo=true`);
+                if (response && response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.data.length > 0) {
+                        selectCasa.disabled = false;
+                        selectCasa.innerHTML = '<option value="">Seleccione una casa...</option>' +
+                            data.data.map(casa => 
+                                `<option value="${casa.id}">${casa.numero_casa} - ${casa.direccion}</option>`
+                            ).join('');
+                    } else {
+                        selectCasa.disabled = true;
+                        selectCasa.innerHTML = '<option value="">No hay casas en esta plaza</option>';
+                    }
+                }
+            } catch (error) {
+                console.error('Error al cargar casas:', error);
+                selectCasa.disabled = true;
+                selectCasa.innerHTML = '<option value="">Error al cargar casas</option>';
+            }
+        }
+
+        // Cargar residentes de la casa seleccionada para mascotas
+        async function loadResidentesPorCasaMascota() {
             const casaId = document.getElementById('mascotaCasa').value;
             const selectResidente = document.getElementById('mascotaResidente');
             
             if (!casaId) {
-                selectResidente.innerHTML = '<option value="">Mascota Comunitaria</option>';
+                selectResidente.innerHTML = '<option value="">Seleccione un residente...</option>';
                 return;
             }
             
@@ -4167,16 +4268,36 @@
                 const response = await authenticatedFetch(`/api/residentes/casa/${casaId}`);
                 if (response && response.ok) {
                     const data = await response.json();
-                    if (data.success) {
-                        selectResidente.innerHTML = '<option value="">Mascota Comunitaria</option>' +
+                    if (data.success && data.data.length > 0) {
+                        selectResidente.innerHTML = '<option value="">Seleccione un residente...</option>' +
                             data.data.map(residente => 
                                 `<option value="${residente.id}">${residente.nombre} ${residente.apellido_paterno}</option>`
                             ).join('');
+                    } else {
+                        selectResidente.innerHTML = '<option value="">No hay residentes en esta casa</option>';
                     }
                 }
             } catch (error) {
                 console.error('Error al cargar residentes por casa:', error);
-                selectResidente.innerHTML = '<option value="">Mascota Comunitaria</option>';
+                selectResidente.innerHTML = '<option value="">Error al cargar residentes</option>';
+            }
+        }
+
+        // Toggle mostrar/ocultar selector de dueño
+        function toggleDuenoMascota() {
+            const tipoComunitaria = document.getElementById('tipoComunitaria').checked;
+            const selectorDueno = document.getElementById('selectorDueno');
+            const selectResidente = document.getElementById('mascotaResidente');
+            
+            if (tipoComunitaria) {
+                // Mascota comunitaria: ocultar selector y limpiar valor
+                selectorDueno.style.display = 'none';
+                selectResidente.value = '';
+                selectResidente.removeAttribute('required');
+            } else {
+                // Con dueño: mostrar selector y hacer requerido
+                selectorDueno.style.display = 'block';
+                selectResidente.setAttribute('required', 'required');
             }
         }
 
@@ -4189,11 +4310,22 @@
             }
             
             const mascotaId = document.getElementById('mascotaId').value;
+            const tipoComunitaria = document.getElementById('tipoComunitaria').checked;
             const residenteValue = document.getElementById('mascotaResidente').value;
+            
+            // Validar que si es con dueño, se haya seleccionado un residente
+            if (!tipoComunitaria && !residenteValue) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Falta seleccionar dueño',
+                    text: 'Debe seleccionar un residente como dueño de la mascota'
+                });
+                return;
+            }
             
             const data = {
                 casa_id: parseInt(document.getElementById('mascotaCasa').value),
-                residente_id: residenteValue ? parseInt(residenteValue) : null,
+                residente_id: tipoComunitaria ? null : parseInt(residenteValue),
                 nombre: document.getElementById('mascotaNombre').value.trim(),
                 tipo: document.getElementById('mascotaTipo').value,
                 raza: document.getElementById('mascotaRaza').value.trim() || null,
