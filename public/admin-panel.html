@@ -1050,6 +1050,14 @@
                         
                         <div class="row">
                             <div class="col-md-12 mb-3">
+                                <label for="mascotaFoto" class="form-label">Foto de la Mascota</label>
+                                <input type="text" class="form-control" id="mascotaFoto" placeholder="https://ejemplo.com/foto-mascota.jpg">
+                                <small class="text-muted">URL de la foto para identificar visualmente a la mascota</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
                                 <label for="mascotaObservaciones" class="form-label">Observaciones</label>
                                 <textarea class="form-control" id="mascotaObservaciones" rows="3" placeholder="Notas adicionales sobre la mascota..."></textarea>
                             </div>
@@ -3925,7 +3933,7 @@
                         selectCasa.disabled = false;
                         selectCasa.innerHTML = '<option value="">Seleccione una casa...</option>' +
                             data.data.map(casa => 
-                                `<option value="${casa.id}">${casa.numero_casa} - ${casa.direccion}</option>`
+                                `<option value="${casa.id}">${casa.direccion}</option>`
                             ).join('');
                     } else {
                         selectCasa.disabled = true;
@@ -4275,6 +4283,7 @@
                             document.getElementById('mascotaColor').value = mascota.color || '';
                             document.getElementById('mascotaFechaVacuna').value = mascota.fecha_ultima_vacuna || '';
                             document.getElementById('mascotaCertificado').checked = mascota.certificado_vacunas || false;
+                            document.getElementById('mascotaFoto').value = mascota.foto_url || '';
                             document.getElementById('mascotaObservaciones').value = mascota.observaciones || '';
                         }
                     }
@@ -4358,10 +4367,10 @@
             }
             
             try {
-                const response = await authenticatedFetch(`/api/residentes?casa_id=${casaId}&activo=true`);
+                const response = await authenticatedFetch(`/api/residentes/casa/${casaId}`);
                 if (response && response.ok) {
                     const data = await response.json();
-                    if (data.success) {
+                    if (data.success && data.data.length > 0) {
                         selectResidente.disabled = false;
                         selectResidente.innerHTML = '<option value="">Seleccione un residente...</option>' +
                             data.data.map(residente => 
@@ -4412,6 +4421,7 @@
             color: document.getElementById('mascotaColor').value.trim() || null,
             certificado_vacunas: document.getElementById('mascotaCertificado').checked,
             fecha_ultima_vacuna: document.getElementById('mascotaFechaVacuna').value || null,
+            foto_url: document.getElementById('mascotaFoto').value.trim() || null,
             observaciones: document.getElementById('mascotaObservaciones').value.trim() || null
         };
         
@@ -4732,7 +4742,7 @@
                     
                     if (casasFiltradas.length > 0) {
                         casaSelect.innerHTML = '<option value="">Seleccionar casa</option>' +
-                            casasFiltradas.map(c => `<option value="${c.id}">${c.numero_casa} - ${c.direccion}</option>`).join('');
+                            casasFiltradas.map(c => `<option value="${c.id}">${c.direccion}</option>`).join('');
                         casaSelect.disabled = false;
                     } else {
                         casaSelect.innerHTML = '<option value="">No hay casas en esta plaza</option>';
@@ -5210,7 +5220,7 @@
                         <td>${v.color || '-'}</td>
                         <td>${v.anio || '-'}</td>
                         <td><span class="badge bg-secondary">${v.tipo}</span></td>
-                        <td>${v.numero_casa} - ${v.casa_direccion}</td>
+                        <td>${v.casa_direccion}</td>
                         <td>
                             ${v.residente_nombre}
                             ${v.residente_rut ? `<br><small class="text-muted">${v.residente_rut}</small>` : ''}
@@ -5346,7 +5356,7 @@
                     
                     if (casasFiltradas.length > 0) {
                         casaSelect.innerHTML = '<option value="">Seleccionar casa</option>' +
-                            casasFiltradas.map(c => `<option value="${c.id}">${c.numero_casa} - ${c.direccion}</option>`).join('');
+                            casasFiltradas.map(c => `<option value="${c.id}">${c.direccion}</option>`).join('');
                         casaSelect.disabled = false;
                     } else {
                         casaSelect.innerHTML = '<option value="">No hay casas en esta plaza</option>';
