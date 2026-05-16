@@ -411,7 +411,13 @@
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-3">
+                        <div class="col-md-2">
+                            <label for="filterPlazaMascotas" class="form-label">Filtrar por Plaza:</label>
+                            <select id="filterPlazaMascotas" class="form-select" onchange="onPlazaMascotasFilterChange()">
+                                <option value="">Todas las plazas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
                             <label for="filterCasaMascotas" class="form-label">Filtrar por Casa:</label>
                             <select id="filterCasaMascotas" class="form-select" onchange="loadMascotas()">
                                 <option value="">Todas las casas</option>
@@ -442,7 +448,7 @@
                                 <option value="false">Solo inactivos</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label for="searchMascotas" class="form-label">Buscar:</label>
                             <input type="text" id="searchMascotas" class="form-control" placeholder="Nombre, dueño, raza..." onkeyup="loadMascotas()">
                         </div>
@@ -457,6 +463,7 @@
                             <th>Nombre</th>
                             <th>Tipo</th>
                             <th>Raza</th>
+                            <th>Plaza</th>
                             <th>Casa</th>
                             <th>Dueño</th>
                             <th>Edad</th>
@@ -466,7 +473,7 @@
                         </tr>
                     </thead>
                     <tbody id="mascotasTableBody">
-                        <tr><td colspan="9" class="text-center">Cargando mascotas...</td></tr>
+                        <tr><td colspan="10" class="text-center">Cargando mascotas...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -490,7 +497,13 @@
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-3">
+                        <div class="col-md-2">
+                            <label for="filterPlazaPagos" class="form-label">Filtrar por Plaza:</label>
+                            <select id="filterPlazaPagos" class="form-select" onchange="onPlazaPagosFilterChange()">
+                                <option value="">Todas las plazas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
                             <label for="filterCasaPagos" class="form-label">Filtrar por Casa:</label>
                             <select id="filterCasaPagos" class="form-select" onchange="loadPagos()">
                                 <option value="">Todas las casas</option>
@@ -518,9 +531,9 @@
                                 <option value="anulado">Anulados</option>
                             </select>
                         </div>
-                        <div class="col-md-3 d-flex align-items-end">
+                        <div class="col-md-2 d-flex align-items-end">
                             <button class="btn btn-warning w-100" onclick="showCasasMorosas()">
-                                <i class="fas fa-exclamation-triangle"></i> Ver Casas Morosas
+                                <i class="fas fa-exclamation-triangle"></i> Morosas
                             </button>
                         </div>
                     </div>
@@ -531,6 +544,7 @@
                 <table class="table table-striped">
                     <thead class="table-dark">
                         <tr>
+                            <th>Plaza</th>
                             <th>Casa</th>
                             <th>Período</th>
                             <th>Tipo</th>
@@ -543,7 +557,7 @@
                         </tr>
                     </thead>
                     <tbody id="pagosTableBody">
-                        <tr><td colspan="9" class="text-center">Cargando pagos...</td></tr>
+                        <tr><td colspan="10" class="text-center">Cargando pagos...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -566,6 +580,12 @@
             <div class="card mb-3">
                 <div class="card-body">
                     <div class="row g-3">
+                        <div class="col-md-3">
+                            <label>Filtrar por Plaza</label>
+                            <select id="filterPlazaVehiculos" class="form-select" onchange="onPlazaVehiculosFilterChange()">
+                                <option value="">Todas las plazas</option>
+                            </select>
+                        </div>
                         <div class="col-md-3">
                             <label>Filtrar por Casa</label>
                             <select id="filterVehiculoCasa" class="form-select" onchange="loadVehiculos()">
@@ -604,6 +624,7 @@
                             <th>Color</th>
                             <th>Año</th>
                             <th>Tipo</th>
+                            <th>Plaza</th>
                             <th>Casa</th>
                             <th>Residente</th>
                             <th>Estado Morosidad</th>
@@ -612,7 +633,7 @@
                         </tr>
                     </thead>
                     <tbody id="vehiculosTableBody">
-                        <tr><td colspan="10" class="text-center">Cargando vehículos...</td></tr>
+                        <tr><td colspan="11" class="text-center">Cargando vehículos...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -1795,14 +1816,17 @@
                     loadResidentes();
                     break;
                 case 'mascotas':
+                    loadPlazasForFilter(); // Cargar plazas para filtros
                     loadCasas(); // Cargar casas para filtros y formulario
                     loadMascotas();
                     break;
                 case 'pagos':
+                    loadPlazasForFilter(); // Cargar plazas para filtros
                     loadCasas(); // Cargar casas para filtros y formulario
                     loadPagos();
                     break;
                 case 'vehiculos':
+                    loadPlazasForFilter(); // Cargar plazas para filtros
                     loadCasas(); // Cargar casas para filtros y formulario
                     loadVehiculos();
                     break;
@@ -3607,6 +3631,42 @@
                     filterSelectResidentes.appendChild(option);
                 });
             }
+            
+            // Actualizar filtro de Mascotas
+            const filterSelectMascotas = document.getElementById('filterPlazaMascotas');
+            if (filterSelectMascotas) {
+                filterSelectMascotas.innerHTML = '<option value="">Todas las plazas</option>';
+                plazasGlobal.forEach(plaza => {
+                    const option = document.createElement('option');
+                    option.value = plaza.id;
+                    option.textContent = plaza.nombre;
+                    filterSelectMascotas.appendChild(option);
+                });
+            }
+            
+            // Actualizar filtro de Pagos
+            const filterSelectPagos = document.getElementById('filterPlazaPagos');
+            if (filterSelectPagos) {
+                filterSelectPagos.innerHTML = '<option value="">Todas las plazas</option>';
+                plazasGlobal.forEach(plaza => {
+                    const option = document.createElement('option');
+                    option.value = plaza.id;
+                    option.textContent = plaza.nombre;
+                    filterSelectPagos.appendChild(option);
+                });
+            }
+            
+            // Actualizar filtro de Vehículos
+            const filterSelectVehiculos = document.getElementById('filterPlazaVehiculos');
+            if (filterSelectVehiculos) {
+                filterSelectVehiculos.innerHTML = '<option value="">Todas las plazas</option>';
+                plazasGlobal.forEach(plaza => {
+                    const option = document.createElement('option');
+                    option.value = plaza.id;
+                    option.textContent = plaza.nombre;
+                    filterSelectVehiculos.appendChild(option);
+                });
+            }
         }
 
         function renderCasasTable(casas) {
@@ -4214,6 +4274,33 @@
 
         // ==================== FUNCIONES DE MASCOTAS ====================
 
+        async function onPlazaMascotasFilterChange() {
+            const plazaId = document.getElementById('filterPlazaMascotas').value;
+            const casaSelect = document.getElementById('filterCasaMascotas');
+            
+            // Resetear selector de casas
+            casaSelect.innerHTML = '<option value="">Todas las casas</option>';
+            
+            if (plazaId) {
+                // Cargar casas de la plaza seleccionada
+                try {
+                    const response = await authenticatedFetch(`/api/casas?plaza_id=${plazaId}&activo=true`);
+                    if (!response) return;
+                    const data = await response.json();
+                    
+                    if (response.ok && data.success) {
+                        casaSelect.innerHTML = '<option value="">Todas las casas</option>' +
+                            data.data.map(c => `<option value="${c.id}">${c.direccion}</option>`).join('');
+                    }
+                } catch (error) {
+                    console.error('Error al cargar casas:', error);
+                }
+            }
+            
+            // Ejecutar búsqueda
+            loadMascotas();
+        }
+
         async function loadMascotas() {
             try {
                 const casaId = document.getElementById('filterCasaMascotas').value;
@@ -4243,7 +4330,7 @@
             } catch (error) {
                 console.error('Error al cargar mascotas:', error);
                 document.getElementById('mascotasTableBody').innerHTML = 
-                    '<tr><td colspan="9" class="text-center text-danger">Error al cargar mascotas</td></tr>';
+                    '<tr><td colspan="10" class="text-center text-danger">Error al cargar mascotas</td></tr>';
             }
         }
 
@@ -4251,7 +4338,7 @@
             const tbody = document.getElementById('mascotasTableBody');
             
             if (mascotas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" class="text-center">No hay mascotas registradas</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center">No hay mascotas registradas</td></tr>';
                 return;
             }
             
@@ -4268,7 +4355,8 @@
                         </td>
                         <td><span class="badge bg-secondary">${escapeHtml(mascota.tipo)}</span></td>
                         <td>${escapeHtml(mascota.raza || 'N/A')}</td>
-                        <td>${escapeHtml(mascota.numero_casa || 'N/A')}</td>
+                        <td><span class="badge bg-info">${escapeHtml(mascota.plaza_nombre || 'N/A')}</span></td>
+                        <td>${escapeHtml(mascota.casa_direccion || mascota.numero_casa || 'N/A')}</td>
                         <td>${duenoTexto}</td>
                         <td>${edad}</td>
                         <td>
@@ -4278,6 +4366,21 @@
                         </td>
                         <td>
                             <span class="badge ${mascota.activo ? 'bg-success' : 'bg-secondary'}">
+                                ${mascota.activo ? 'Activo' : 'Inactivo'}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-info me-1" onclick="showMascotaForm(${mascota.id})" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteMascota(${mascota.id}, '${escapeHtml(mascota.mascota_nombre)}')" title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
                                 ${mascota.activo ? 'Activo' : 'Inactivo'}
                             </span>
                         </td>
@@ -4718,6 +4821,33 @@
 
         // ==================== FUNCIONES DE PAGOS ====================
 
+        async function onPlazaPagosFilterChange() {
+            const plazaId = document.getElementById('filterPlazaPagos').value;
+            const casaSelect = document.getElementById('filterCasaPagos');
+            
+            // Resetear selector de casas
+            casaSelect.innerHTML = '<option value="">Todas las casas</option>';
+            
+            if (plazaId) {
+                // Cargar casas de la plaza seleccionada
+                try {
+                    const response = await authenticatedFetch(`/api/casas?plaza_id=${plazaId}&activo=true`);
+                    if (!response) return;
+                    const data = await response.json();
+                    
+                    if (response.ok && data.success) {
+                        casaSelect.innerHTML = '<option value="">Todas las casas</option>' +
+                            data.data.map(c => `<option value="${c.id}">${c.direccion}</option>`).join('');
+                    }
+                } catch (error) {
+                    console.error('Error al cargar casas:', error);
+                }
+            }
+            
+            // Ejecutar búsqueda
+            loadPagos();
+        }
+
         async function loadPagos() {
             try {
                 const casaId = document.getElementById('filterCasaPagos').value;
@@ -4748,7 +4878,7 @@
             } catch (error) {
                 console.error('Error al cargar pagos:', error);
                 document.getElementById('pagosTableBody').innerHTML = 
-                    '<tr><td colspan="9" class="text-center text-danger">Error al cargar pagos</td></tr>';
+                    '<tr><td colspan="10" class="text-center text-danger">Error al cargar pagos</td></tr>';
             }
         }
 
@@ -4756,7 +4886,7 @@
             const tbody = document.getElementById('pagosTableBody');
             
             if (pagos.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" class="text-center">No hay pagos registrados</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center">No hay pagos registrados</td></tr>';
                 return;
             }
             
@@ -4777,6 +4907,34 @@
                     : '<span class="text-muted">-</span>';
                     
                 const metodo = pago.metodo_pago || '<span class="text-muted">-</span>';
+                
+                const montoFormateado = '$' + formatCLP(pago.monto);
+                
+                const acciones = pago.estado === 'pendiente' || pago.estado === 'vencido'
+                    ? `<button class="btn btn-sm btn-success me-1" onclick="showRegistrarPagoForm(${pago.id}, '${escapeHtml(pago.numero_casa)}', '${pago.periodo}', '${pago.tipo_pago}', ${pago.monto})" title="Registrar Pago">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deletePago(${pago.id})" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>`
+                    : `<span class="text-muted">-</span>`;
+                
+                return `
+                    <tr>
+                        <td><span class="badge bg-info">${escapeHtml(pago.plaza_nombre || 'N/A')}</span></td>
+                        <td>${escapeHtml(pago.casa_direccion || pago.numero_casa || 'N/A')}</td>
+                        <td>${pago.periodo}</td>
+                        <td>${tipoBadge}</td>
+                        <td class="text-end"><strong>${montoFormateado}</strong></td>
+                        <td>${estadoBadge}</td>
+                        <td>${new Date(pago.fecha_vencimiento).toLocaleDateString('es-CL')}</td>
+                        <td>${fechaPago}</td>
+                        <td>${metodo}</td>
+                        <td>${acciones}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
                 
                 const montoFormateado = '$' + formatCLP(pago.monto);
                 
@@ -5303,6 +5461,33 @@
 
         // ========== FUNCIONES DE VEHÍCULOS ==========
 
+        async function onPlazaVehiculosFilterChange() {
+            const plazaId = document.getElementById('filterPlazaVehiculos').value;
+            const casaSelect = document.getElementById('filterVehiculoCasa');
+            
+            // Resetear selector de casas
+            casaSelect.innerHTML = '<option value="">Todas las casas</option>';
+            
+            if (plazaId) {
+                // Cargar casas de la plaza seleccionada
+                try {
+                    const response = await authenticatedFetch(`/api/casas?plaza_id=${plazaId}&activo=true`);
+                    if (!response) return;
+                    const data = await response.json();
+                    
+                    if (response.ok && data.success) {
+                        casaSelect.innerHTML = '<option value="">Todas las casas</option>' +
+                            data.data.map(c => `<option value="${c.id}">${c.direccion}</option>`).join('');
+                    }
+                } catch (error) {
+                    console.error('Error al cargar casas:', error);
+                }
+            }
+            
+            // Ejecutar búsqueda
+            loadVehiculos();
+        }
+
         async function loadVehiculos() {
             try {
                 const casaId = document.getElementById('filterVehiculoCasa').value;
@@ -5328,6 +5513,9 @@
             } catch (error) {
                 console.error('Error al cargar vehículos:', error);
                 document.getElementById('vehiculosTableBody').innerHTML = 
+                    '<tr><td colspan="11" class="text-center text-danger">Error al cargar vehículos</td></tr>';
+            }
+        } 
                     '<tr><td colspan="10" class="text-center text-danger">Error al cargar vehículos</td></tr>';
             }
         }
@@ -5336,7 +5524,7 @@
             const tbody = document.getElementById('vehiculosTableBody');
             
             if (vehiculos.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10" class="text-center">No hay vehículos registrados</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="11" class="text-center">No hay vehículos registrados</td></tr>';
                 return;
             }
             
@@ -5363,10 +5551,11 @@
                         <td>${v.color || '-'}</td>
                         <td>${v.anio || '-'}</td>
                         <td><span class="badge bg-secondary">${v.tipo}</span></td>
-                        <td>${v.casa_direccion}</td>
+                        <td><span class="badge bg-info">${escapeHtml(v.plaza_nombre || 'N/A')}</span></td>
+                        <td>${escapeHtml(v.casa_direccion || v.numero_casa || 'N/A')}</td>
                         <td>
                             ${v.residente_nombre}
-                            ${v.residente_rut ? `<br><small class="text-muted">${v.residente_rut}</small>` : ''}
+                            ${v.residente_run ? `<br><small class="text-muted">${v.residente_run}</small>` : ''}
                         </td>
                         <td>
                             ${estadoMorosidadBadge[v.estado_morosidad] || '-'}
