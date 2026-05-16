@@ -16,7 +16,7 @@ router.get('/plazas', async (req, res) => {
     
     res.json({
       success: true,
-      plazas: plazas
+      data: plazas
     });
   } catch (error) {
     console.error('Error obteniendo plazas:', error);
