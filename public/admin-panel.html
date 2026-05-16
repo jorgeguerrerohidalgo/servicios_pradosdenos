@@ -4327,6 +4327,12 @@
                                 data.data.map(casa => 
                                     `<option value="${casa.id}">${casa.direccion}</option>`
                                 ).join('');
+                            
+                            // Agregar event listener para cargar residentes cuando se selecciona una casa
+                            selectCasa.onchange = function() {
+                                console.log('🔔 Casa seleccionada - disparando loadResidentesPorCasa()');
+                                loadResidentesPorCasa();
+                            };
                         } else {
                             console.log('⚠️ No hay casas en esta plaza');
                             selectCasa.disabled = true;
