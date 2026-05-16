@@ -4330,11 +4330,49 @@
                             
                             // Agregar event listener para cargar residentes cuando se selecciona una casa
                             selectCasa.onchange = async function() {
-                                console.log('🔔 Casa seleccionada - disparando loadResidentesPorCasa()');
+                                console.log('🔔 Casa seleccionada - disparando carga de residentes');
+                                const casaId = this.value;
+                                const selectResidente = document.getElementById('mascotaResidente');
+                                
+                                console.log('🏠 Casa ID seleccionado:', casaId);
+                                
+                                if (!casaId) {
+                                    console.log('⚠️ No hay casa_id');
+                                    selectResidente.disabled = true;
+                                    selectResidente.innerHTML = '<option value="">Primero seleccione casa...</option>';
+                                    return;
+                                }
+                                
                                 try {
-                                    await loadResidentesPorCasa();
+                                    console.log(`📡 Consultando residentes: /api/residentes/casa/${casaId}`);
+                                    const response = await authenticatedFetch(`/api/residentes/casa/${casaId}`);
+                                    console.log('📥 Respuesta recibida:', response ? response.status : 'null');
+                                    
+                                    if (response && response.ok) {
+                                        const data = await response.json();
+                                        console.log('📊 Datos de residentes:', data);
+                                        
+                                        if (data.success && data.data.length > 0) {
+                                            console.log(`✅ ${data.data.length} residentes encontrados`);
+                                            selectResidente.disabled = false;
+                                            selectResidente.innerHTML = '<option value="">Seleccione un residente...</option>' +
+                                                data.data.map(residente => 
+                                                    `<option value="${residente.id}">${residente.nombre} ${residente.apellido_paterno}</option>`
+                                                ).join('');
+                                        } else {
+                                            console.log('⚠️ No hay residentes en esta casa');
+                                            selectResidente.disabled = true;
+                                            selectResidente.innerHTML = '<option value="">No hay residentes en esta casa</option>';
+                                        }
+                                    } else {
+                                        console.error('❌ Respuesta no OK:', response ? response.status : 'null');
+                                        selectResidente.disabled = true;
+                                        selectResidente.innerHTML = '<option value="">Error al cargar residentes</option>';
+                                    }
                                 } catch (error) {
-                                    console.error('❌ Error en event listener onchange:', error);
+                                    console.error('❌ ERROR al cargar residentes:', error);
+                                    selectResidente.disabled = true;
+                                    selectResidente.innerHTML = '<option value="">Error al cargar residentes</option>';
                                 }
                             };
                         } else {
