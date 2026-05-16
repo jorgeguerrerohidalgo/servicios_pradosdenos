@@ -809,18 +809,55 @@
                     <form id="residenteForm">
                         <input type="hidden" id="residenteId">
                         
+                        <!-- Paso 1: Seleccionar Plaza -->
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="residentePlaza" class="form-label">
+                                    <span class="badge bg-primary me-2">Paso 1</span>
+                                    Plaza <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="residentePlaza" required onchange="loadCasasPorPlaza()">
+                                    <option value="">Seleccione primero una plaza...</option>
+                                </select>
+                                <small class="text-muted">Seleccione la plaza donde está la casa</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Paso 2: Seleccionar Casa (se habilita después de seleccionar plaza) -->
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="residenteCasa" class="form-label">
+                                    <span class="badge bg-secondary me-2">Paso 2</span>
+                                    Casa <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="residenteCasa" required disabled>
+                                    <option value="">Primero seleccione una plaza...</option>
+                                </select>
+                                <small class="text-muted" id="casaDireccionHint">Se mostrará la dirección de la casa seleccionada</small>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        <h6 class="text-muted mb-3">
+                            <span class="badge bg-success me-2">Paso 3</span>
+                            Datos del Residente
+                        </h6>
+                        
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="residenteCasa" class="form-label">Casa <span class="text-danger">*</span></label>
-                                <select class="form-select" id="residenteCasa" required>
-                                    <option value="">Seleccione una casa...</option>
-                                </select>
+                                <label for="residenteRun" class="form-label">RUN <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="residenteRun" required 
+                                       placeholder="12345678-9" maxlength="12"
+                                       oninput="formatearRUN(this)" onblur="validarRUN(this)">
+                                <small class="text-muted">Formato: 12345678-9 (sin puntos)</small>
+                                <div class="invalid-feedback" id="runError">
+                                    RUN inválido. Verifique el dígito verificador.
+                                </div>
                             </div>
                             
                             <div class="col-md-6 mb-3">
-                                <label for="residenteRun" class="form-label">RUN <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="residenteRun" required placeholder="12345678-9" maxlength="12">
-                                <small class="text-muted">Formato: 12345678-9 (sin puntos)</small>
+                                <label for="residenteFechaNacimiento" class="form-label">Fecha de Nacimiento <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="residenteFechaNacimiento" required>
                             </div>
                         </div>
                         
@@ -3699,24 +3736,20 @@
             document.getElementById('residenteId').value = '';
             document.getElementById('residenteModalTitle').textContent = residenteId ? 'Editar Residente' : 'Nuevo Residente';
             
-            // Cargar casas en el dropdown
+            // Deshabilitar selector de casa hasta que se seleccione plaza
+            document.getElementById('residenteCasa').disabled = true;
+            document.getElementById('residenteCasa').innerHTML = '<option value="">Primero seleccione una plaza...</option>';
+            
+            // Cargar plazas en el dropdown
             try {
-                const response = await authenticatedFetch('/api/casas/simple');
-                if (response && response.ok) {
-                    const data = await response.json();
-                    if (data.success) {
-                        const selectCasa = document.getElementById('residenteCasa');
-                        selectCasa.innerHTML = '<option value="">Seleccione una casa...</option>' +
-                            data.data.map(casa => `<option value="${casa.id}">${casa.numero_casa}</option>`).join('');
-                        
-                        // Poblar el filtro de casas también
-                        const filterCasa = document.getElementById('filterCasaResidentes');
-                        filterCasa.innerHTML = '<option value="">Todas las casas</option>' +
-                            data.data.map(casa => `<option value="${casa.id}">${casa.numero_casa}</option>`).join('');
-                    }
-                }
+                await loadPlazasForFilter();
+                const selectPlaza = document.getElementById('residentePlaza');
+                selectPlaza.innerHTML = '<option value="">Seleccione primero una plaza...</option>' +
+                    plazasGlobal.filter(p => p.activo).map(plaza => 
+                        `<option value="${plaza.id}">${plaza.nombre}</option>`
+                    ).join('');
             } catch (error) {
-                console.error('Error al cargar casas:', error);
+                console.error('Error al cargar plazas:', error);
             }
             
             // Si es edición, cargar datos del residente
@@ -3728,6 +3761,13 @@
                         if (data.success && data.data.length > 0) {
                             const residente = data.data[0];
                             document.getElementById('residenteId').value = residente.id;
+                            
+                            // Cargar plaza de la casa
+                            if (residente.plaza_id) {
+                                document.getElementById('residentePlaza').value = residente.plaza_id;
+                                await loadCasasPorPlaza(); // Cargar casas de esa plaza
+                            }
+                            
                             document.getElementById('residenteCasa').value = residente.casa_id;
                             document.getElementById('residenteRun').value = residente.run;
                             document.getElementById('residenteNombre').value = residente.nombre;
@@ -3748,11 +3788,132 @@
             modal.show();
         }
 
+        // Nueva función para cargar casas filtradas por plaza
+        async function loadCasasPorPlaza() {
+            const plazaId = document.getElementById('residentePlaza').value;
+            const selectCasa = document.getElementById('residenteCasa');
+            
+            if (!plazaId) {
+                selectCasa.disabled = true;
+                selectCasa.innerHTML = '<option value="">Primero seleccione una plaza...</option>';
+                return;
+            }
+            
+            try {
+                const response = await authenticatedFetch(`/api/casas?plaza_id=${plazaId}&activo=true`);
+                if (response && response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.data.length > 0) {
+                        selectCasa.disabled = false;
+                        selectCasa.innerHTML = '<option value="">Seleccione una casa...</option>' +
+                            data.data.map(casa => 
+                                `<option value="${casa.id}">${casa.numero_casa} - ${casa.direccion}</option>`
+                            ).join('');
+                    } else {
+                        selectCasa.disabled = true;
+                        selectCasa.innerHTML = '<option value="">No hay casas en esta plaza</option>';
+                    }
+                }
+            } catch (error) {
+                console.error('Error al cargar casas:', error);
+                selectCasa.disabled = true;
+                selectCasa.innerHTML = '<option value="">Error al cargar casas</option>';
+            }
+        }
+
+        // ==================== VALIDACIÓN DE RUN CHILENO ====================
+        
+        /**
+         * Formatea el RUN mientras se escribe (agrega guión automáticamente)
+         */
+        function formatearRUN(input) {
+            let run = input.value.replace(/[^0-9kK]/g, ''); // Solo números y K
+            
+            if (run.length > 1) {
+                const cuerpo = run.slice(0, -1);
+                const dv = run.slice(-1).toUpperCase();
+                run = cuerpo + '-' + dv;
+            }
+            
+            input.value = run;
+        }
+        
+        /**
+         * Calcula el dígito verificador de un RUN
+         * @param {string} run - RUN sin dígito verificador
+         * @returns {string} - Dígito verificador ('0'-'9' o 'K')
+         */
+        function calcularDV(run) {
+            let suma = 0;
+            let multiplicador = 2;
+            
+            // Calcular suma según algoritmo módulo 11
+            for (let i = run.length - 1; i >= 0; i--) {
+                suma += parseInt(run[i]) * multiplicador;
+                multiplicador = multiplicador === 7 ? 2 : multiplicador + 1;
+            }
+            
+            const resto = suma % 11;
+            const dv = 11 - resto;
+            
+            if (dv === 11) return '0';
+            if (dv === 10) return 'K';
+            return dv.toString();
+        }
+        
+        /**
+         * Valida un RUN chileno completo (con dígito verificador)
+         * @param {HTMLInputElement} input - Input del RUN
+         * @returns {boolean} - true si el RUN es válido
+         */
+        function validarRUN(input) {
+            const run = input.value.trim();
+            const runError = document.getElementById('runError');
+            
+            // Validar formato básico
+            if (!run || !/^\d{1,8}-[\dkK]$/.test(run)) {
+                input.classList.add('is-invalid');
+                input.classList.remove('is-valid');
+                runError.textContent = 'Formato inválido. Use: 12345678-9';
+                return false;
+            }
+            
+            // Separar cuerpo y dígito verificador
+            const [cuerpo, dvIngresado] = run.split('-');
+            const dvCalculado = calcularDV(cuerpo);
+            
+            // Validar dígito verificador
+            if (dvIngresado.toUpperCase() !== dvCalculado) {
+                input.classList.add('is-invalid');
+                input.classList.remove('is-valid');
+                runError.textContent = `RUN inválido. El dígito verificador debería ser: ${dvCalculado}`;
+                return false;
+            }
+            
+            // RUN válido
+            input.classList.remove('is-invalid');
+            input.classList.add('is-valid');
+            return true;
+        }
+
         async function saveResidente() {
             const form = document.getElementById('residenteForm');
+            const runInput = document.getElementById('residenteRun');
             
+            // Validar formulario básico
             if (!form.checkValidity()) {
                 form.reportValidity();
+                return;
+            }
+            
+            // Validar RUN chileno
+            if (!validarRUN(runInput)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'RUN inválido',
+                    text: 'Por favor, ingrese un RUN válido con su dígito verificador correcto.'
+                });
+                runInput.focus();
                 return;
             }
             
