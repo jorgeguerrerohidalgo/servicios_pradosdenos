@@ -16,10 +16,13 @@
             left: 0;
             width: 250px;
             z-index: 1000;
+            transition: transform 0.3s ease;
+            overflow-y: auto;
         }
         .content {
             margin-left: 250px;
             padding: 20px;
+            transition: margin-left 0.3s ease;
         }
         .section-hidden {
             display: none;
@@ -51,9 +54,177 @@
             overflow: hidden;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+        
+        /* Botón hamburguesa para móviles */
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1001;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 15px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .menu-toggle:hover {
+            transform: scale(1.05);
+        }
+        
+        /* Overlay para cerrar sidebar en móvil */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        
+        /* Responsive - Tablets y móviles */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .sidebar-overlay.active {
+                display: block;
+            }
+            
+            .content {
+                margin-left: 0;
+                padding: 70px 15px 15px 15px;
+            }
+            
+            .menu-toggle {
+                display: block;
+            }
+            
+            /* Ajustar tamaño de cards en tablets */
+            .stats-card {
+                padding: 15px;
+            }
+            
+            .stats-card h3 {
+                font-size: 1.5rem;
+            }
+            
+            /* Hacer tablas scrollables horizontalmente */
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            /* Reducir padding de botones */
+            .btn-sm {
+                padding: 0.15rem 0.3rem;
+                font-size: 0.75rem;
+            }
+        }
+        
+        /* Responsive - Móviles pequeños */
+        @media (max-width: 576px) {
+            .content {
+                padding: 70px 10px 10px 10px;
+            }
+            
+            /* Cards en columna completa */
+            .stats-card {
+                padding: 12px;
+                margin-bottom: 15px;
+            }
+            
+            .stats-card h3 {
+                font-size: 1.3rem;
+            }
+            
+            .stats-card p {
+                font-size: 0.85rem;
+            }
+            
+            /* Ajustar filtros para móvil */
+            .row.mb-3 .col-md-2,
+            .row.mb-3 .col-md-3,
+            .row.mb-3 .col-md-4 {
+                margin-bottom: 10px;
+            }
+            
+            /* Botones más pequeños en móvil */
+            .btn {
+                font-size: 0.85rem;
+                padding: 0.4rem 0.7rem;
+            }
+            
+            .btn-sm {
+                padding: 0.2rem 0.4rem;
+                font-size: 0.7rem;
+            }
+            
+            /* Ajustar encabezados */
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            h3 {
+                font-size: 1.2rem;
+            }
+            
+            /* Tablas más compactas */
+            .table {
+                font-size: 0.85rem;
+            }
+            
+            .table th,
+            .table td {
+                padding: 0.4rem;
+            }
+            
+            /* Modales ajustados */
+            .modal-dialog {
+                margin: 0.5rem;
+            }
+            
+            /* Formularios más compactos */
+            .form-label {
+                font-size: 0.9rem;
+                margin-bottom: 0.3rem;
+            }
+            
+            .form-control,
+            .form-select {
+                font-size: 0.9rem;
+                padding: 0.4rem 0.6rem;
+            }
+        }
+        
+        /* Mejorar visualización de badges en móvil */
+        @media (max-width: 768px) {
+            .badge {
+                font-size: 0.7rem;
+                padding: 0.25em 0.5em;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Botón menú hamburguesa para móviles -->
+    <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Abrir menú">
+        <i class="fas fa-bars fa-lg"></i>
+    </button>
+    
+    <!-- Overlay para cerrar sidebar en móvil -->
+    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+    
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="p-4">
@@ -4935,33 +5106,6 @@
                 `;
             }).join('');
         }
-                
-                const montoFormateado = '$' + formatCLP(pago.monto);
-                
-                const acciones = pago.estado === 'pendiente' || pago.estado === 'vencido'
-                    ? `<button class="btn btn-sm btn-success me-1" onclick="showRegistrarPagoForm(${pago.id}, '${escapeHtml(pago.numero_casa)}', '${pago.periodo}', '${pago.tipo_pago}', ${pago.monto})" title="Registrar Pago">
-                            <i class="fas fa-check"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="deletePago(${pago.id})" title="Eliminar">
-                            <i class="fas fa-trash"></i>
-                        </button>`
-                    : `<span class="text-muted">-</span>`;
-                
-                return `
-                    <tr>
-                        <td>${escapeHtml(pago.numero_casa)}</td>
-                        <td>${pago.periodo}</td>
-                        <td>${tipoBadge}</td>
-                        <td class="text-end"><strong>${montoFormateado}</strong></td>
-                        <td>${estadoBadge}</td>
-                        <td>${new Date(pago.fecha_vencimiento).toLocaleDateString('es-CL')}</td>
-                        <td>${fechaPago}</td>
-                        <td>${metodo}</td>
-                        <td>${acciones}</td>
-                    </tr>
-                `;
-            }).join('');
-        }
 
         // Variable global para almacenar montos de la casa seleccionada
         let casaMontos = {
@@ -6301,6 +6445,36 @@
                 });
             }
         }
+
+        // ==================== FUNCIONES DE NAVEGACIÓN MÓVIL ====================
+        
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+        
+        function closeSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        }
+        
+        // Cerrar sidebar al hacer click en un enlace (solo en móvil)
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('.sidebar .nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 992) {
+                        closeSidebar();
+                    }
+                });
+            });
+        });
 
         async function logout() {
             try {
