@@ -8,7 +8,7 @@ const { requireAuth, requireAdmin, requireAuthAdmin } = require('../middleware/s
 // GET /api/residentes - Obtener todos los residentes (requiere autenticación admin)
 router.get('/', requireAuthAdmin, async (req, res) => {
     try {
-        const { casa_id, activo = 'true', search } = req.query;
+        const { plaza_id, casa_id, activo = 'true', search } = req.query;
         
         let sql = `
             SELECT 
@@ -48,6 +48,10 @@ router.get('/', requireAuthAdmin, async (req, res) => {
             paramCount++;
             sql += ` AND r.casa_id = $${paramCount}`;
             params.push(casa_id);
+        } else if (plaza_id) {
+            paramCount++;
+            sql += ` AND c.plaza_id = $${paramCount}`;
+            params.push(plaza_id);
         }
         
         if (search) {

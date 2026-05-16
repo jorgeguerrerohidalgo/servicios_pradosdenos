@@ -21,16 +21,20 @@ router.use(requireAuthAdmin);
  */
 router.get('/', async (req, res) => {
     try {
-        const { casa_id, periodo, tipo_pago, estado, activo = 'true' } = req.query;
+        const { plaza_id, casa_id, periodo, tipo_pago, estado, activo = 'true' } = req.query;
         
         let query = 'SELECT * FROM v_pagos_completo WHERE 1=1';
         const params = [];
         let paramCount = 1;
         
-        // Filtro por casa
+        // Filtro por casa (prioridad sobre plaza)
         if (casa_id) {
             query += ` AND casa_id = $${paramCount}`;
             params.push(parseInt(casa_id));
+            paramCount++;
+        } else if (plaza_id) {
+            query += ` AND plaza_id = $${paramCount}`;
+            params.push(parseInt(plaza_id));
             paramCount++;
         }
         

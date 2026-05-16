@@ -4093,12 +4093,17 @@
 
         async function loadResidentes() {
             try {
+                const plazaId = document.getElementById('filterPlazaResidentes').value;
                 const casaId = document.getElementById('filterCasaResidentes').value;
                 const activo = document.getElementById('filterActivoResidentes').value;
                 const search = document.getElementById('searchResidentes').value;
                 
                 const params = new URLSearchParams();
-                if (casaId) params.append('casa_id', casaId);
+                if (casaId) {
+                    params.append('casa_id', casaId);
+                } else if (plazaId) {
+                    params.append('plaza_id', plazaId);
+                }
                 if (activo !== 'all') params.append('activo', activo);
                 if (search) params.append('search', search);
                 
@@ -4476,6 +4481,7 @@
 
         async function loadMascotas() {
             try {
+                const plazaId = document.getElementById('filterPlazaMascotas').value;
                 const casaId = document.getElementById('filterCasaMascotas').value;
                 const tipo = document.getElementById('filterTipoMascotas').value;
                 const certificado = document.getElementById('filterCertificadoMascotas').value;
@@ -4483,7 +4489,11 @@
                 const search = document.getElementById('searchMascotas').value;
                 
                 const params = new URLSearchParams();
-                if (casaId) params.append('casa_id', casaId);
+                if (casaId) {
+                    params.append('casa_id', casaId);
+                } else if (plazaId) {
+                    params.append('plaza_id', plazaId);
+                }
                 if (tipo !== 'all') params.append('tipo', tipo);
                 if (certificado !== 'all') params.append('certificado_vacunas', certificado);
                 if (activo !== 'all') params.append('activo', activo);
@@ -5009,6 +5019,7 @@
 
         async function loadPagos() {
             try {
+                const plazaId = document.getElementById('filterPlazaPagos').value;
                 const casaId = document.getElementById('filterCasaPagos').value;
                 const periodoInput = document.getElementById('filterPeriodoPagos').value;
                 const tipo = document.getElementById('filterTipoPagos').value;
@@ -5018,7 +5029,11 @@
                 const periodo = periodoInput ? periodoInput : '';
                 
                 const params = new URLSearchParams();
-                if (casaId) params.append('casa_id', casaId);
+                if (casaId) {
+                    params.append('casa_id', casaId);
+                } else if (plazaId) {
+                    params.append('plaza_id', plazaId);
+                }
                 if (periodo) params.append('periodo', periodo);
                 if (tipo !== 'all') params.append('tipo_pago', tipo);
                 if (estado !== 'all') params.append('estado', estado);
@@ -5623,12 +5638,17 @@
 
         async function loadVehiculos() {
             try {
+                const plazaId = document.getElementById('filterPlazaVehiculos').value;
                 const casaId = document.getElementById('filterVehiculoCasa').value;
                 const tipo = document.getElementById('filterVehiculoTipo').value;
                 const activo = document.getElementById('filterVehiculoActivo').value;
                 
                 const params = new URLSearchParams();
-                if (casaId) params.append('casa_id', casaId);
+                if (casaId) {
+                    params.append('casa_id', casaId);
+                } else if (plazaId) {
+                    params.append('plaza_id', plazaId);
+                }
                 if (tipo) params.append('tipo', tipo);
                 if (activo) params.append('activo', activo);
                 

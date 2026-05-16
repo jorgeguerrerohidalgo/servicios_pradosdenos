@@ -19,7 +19,7 @@ router.use(requireAuthAdmin);
  */
 router.get('/', async (req, res) => {
     try {
-        const { casa_id, tipo, activo, residente_id } = req.query;
+        const { plaza_id, casa_id, tipo, activo, residente_id } = req.query;
         
         let query = `
             SELECT 
@@ -51,9 +51,14 @@ router.get('/', async (req, res) => {
         const params = [];
         let paramCount = 1;
         
+        // Filtro por casa (prioridad sobre plaza)
         if (casa_id) {
             query += ` AND casa_id = $${paramCount}`;
             params.push(casa_id);
+            paramCount++;
+        } else if (plaza_id) {
+            query += ` AND plaza_id = $${paramCount}`;
+            params.push(plaza_id);
             paramCount++;
         }
         
