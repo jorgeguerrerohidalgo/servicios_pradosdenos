@@ -4362,21 +4362,22 @@
                 if (response && response.ok) {
                     const data = await response.json();
                     if (data.success) {
-                selectResidente.disabled = false;
-                selectResidente.innerHTML = '<option value="">Seleccione un residente...</option>' +
-                    data.data.map(residente => 
-                        `<option value="${residente.id}">${residente.nombre} ${residente.apellido_paterno}</option>`
-                    ).join('');
-            } else {
+                        selectResidente.disabled = false;
+                        selectResidente.innerHTML = '<option value="">Seleccione un residente...</option>' +
+                            data.data.map(residente => 
+                                `<option value="${residente.id}">${residente.nombre} ${residente.apellido_paterno}</option>`
+                            ).join('');
+                    } else {
+                        selectResidente.disabled = true;
+                        selectResidente.innerHTML = '<option value="">No hay residentes en esta casa</option>';
+                    }
+                }
+            } catch (error) {
+                console.error('Error al cargar residentes por casa:', error);
                 selectResidente.disabled = true;
-                selectResidente.innerHTML = '<option value="">No hay residentes en esta casa</option>';
+                selectResidente.innerHTML = '<option value="">Error al cargar residentes</option>';
             }
-        } catch (error) {
-            console.error('Error al cargar residentes por casa:', error);
-            selectResidente.disabled = true;
-            selectResidente.innerHTML = '<option value="">Error al cargar residentes</option>';
         }
-    }
 
     async function saveMascota() {
         const form = document.getElementById('mascotaForm');
