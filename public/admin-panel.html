@@ -1684,6 +1684,24 @@
         let guardiasGlobal = [];
         let adminsGlobal = [];
 
+        // ==================== FUNCIONES DE FORMATO ====================
+        
+        /**
+         * Formatea un número como peso chileno (CLP)
+         * Formato: separador de miles con punto, sin decimales
+         * Ejemplo: 25000 -> "25.000"
+         */
+        function formatCLP(amount) {
+            if (amount === null || amount === undefined || isNaN(amount)) {
+                return '0';
+            }
+            return new Intl.NumberFormat('es-CL', {
+                style: 'decimal',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(Math.round(amount));
+        }
+
         // ==================== FUNCIONES DE NAVEGACIÓN ====================
         function hideAllSections() {
             const sections = ['dashboardSection', 'eventosSection', 'documentosSection', 'guardiasSection', 'plazasSection', 'adminsSection', 'casasSection', 'residentesSection', 'mascotasSection', 'pagosSection', 'vehiculosSection', 'accesoSection', 'reportesSection', 'qr-plazasSection', 'generar-tokensSection'];
@@ -3579,9 +3597,9 @@
                     <td><strong>${casa.numero_casa}</strong></td>
                     <td>${casa.direccion}</td>
                     <td><span class="badge bg-info">${casa.plaza_nombre || 'N/A'}</span></td>
-                    <td class="text-end">$${parseInt(casa.monto_cuota_social || 0).toLocaleString('es-CL')}</td>
-                    <td class="text-end">$${parseInt(casa.monto_junta_vecinos || 0).toLocaleString('es-CL')}</td>
-                    <td class="text-end"><strong>$${parseInt(casa.monto_total_mensual || 0).toLocaleString('es-CL')}</strong></td>
+                    <td class="text-end">$${formatCLP(casa.monto_cuota_social || 0)}</td>
+                    <td class="text-end">$${formatCLP(casa.monto_junta_vecinos || 0)}</td>
+                    <td class="text-end"><strong>$${formatCLP(casa.monto_total_mensual || 0)}</strong></td>
                     <td class="text-center">
                         <span class="badge bg-secondary">${casa.total_residentes || 0}</span>
                     </td>
@@ -3664,7 +3682,7 @@
             const cuotaSocial = parseFloat(document.getElementById('casaMontoCuotaSocial').value) || 0;
             const juntaVecinos = parseFloat(document.getElementById('casaMontoJuntaVecinos').value) || 0;
             const total = cuotaSocial + juntaVecinos;
-            document.getElementById('casaMontoTotalPreview').textContent = total.toLocaleString('es-CL');
+            document.getElementById('casaMontoTotalPreview').textContent = formatCLP(total);
         }
 
         async function saveCasa() {
@@ -4707,10 +4725,7 @@
                     
                 const metodo = pago.metodo_pago || '<span class="text-muted">-</span>';
                 
-                const montoFormateado = new Intl.NumberFormat('es-CL', { 
-                    style: 'currency', 
-                    currency: 'CLP' 
-                }).format(pago.monto);
+                const montoFormateado = '$' + formatCLP(pago.monto);
                 
                 const acciones = pago.estado === 'pendiente' || pago.estado === 'vencido'
                     ? `<button class="btn btn-sm btn-success me-1" onclick="showRegistrarPagoForm(${pago.id}, '${escapeHtml(pago.numero_casa)}', '${pago.periodo}', '${pago.tipo_pago}', ${pago.monto})" title="Registrar Pago">
@@ -4854,8 +4869,8 @@
                     casaMontos.trimestral = casa.monto_junta_vecinos || 0;
                     
                     // Mostrar información de montos
-                    document.getElementById('pagoMontoMensualInfo').textContent = casaMontos.mensual.toLocaleString('es-CL');
-                    document.getElementById('pagoMontoTrimestralInfo').textContent = casaMontos.trimestral.toLocaleString('es-CL');
+                    document.getElementById('pagoMontoMensualInfo').textContent = formatCLP(casaMontos.mensual);
+                    document.getElementById('pagoMontoTrimestralInfo').textContent = formatCLP(casaMontos.trimestral);
                     montosInfo.style.display = 'block';
                     
                     // Si ya se seleccionó un tipo, actualizar el monto
@@ -5050,10 +5065,7 @@
             document.getElementById('registrarPagoId').value = pagoId;
             
             const tipoTexto = tipo === 'cuota_social' ? 'Cuota Social' : 'Junta de Vecinos';
-            const montoFormateado = new Intl.NumberFormat('es-CL', { 
-                style: 'currency', 
-                currency: 'CLP' 
-            }).format(monto);
+            const montoFormateado = '$' + formatCLP(monto);
             
             document.getElementById('registrarPagoInfo').innerHTML = `
                 <div class="alert alert-info">
@@ -5146,10 +5158,7 @@
                         tbody.innerHTML = '<tr><td colspan="4" class="text-center text-success"><i class="fas fa-check-circle me-2"></i>¡No hay casas morosas!</td></tr>';
                     } else {
                         tbody.innerHTML = data.data.map(casa => {
-                            const deuda = new Intl.NumberFormat('es-CL', { 
-                                style: 'currency', 
-                                currency: 'CLP' 
-                            }).format(casa.deuda_total);
+                            const deuda = '$' + formatCLP(casa.deuda_total);
                             
                             return `
                                 <tr>
@@ -5291,7 +5300,7 @@
                     : '<span class="badge bg-danger"><i class="fas fa-ban"></i> Bloqueado</span>';
                 
                 const deudaFormatted = v.deuda_total > 0 
-                    ? new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(v.deuda_total)
+                    ? '$' + formatCLP(v.deuda_total)
                     : '-';
                 
                 return `
@@ -5627,7 +5636,7 @@
                         tbody.innerHTML = '<tr><td colspan="6" class="text-center text-success"><i class="fas fa-check-circle"></i> No hay vehículos bloqueados</td></tr>';
                     } else {
                         tbody.innerHTML = data.data.map(v => {
-                            const deudaFormatted = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(v.deuda_total);
+                            const deudaFormatted = '$' + formatCLP(v.deuda_total);
                             return `
                                 <tr>
                                     <td><strong>${v.patente}</strong></td>
@@ -5721,7 +5730,7 @@
                     : '<span class="badge bg-success">Al Día</span>';
                 
                 const deudaFormatted = a.monto_deuda > 0
-                    ? new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(a.monto_deuda)
+                    ? '$' + formatCLP(a.monto_deuda)
                     : '-';
                 
                 const fechaFormatted = new Date(a.fecha_hora).toLocaleString('es-CL');
@@ -5799,7 +5808,7 @@
                                 <p><strong>Casa:</strong> ${acceso.numero_casa}</p>
                                 ${acceso.residente_nombre !== 'Sin residente asignado' ? `<p><strong>Residente:</strong> ${acceso.residente_nombre}</p>` : ''}
                                 <p><strong>Estado:</strong> ${acceso.acceso_permitido ? '<span class="badge bg-success">Permitido</span>' : '<span class="badge bg-danger">Bloqueado</span>'}</p>
-                                ${acceso.tiene_morosidad ? `<p class="text-warning"><i class="fas fa-exclamation-triangle"></i> Casa con morosidad (${new Intl.NumberFormat('es-CL', {style: 'currency', currency: 'CLP'}).format(acceso.monto_deuda)})</p>` : ''}
+                                ${acceso.tiene_morosidad ? `<p class="text-warning"><i class="fas fa-exclamation-triangle"></i> Casa con morosidad ($${formatCLP(acceso.monto_deuda)})</p>` : ''}
                                 ${acceso.motivo_bloqueo ? `<p class="text-danger"><strong>Motivo:</strong> ${acceso.motivo_bloqueo}</p>` : ''}
                             </div>
                         `,
@@ -5863,7 +5872,7 @@
                         : '<i class="fas fa-times-circle fa-3x text-danger"></i>';
                     
                     const deudaFormatted = verificacion.deuda > 0
-                        ? new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(verificacion.deuda)
+                        ? '$' + formatCLP(verificacion.deuda)
                         : '$0';
                     
                     resultadoDiv.innerHTML = `
