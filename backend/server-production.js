@@ -143,6 +143,31 @@ try {
   const eventosRoutes = require('./routes/eventos.routes');
   console.log('✅ eventos.routes importado');
   
+  // Importar rutas de módulos de gestión residencial
+  console.log('📦 Importando casas.routes...');
+  const casasRoutes = require('./routes/casas.routes');
+  console.log('✅ casas.routes importado');
+  
+  console.log('📦 Importando residentes.routes...');
+  const residentesRoutes = require('./routes/residentes.routes');
+  console.log('✅ residentes.routes importado');
+  
+  console.log('📦 Importando mascotas.routes...');
+  const mascotasRoutes = require('./routes/mascotas.routes');
+  console.log('✅ mascotas.routes importado');
+  
+  console.log('📦 Importando pagos.routes...');
+  const pagosRoutes = require('./routes/pagos.routes');
+  console.log('✅ pagos.routes importado');
+  
+  console.log('📦 Importando vehiculos.routes...');
+  const vehiculosRoutes = require('./routes/vehiculos.routes');
+  console.log('✅ vehiculos.routes importado');
+  
+  console.log('📦 Importando acceso.routes...');
+  const accesoRoutes = require('./routes/acceso.routes');
+  console.log('✅ acceso.routes importado');
+  
   console.log('✅ Todas las rutas importadas correctamente');
 
   // Configurar rutas EN EL ORDEN CORRECTO
@@ -154,6 +179,15 @@ try {
   app.use('/api/init', initRoutes);
   app.use('/api/documentos', documentosRoutes);
   app.use('/api/eventos', eventosRoutes);
+  
+  // Rutas de módulos de gestión residencial
+  app.use('/api/casas', casasRoutes);
+  app.use('/api/residentes', residentesRoutes);
+  app.use('/api/mascotas', mascotasRoutes);
+  app.use('/api/pagos', pagosRoutes);
+  app.use('/api/vehiculos', vehiculosRoutes);
+  app.use('/api/acceso', accesoRoutes);
+  
   app.use('/api', publicRoutes); // Para /api/plazas - DEBE IR AL FINAL
 
   console.log('✅ Rutas configuradas:');
@@ -164,6 +198,12 @@ try {
   console.log('  - /api/init (init.routes.js)');
   console.log('  - /api/documentos (documentos.routes.js)');
   console.log('  - /api/eventos (eventos.routes.js)');
+  console.log('  - /api/casas (casas.routes.js)');
+  console.log('  - /api/residentes (residentes.routes.js)');
+  console.log('  - /api/mascotas (mascotas.routes.js)');
+  console.log('  - /api/pagos (pagos.routes.js)');
+  console.log('  - /api/vehiculos (vehiculos.routes.js)');
+  console.log('  - /api/acceso (acceso.routes.js)');
   console.log('  - /api (public.routes.js) - CATCH-ALL al final');
 
   console.log('✅ Rutas configuradas correctamente');
