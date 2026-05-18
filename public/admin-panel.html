@@ -1901,6 +1901,32 @@
             }).format(Math.round(amount));
         }
 
+        /**
+         * Formatea una fecha para inputs de tipo date o datetime-local
+         * @param {string|Date} dateValue - Valor de fecha a formatear
+         * @param {string} type - Tipo de input: 'date' o 'datetime-local' (default: 'date')
+         * @returns {string} Fecha formateada o cadena vacía
+         * Ejemplos:
+         * - formatDateForInput('2024-05-15T00:00:00.000Z', 'date') -> '2024-05-15'
+         * - formatDateForInput('2024-05-15T14:30:00.000Z', 'datetime-local') -> '2024-05-15T14:30'
+         */
+        function formatDateForInput(dateValue, type = 'date') {
+            if (!dateValue) return '';
+            try {
+                const date = new Date(dateValue);
+                if (isNaN(date.getTime())) return '';
+                
+                if (type === 'datetime-local') {
+                    return date.toISOString().slice(0, 16);
+                } else {
+                    return date.toISOString().split('T')[0];
+                }
+            } catch (error) {
+                console.error('Error al formatear fecha:', error);
+                return '';
+            }
+        }
+
         // ==================== FUNCIONES DE NAVEGACIÓN ====================
         function hideAllSections() {
             const sections = ['dashboardSection', 'eventosSection', 'documentosSection', 'guardiasSection', 'plazasSection', 'adminsSection', 'casasSection', 'residentesSection', 'mascotasSection', 'pagosSection', 'vehiculosSection', 'accesoSection', 'reportesSection', 'qr-plazasSection', 'generar-tokensSection'];
@@ -4207,7 +4233,7 @@
                             document.getElementById('residenteNombre').value = residente.nombre;
                             document.getElementById('residenteApellidoPaterno').value = residente.apellido_paterno;
                             document.getElementById('residenteApellidoMaterno').value = residente.apellido_materno || '';
-                            document.getElementById('residenteFechaNacimiento').value = residente.fecha_nacimiento;
+                            document.getElementById('residenteFechaNacimiento').value = formatDateForInput(residente.fecha_nacimiento);
                             document.getElementById('residenteEmail').value = residente.email || '';
                             document.getElementById('residenteTelefono').value = residente.telefono || '';
                         }
@@ -4620,10 +4646,10 @@
                             document.getElementById('mascotaNombre').value = mascota.mascota_nombre;
                             document.getElementById('mascotaTipo').value = mascota.tipo;
                             document.getElementById('mascotaRaza').value = mascota.raza || '';
-                            document.getElementById('mascotaFechaNacimiento').value = mascota.fecha_nacimiento || '';
+                            document.getElementById('mascotaFechaNacimiento').value = formatDateForInput(mascota.fecha_nacimiento);
                             document.getElementById('mascotaGenero').value = mascota.genero || '';
                             document.getElementById('mascotaColor').value = mascota.color || '';
-                            document.getElementById('mascotaFechaVacuna').value = mascota.fecha_ultima_vacuna || '';
+                            document.getElementById('mascotaFechaVacuna').value = formatDateForInput(mascota.fecha_ultima_vacuna);
                             document.getElementById('mascotaCertificado').checked = mascota.certificado_vacunas || false;
                             document.getElementById('mascotaFoto').value = mascota.foto_url || '';
                             document.getElementById('mascotaObservaciones').value = mascota.observaciones || '';
