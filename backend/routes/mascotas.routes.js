@@ -196,6 +196,42 @@ router.get('/vacunas/vencidas', async (req, res) => {
     }
 });
 
+// ==================== GET: Obtener mascota por ID ====================
+/**
+ * GET /api/mascotas/:id
+ * Obtiene una mascota específica por su ID
+ */
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const result = await pool.query(
+            'SELECT * FROM v_mascotas_completo WHERE id = $1',
+            [parseInt(id)]
+        );
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Mascota no encontrada'
+            });
+        }
+        
+        res.json({
+            success: true,
+            data: result.rows[0]
+        });
+        
+    } catch (error) {
+        console.error('Error al obtener mascota:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener mascota',
+            error: error.message
+        });
+    }
+});
+
 // ==================== POST: Crear mascota ====================
 /**
  * POST /api/mascotas

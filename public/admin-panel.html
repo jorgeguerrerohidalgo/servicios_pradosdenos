@@ -4189,11 +4189,11 @@
             // Si es edición, cargar datos del residente
             if (residenteId) {
                 try {
-                    const response = await authenticatedFetch(`/api/residentes?id=${residenteId}`);
+                    const response = await authenticatedFetch(`/api/residentes/${residenteId}`);
                     if (response && response.ok) {
                         const data = await response.json();
-                        if (data.success && data.data.length > 0) {
-                            const residente = data.data[0];
+                        if (data.success && data.data) {
+                            const residente = data.data;
                             document.getElementById('residenteId').value = residente.id;
                             
                             // Cargar plaza de la casa
@@ -4591,11 +4591,11 @@
             // Si es edición, cargar datos de la mascota
             if (mascotaId) {
                 try {
-                    const response = await authenticatedFetch(`/api/mascotas?id=${mascotaId}`);
+                    const response = await authenticatedFetch(`/api/mascotas/${mascotaId}`);
                     if (response && response.ok) {
                         const data = await response.json();
-                        if (data.success && data.data.length > 0) {
-                            const mascota = data.data[0];
+                        if (data.success && data.data) {
+                            const mascota = data.data;
                             document.getElementById('mascotaId').value = mascota.id;
                             
                             // Cargar plaza

@@ -173,6 +173,7 @@ router.get('/:id', requireAuthAdmin, async (req, res) => {
                 r.casa_id,
                 c.numero_casa,
                 c.direccion as casa_direccion,
+                c.plaza_id,
                 p.nombre as plaza_nombre,
                 r.nombre,
                 r.apellido_paterno,
