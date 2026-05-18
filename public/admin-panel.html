@@ -1249,9 +1249,54 @@
                         
                         <div class="row">
                             <div class="col-md-12 mb-3">
-                                <label for="mascotaFoto" class="form-label">Foto de la Mascota</label>
-                                <input type="text" class="form-control" id="mascotaFoto" placeholder="https://ejemplo.com/foto-mascota.jpg">
-                                <small class="text-muted">URL de la foto para identificar visualmente a la mascota</small>
+                                <label class="form-label">
+                                    <i class="fas fa-camera"></i> Foto de la Mascota
+                                </label>
+                                
+                                <!-- Preview de la foto -->
+                                <div id="mascotaFotoPreview" class="mb-3 text-center" style="display: none;">
+                                    <img id="mascotaFotoImg" 
+                                         src="" 
+                                         alt="Foto de mascota" 
+                                         class="img-thumbnail"
+                                         style="max-width: 250px; max-height: 250px; border-radius: 12px;">
+                                    <br>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-danger mt-2" 
+                                            onclick="removeMascotaFoto()">
+                                        <i class="fas fa-trash"></i> Eliminar foto
+                                    </button>
+                                </div>
+                                
+                                <!-- Input para subir foto -->
+                                <div class="input-group">
+                                    <input type="file" 
+                                           class="form-control" 
+                                           id="mascotaFotoFile" 
+                                           accept="image/jpeg,image/png,image/webp,image/gif"
+                                           onchange="previewMascotaPhoto(this)">
+                                    <label class="input-group-text" for="mascotaFotoFile">
+                                        <i class="fas fa-upload"></i>
+                                    </label>
+                                </div>
+                                
+                                <!-- Input oculto para URL -->
+                                <input type="hidden" id="mascotaFotoHidden">
+                                
+                                <!-- Indicador de progreso -->
+                                <div id="mascotaUploadProgress" class="mt-2" style="display: none;">
+                                    <div class="progress">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                             style="width: 100%">
+                                            Subiendo foto...
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle"></i> 
+                                    Formatos: JPG, PNG, WebP, GIF. Tamaño máximo: 3 MB
+                                </small>
                             </div>
                         </div>
                         
@@ -4651,7 +4696,10 @@
                             document.getElementById('mascotaColor').value = mascota.color || '';
                             document.getElementById('mascotaFechaVacuna').value = formatDateForInput(mascota.fecha_ultima_vacuna);
                             document.getElementById('mascotaCertificado').checked = mascota.certificado_vacunas || false;
-                            document.getElementById('mascotaFoto').value = mascota.foto_url || '';
+                            
+                            // Cargar foto si existe
+                            showMascotaFotoPreview(mascota.foto_url);
+                            
                             document.getElementById('mascotaObservaciones').value = mascota.observaciones || '';
                         }
                     }
@@ -4858,6 +4906,9 @@
         const mascotaId = document.getElementById('mascotaId').value;
         const esComunitaria = tipoRadio.value === 'comunitaria';
         
+        // Preparar datos básicos
+        let fotoURL = document.getElementById('mascotaFotoHidden').value || null;
+        
         const data = {
             plaza_id: parseInt(plazaId),
             nombre: document.getElementById('mascotaNombre').value.trim(),
@@ -4868,7 +4919,6 @@
             color: document.getElementById('mascotaColor').value.trim() || null,
             certificado_vacunas: document.getElementById('mascotaCertificado').checked,
             fecha_ultima_vacuna: document.getElementById('mascotaFechaVacuna').value || null,
-            foto_url: document.getElementById('mascotaFoto').value.trim() || null,
             observaciones: document.getElementById('mascotaObservaciones').value.trim() || null
         };
         
@@ -4897,6 +4947,46 @@
             
             data.casa_id = parseInt(casaId);
             data.residente_id = parseInt(residenteId);
+            
+            // ============================================
+            // SUBIR FOTO SI SE SELECCIONÓ UN ARCHIVO
+            // ============================================
+            const fileInput = document.getElementById('mascotaFotoFile');
+            if (fileInput.files.length > 0) {
+                try {
+                    // Mostrar indicador de progreso
+                    document.getElementById('mascotaUploadProgress').style.display = 'block';
+                    
+                    const file = fileInput.files[0];
+                    const effectiveMascotaId = mascotaId || `temp_${Date.now()}`;
+                    
+                    console.log('📸 Subiendo foto de mascota...');
+                    
+                    // Subir foto (reemplaza si existe una anterior)
+                    fotoURL = await replaceMascotaPhoto(
+                        file,
+                        fotoURL,
+                        effectiveMascotaId,
+                        data.casa_id,
+                        data.plaza_id
+                    );
+                    
+                    console.log('✅ Foto subida:', fotoURL);
+                    document.getElementById('mascotaUploadProgress').style.display = 'none';
+                    
+                } catch (error) {
+                    console.error('Error al subir foto:', error);
+                    document.getElementById('mascotaUploadProgress').style.display = 'none';
+                    
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error al subir foto',
+                        text: error.message || 'No se pudo subir la imagen'
+                    });
+                    return;
+                }
+            }
+            
         } else {
             // Mascota comunitaria: se necesita asociar a alguna casa de la plaza para cumplir constraint
             // Usaremos la primera casa activa de la plaza
@@ -4907,6 +4997,44 @@
                     if (casasData.success && casasData.data.length > 0) {
                         data.casa_id = casasData.data[0].id;
                         data.residente_id = null; // Comunitaria no tiene dueño
+                        
+                        // ============================================
+                        // SUBIR FOTO PARA MASCOTA COMUNITARIA
+                        // ============================================
+                        const fileInput = document.getElementById('mascotaFotoFile');
+                        if (fileInput.files.length > 0) {
+                            try {
+                                document.getElementById('mascotaUploadProgress').style.display = 'block';
+                                
+                                const file = fileInput.files[0];
+                                const effectiveMascotaId = mascotaId || `temp_${Date.now()}`;
+                                
+                                console.log('📸 Subiendo foto de mascota comunitaria...');
+                                
+                                fotoURL = await replaceMascotaPhoto(
+                                    file,
+                                    fotoURL,
+                                    effectiveMascotaId,
+                                    data.casa_id,
+                                    data.plaza_id
+                                );
+                                
+                                console.log('✅ Foto subida:', fotoURL);
+                                document.getElementById('mascotaUploadProgress').style.display = 'none';
+                                
+                            } catch (error) {
+                                console.error('Error al subir foto:', error);
+                                document.getElementById('mascotaUploadProgress').style.display = 'none';
+                                
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error al subir foto',
+                                    text: error.message || 'No se pudo subir la imagen'
+                                });
+                                return;
+                            }
+                        }
+                        
                     } else {
                         Swal.fire({
                             icon: 'error',
@@ -4926,6 +5054,9 @@
                 return;
             }
         }
+        
+        // Asignar URL de foto al objeto data
+        data.foto_url = fotoURL;
         
         try {
             const url = mascotaId ? `/api/mascotas/${mascotaId}` : '/api/mascotas';
@@ -6738,7 +6869,164 @@
         }, 3000);
     </script>
 
+    <!-- Supabase JS Client para Storage -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <!-- Bootstrap JS con Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // ==================== SUPABASE STORAGE PARA FOTOS DE MASCOTAS ====================
+        const SUPABASE_URL = 'https://ixttdxkelassioemefbo.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_B6bP3EBhjgdQTi4-G8CpyQ_546Qwed0';
+        const BUCKET_NAME = 'mascotas-fotos';
+        
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        /**
+         * Sube foto de mascota a Supabase Storage
+         */
+        async function uploadMascotaPhoto(file, mascotaId, casaId, plazaId) {
+            try {
+                // Validar tipo
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+                if (!allowedTypes.includes(file.type)) {
+                    throw new Error('Tipo de archivo no permitido. Use JPG, PNG, WebP o GIF.');
+                }
+                
+                // Validar tamaño (3 MB máximo)
+                const maxSize = 3 * 1024 * 1024;
+                if (file.size > maxSize) {
+                    throw new Error('La imagen no debe superar 3 MB.');
+                }
+                
+                // Generar nombre único
+                const timestamp = Date.now();
+                const extension = file.name.split('.').pop();
+                const fileName = `${plazaId}/${casaId}/${mascotaId}_${timestamp}.${extension}`;
+                
+                console.log('📤 Subiendo foto:', fileName);
+                
+                // Subir a Supabase Storage
+                const { data, error } = await supabaseClient.storage
+                    .from(BUCKET_NAME)
+                    .upload(fileName, file, {
+                        cacheControl: '3600',
+                        upsert: false
+                    });
+                
+                if (error) {
+                    console.error('Error al subir:', error);
+                    throw new Error(`Error al subir: ${error.message}`);
+                }
+                
+                // Obtener URL pública
+                const { data: urlData } = supabaseClient.storage
+                    .from(BUCKET_NAME)
+                    .getPublicUrl(fileName);
+                
+                const publicURL = urlData.publicUrl;
+                console.log('✅ Foto subida:', publicURL);
+                
+                return publicURL;
+                
+            } catch (error) {
+                console.error('Error en uploadMascotaPhoto:', error);
+                throw error;
+            }
+        }
+        
+        /**
+         * Elimina foto de Supabase Storage
+         */
+        async function deleteMascotaPhoto(photoURL) {
+            try {
+                if (!photoURL) return false;
+                
+                const urlParts = photoURL.split(`/storage/v1/object/public/${BUCKET_NAME}/`);
+                if (urlParts.length < 2) return false;
+                
+                const filePath = urlParts[1];
+                console.log('🗑️ Eliminando foto:', filePath);
+                
+                const { error } = await supabaseClient.storage
+                    .from(BUCKET_NAME)
+                    .remove([filePath]);
+                
+                if (error) {
+                    console.error('Error al eliminar:', error);
+                    return false;
+                }
+                
+                console.log('✅ Foto eliminada');
+                return true;
+                
+            } catch (error) {
+                console.error('Error en deleteMascotaPhoto:', error);
+                return false;
+            }
+        }
+        
+        /**
+         * Reemplaza foto existente
+         */
+        async function replaceMascotaPhoto(newFile, oldPhotoURL, mascotaId, casaId, plazaId) {
+            try {
+                // Subir nueva
+                const newURL = await uploadMascotaPhoto(newFile, mascotaId, casaId, plazaId);
+                
+                // Eliminar anterior (no falla si no se puede)
+                if (oldPhotoURL) {
+                    await deleteMascotaPhoto(oldPhotoURL).catch(err => 
+                        console.warn('No se pudo eliminar foto anterior:', err)
+                    );
+                }
+                
+                return newURL;
+                
+            } catch (error) {
+                console.error('Error en replaceMascotaPhoto:', error);
+                throw error;
+            }
+        }
+        
+        /**
+         * Preview de foto seleccionada
+         */
+        function previewMascotaPhoto(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('mascotaFotoImg').src = e.target.result;
+                    document.getElementById('mascotaFotoPreview').style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        
+        /**
+         * Mostrar foto existente
+         */
+        function showMascotaFotoPreview(photoURL) {
+            if (photoURL) {
+                document.getElementById('mascotaFotoImg').src = photoURL;
+                document.getElementById('mascotaFotoPreview').style.display = 'block';
+                document.getElementById('mascotaFotoHidden').value = photoURL;
+            } else {
+                document.getElementById('mascotaFotoPreview').style.display = 'none';
+                document.getElementById('mascotaFotoHidden').value = '';
+            }
+        }
+        
+        /**
+         * Eliminar preview
+         */
+        function removeMascotaFoto() {
+            document.getElementById('mascotaFotoPreview').style.display = 'none';
+            document.getElementById('mascotaFotoFile').value = '';
+            document.getElementById('mascotaFotoHidden').value = '';
+            document.getElementById('mascotaFotoImg').src = '';
+        }
+    </script>
 </body>
 </html>
