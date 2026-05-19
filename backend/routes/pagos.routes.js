@@ -190,19 +190,21 @@ router.get('/morosas', async (req, res) => {
                 c.numero_casa,
                 c.direccion,
                 pl.nombre as plaza_nombre,
+                -- Calcular vencidos en tiempo real (estado='vencido' O fecha ya pasó)
                 COALESCE(
                     (SELECT COUNT(*) 
                      FROM pagos p 
                      WHERE p.casa_id = c.id 
-                     AND p.estado = 'vencido' 
+                     AND (p.estado = 'vencido' OR (p.estado = 'pendiente' AND p.fecha_vencimiento < CURRENT_DATE))
                      AND p.activo = true), 
                     0
                 ) as pagos_vencidos,
+                -- Deuda total calculada en tiempo real
                 COALESCE(
                     (SELECT SUM(p.monto) 
                      FROM pagos p 
                      WHERE p.casa_id = c.id 
-                     AND p.estado = 'vencido' 
+                     AND (p.estado = 'vencido' OR (p.estado = 'pendiente' AND p.fecha_vencimiento < CURRENT_DATE))
                      AND p.activo = true), 
                     0
                 ) as deuda_total,
@@ -217,8 +219,12 @@ router.get('/morosas', async (req, res) => {
                 -- Casas sin ningún pago registrado
                 (SELECT COUNT(*) FROM pagos p WHERE p.casa_id = c.id AND p.activo = true) = 0
                 OR
-                -- Casas con pagos vencidos
-                (SELECT COUNT(*) FROM pagos p WHERE p.casa_id = c.id AND p.estado = 'vencido' AND p.activo = true) > 0
+                -- Casas con pagos vencidos (calculado en tiempo real)
+                (SELECT COUNT(*) 
+                 FROM pagos p 
+                 WHERE p.casa_id = c.id 
+                 AND (p.estado = 'vencido' OR (p.estado = 'pendiente' AND p.fecha_vencimiento < CURRENT_DATE))
+                 AND p.activo = true) > 0
             )
             ORDER BY total_pagos ASC, deuda_total DESC
         `);
