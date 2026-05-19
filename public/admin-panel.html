@@ -4702,21 +4702,53 @@
                                 await onTipoMascotaChange();
                                 await onMascotaPlazaChange();
                                 
-                                // Asignar casa y esperar a que cargue residentes
+                                // Asignar casa
                                 document.getElementById('mascotaCasa').value = mascota.casa_id;
                                 console.log('🏠 Casa asignada:', mascota.casa_id);
                                 
-                                await loadResidentesPorCasa();
-                                console.log('📋 Residentes cargados, esperando actualización DOM...');
+                                // Cargar residentes INLINE (no usar función externa para evitar scope issues)
+                                try {
+                                    console.log('🔄 Cargando residentes inline para casa_id:', mascota.casa_id);
+                                    const selectResidente = document.getElementById('mascotaResidente');
+                                    const response = await authenticatedFetch(`/api/residentes/casa/${mascota.casa_id}`);
+                                    
+                                    if (response && response.ok) {
+                                        const data = await response.json();
+                                        console.log('📥 Residentes recibidos:', data);
+                                        
+                                        if (data.success && data.data.length > 0) {
+                                            console.log(`✅ ${data.data.length} residentes encontrados para casa ${mascota.casa_id}`);
+                                            selectResidente.disabled = false;
+                                            selectResidente.innerHTML = '<option value="">Seleccione un residente...</option>' +
+                                                data.data.map(r => `<option value="${r.id}">${r.nombre} ${r.apellido_paterno}</option>`).join('');
+                                            
+                                            console.log('📋 Select de residentes poblado con', selectResidente.options.length, 'opciones');
+                                        } else {
+                                            console.warn('⚠️ No hay residentes en casa', mascota.casa_id);
+                                            selectResidente.innerHTML = '<option value="">No hay residentes</option>';
+                                        }
+                                    } else {
+                                        console.error('❌ Error al cargar residentes - Response status:', response?.status);
+                                    }
+                                } catch (error) {
+                                    console.error('❌ ERROR al cargar residentes inline:', error);
+                                }
                                 
-                                // IMPORTANTE: Esperar 200ms para que el DOM se actualice
-                                await new Promise(resolve => setTimeout(resolve, 200));
+                                // Esperar 300ms para que el DOM se actualice
+                                console.log('⏱️ Esperando 300ms para actualización del DOM...');
+                                await new Promise(resolve => setTimeout(resolve, 300));
                                 
                                 // Verificar que el select tenga opciones
                                 const selectResidente = document.getElementById('mascotaResidente');
                                 console.log('👥 Opciones disponibles en select de residentes:', selectResidente.options.length);
                                 
+                                // Mostrar todas las opciones disponibles
+                                for (let i = 0; i < selectResidente.options.length; i++) {
+                                    console.log(`   Opción ${i}:`, selectResidente.options[i].value, '-', selectResidente.options[i].text);
+                                }
+                                
                                 // Ahora sí asignar el residente
+                                console.log('🎯 Intentando asignar residente_id:', mascota.residente_id);
                                 document.getElementById('mascotaResidente').value = mascota.residente_id;
                                 
                                 // Verificar que se asignó correctamente
@@ -4724,7 +4756,10 @@
                                 if (valorAsignado == mascota.residente_id) {
                                     console.log('✅ Dueño asignado CORRECTAMENTE:', mascota.residente_id);
                                 } else {
-                                    console.error('❌ ERROR: No se pudo asignar dueño. Esperado:', mascota.residente_id, 'Actual:', valorAsignado);
+                                    console.error('❌ ERROR: No se pudo asignar dueño.');
+                                    console.error('   - Esperado:', mascota.residente_id);
+                                    console.error('   - Actual:', valorAsignado);
+                                    console.error('   - Verificar que exista opción con value =', mascota.residente_id);
                                 }
                             } else {
                                 document.getElementById('mascotaComunitaria').checked = true;
