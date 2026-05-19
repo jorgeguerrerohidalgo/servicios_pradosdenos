@@ -12,7 +12,7 @@ const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/sessionAuth');
 const { requirePermission, requireRole } = require('../middleware/rbac');
-const pool = require('../config/database');
+const { pool } = require('../utils/db');
 const { getUserPermissions, getUserRoles } = require('../utils/permissions');
 
 // ========================================

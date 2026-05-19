@@ -8,7 +8,7 @@
  * @date 19/05/2026
  */
 
-const pool = require('../config/database');
+const { pool } = require('./db');
 
 /**
  * Obtiene todos los permisos efectivos de un usuario
