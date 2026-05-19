@@ -215,6 +215,8 @@
             }
         }
     </style>
+    <!-- RBAC Helper -->
+    <script src="/js/rbac-helper.js"></script>
 </head>
 <body>
     <!-- Botón menú hamburguesa para móviles -->
@@ -277,6 +279,9 @@
             </a>
             <a class="nav-link" href="#" onclick="showSection('generar-tokens')">
                 <i class="fas fa-key me-2"></i> Generar Tokens
+            </a>
+            <a class="nav-link" href="#" onclick="showSection('roles')">
+                <i class="fas fa-user-lock me-2"></i> Gestión de Roles
             </a>
             <hr class="text-white">
             <a class="nav-link" href="#" onclick="logout()">
@@ -988,6 +993,193 @@
                         <button class="btn btn-primary" onclick="window.open('generar_tokens.html', '_blank')">
                             <i class="fas fa-external-link-alt me-2"></i>Abrir Generador de Tokens
                         </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección Gestión de Roles -->
+        <div id="rolesSection" class="section-hidden">
+            <h2><i class="fas fa-user-lock"></i> Gestión de Roles y Permisos</h2>
+            
+            <!-- Tabs -->
+            <ul class="nav nav-tabs mb-4" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="usuarios-roles-tab" data-bs-toggle="tab" data-bs-target="#usuarios-roles" type="button" role="tab">
+                        <i class="fas fa-users me-2"></i>Usuarios y Roles
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="matriz-permisos-tab" data-bs-toggle="tab" data-bs-target="#matriz-permisos" type="button" role="tab">
+                        <i class="fas fa-table me-2"></i>Matriz de Permisos
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="auditoria-tab" data-bs-toggle="tab" data-bs-target="#auditoria" type="button" role="tab">
+                        <i class="fas fa-history me-2"></i>Auditoría
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="roles-personalizados-tab" data-bs-toggle="tab" data-bs-target="#roles-personalizados" type="button" role="tab">
+                        <i class="fas fa-cogs me-2"></i>Roles Personalizados
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Tab 1: Usuarios y Roles -->
+                <div class="tab-pane fade show active" id="usuarios-roles" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="fas fa-users me-2"></i>Usuarios con Roles Asignados</h5>
+                            <button class="btn btn-sm btn-primary" onclick="refreshUsuariosConRoles()">
+                                <i class="fas fa-sync-alt me-1"></i>Actualizar
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-sm">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Usuario</th>
+                                            <th>Email</th>
+                                            <th>Roles Actuales</th>
+                                            <th>Alcance</th>
+                                            <th>Nivel</th>
+                                            <th>Último Cambio</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="usuariosRolesTableBody">
+                                        <tr><td colspan="7" class="text-center">Cargando...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Matriz de Permisos -->
+                <div class="tab-pane fade" id="matriz-permisos" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-table me-2"></i>Matriz de Permisos por Rol</h5>
+                            <small class="text-muted">Los roles del sistema (marcados con candado) no pueden ser editados</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Leyenda:</strong>
+                                <span class="badge bg-success ms-2">✓</span> Tiene permiso
+                                <span class="badge bg-secondary ms-2">—</span> Sin permiso
+                                <span class="badge bg-primary ms-2"><i class="fas fa-lock"></i></span> Rol del sistema
+                            </div>
+                            <div id="matrizPermisosContainer">
+                                <p class="text-center">Cargando matriz...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Auditoría -->
+                <div class="tab-pane fade" id="auditoria" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-history me-2"></i>Historial de Cambios de Permisos</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Filtros -->
+                            <div class="row mb-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Usuario Afectado</label>
+                                    <select class="form-select form-select-sm" id="filtroAuditoriaUsuario" onchange="loadAuditoria()">
+                                        <option value="">Todos</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Acción</label>
+                                    <select class="form-select form-select-sm" id="filtroAuditoriaAccion" onchange="loadAuditoria()">
+                                        <option value="">Todas</option>
+                                        <option value="asignar_rol">Asignar Rol</option>
+                                        <option value="revocar_rol">Revocar Rol</option>
+                                        <option value="crear_rol">Crear Rol</option>
+                                        <option value="eliminar_rol">Eliminar Rol</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Desde</label>
+                                    <input type="date" class="form-control form-control-sm" id="filtroAuditoriaDesde" onchange="loadAuditoria()">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Hasta</label>
+                                    <input type="date" class="form-control form-control-sm" id="filtroAuditoriaHasta" onchange="loadAuditoria()">
+                                </div>
+                            </div>
+
+                            <!-- Tabla de auditoría -->
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Fecha/Hora</th>
+                                            <th>Usuario Ejecutor</th>
+                                            <th>Acción</th>
+                                            <th>Usuario Afectado</th>
+                                            <th>Rol</th>
+                                            <th>Motivo</th>
+                                            <th>IP</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="auditoriaTableBody">
+                                        <tr><td colspan="7" class="text-center">Cargando...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Paginación -->
+                            <nav>
+                                <ul class="pagination pagination-sm justify-content-center" id="auditoriaPagination">
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 4: Roles Personalizados -->
+                <div class="tab-pane fade" id="roles-personalizados" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Administrar Roles Personalizados</h5>
+                            <button class="btn btn-sm btn-success" onclick="showCrearRolPersonalizadoModal()">
+                                <i class="fas fa-plus me-1"></i>Crear Rol Personalizado
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Importante:</strong> Los roles personalizados pueden ser editados o eliminados. 
+                                Los roles del sistema (Super Admin, Administrador, etc.) están protegidos y no pueden modificarse.
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Código</th>
+                                            <th>Nombre</th>
+                                            <th>Descripción</th>
+                                            <th>Nivel</th>
+                                            <th>Permisos</th>
+                                            <th>Sistema</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="rolesPersonalizadosTableBody">
+                                        <tr><td colspan="7" class="text-center">Cargando...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1889,6 +2081,126 @@
         </div>
     </div>
 
+    <!-- Modal Asignar/Revocar Rol -->
+    <div class="modal fade" id="asignarRolModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user-tag"></i> <span id="asignarRolModalTitle">Gestionar Roles</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h6 id="usuarioSeleccionadoNombre" class="mb-3"></h6>
+                    <input type="hidden" id="asignarRolUsuarioId">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Seleccionar Rol *</label>
+                        <select class="form-select" id="asignarRolRolId" required onchange="toggleScopeFields()">
+                            <option value="">Seleccione un rol...</option>
+                        </select>
+                    </div>
+
+                    <div id="scopeFields" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label">Tipo de Alcance</label>
+                            <select class="form-select" id="asignarRolScopeType" onchange="togglePlazaSelector()">
+                                <option value="">Global (Sin restricción)</option>
+                                <option value="plaza">Específico por Plaza</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="plazaSelectorDiv" style="display: none;">
+                            <label class="form-label">Seleccionar Plaza *</label>
+                            <select class="form-select" id="asignarRolPlazaId">
+                                <option value="">Seleccione una plaza...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Motivo del Cambio</label>
+                        <textarea class="form-control" id="asignarRolMotivo" rows="2" placeholder="Opcional: razón de la asignación"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="ejecutarAsignacionRol()">
+                        <i class="fas fa-check"></i> Asignar Rol
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Crear Rol Personalizado -->
+    <div class="modal fade" id="crearRolModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus-circle"></i> Crear Rol Personalizado
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="crearRolForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Código del Rol *</label>
+                                <input type="text" class="form-control" id="nuevoRolCodigo" required placeholder="ej: delegado_plaza">
+                                <small class="text-muted">Solo letras minúsculas, números y guiones bajos</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombre del Rol *</label>
+                                <input type="text" class="form-control" id="nuevoRolNombre" required placeholder="ej: Delegado de Plaza">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Descripción</label>
+                            <textarea class="form-control" id="nuevoRolDescripcion" rows="2" placeholder="Descripción del rol y sus responsabilidades"></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nivel de Prioridad *</label>
+                                <input type="number" class="form-control" id="nuevoRolNivel" required min="1" max="99" value="50">
+                                <small class="text-muted">1-99 (tu nivel actual: <span id="nivelUsuarioActual"></span>)</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Color (Hex)</label>
+                                <input type="text" class="form-control" id="nuevoRolColor" placeholder="#1abc9c">
+                            </div>
+                        </div>
+
+                        <hr>
+                        <h6>Seleccionar Permisos:</h6>
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-sm btn-outline-primary me-2" onclick="seleccionarTodosPermisos(true)">
+                                <i class="fas fa-check-square"></i> Todos
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="seleccionarTodosPermisos(false)">
+                                <i class="fas fa-square"></i> Ninguno
+                            </button>
+                        </div>
+
+                        <div id="permisosChecklistContainer" style="max-height: 400px; overflow-y: auto;">
+                            <p class="text-muted">Cargando permisos...</p>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="guardarRolPersonalizado()">
+                        <i class="fas fa-save"></i> Crear Rol
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ==================== UTILIDADES DE AUTENTICACIÓN ====================
         
@@ -1977,7 +2289,7 @@
 
         // ==================== FUNCIONES DE NAVEGACIÓN ====================
         function hideAllSections() {
-            const sections = ['dashboardSection', 'eventosSection', 'documentosSection', 'guardiasSection', 'plazasSection', 'adminsSection', 'casasSection', 'residentesSection', 'mascotasSection', 'pagosSection', 'vehiculosSection', 'accesoSection', 'reportesSection', 'qr-plazasSection', 'generar-tokensSection'];
+            const sections = ['dashboardSection', 'eventosSection', 'documentosSection', 'guardiasSection', 'plazasSection', 'adminsSection', 'casasSection', 'residentesSection', 'mascotasSection', 'pagosSection', 'vehiculosSection', 'accesoSection', 'reportesSection', 'qr-plazasSection', 'generar-tokensSection', 'rolesSection'];
             sections.forEach(section => {
                 const element = document.getElementById(section);
                 if (element) {
@@ -2011,7 +2323,8 @@
                 'acceso': 'accesoSection',
                 'reportes': 'reportesSection',
                 'qr-plazas': 'qr-plazasSection',
-                'generar-tokens': 'generar-tokensSection'
+                'generar-tokens': 'generar-tokensSection',
+                'roles': 'rolesSection'
             };
             
             const sectionId = sectionMap[sectionName];
@@ -2199,6 +2512,11 @@
                     }
                 });
             });
+            
+            // 🔐 Aplicar permisos a los botones
+            if (typeof applyButtonPermissions === 'function') {
+                applyButtonPermissions('evento');
+            }
         }
 
         // ==================== FUNCIONES DE EVENTOS ====================
@@ -2590,6 +2908,11 @@
                     }
                 });
             });
+            
+            // 🔐 Aplicar permisos a los botones
+            if (typeof applyButtonPermissions === 'function') {
+                applyButtonPermissions('documento');
+            }
         }
 
         // ==================== FUNCIONES DE DOCUMENTOS ====================
@@ -2910,6 +3233,11 @@
                     }
                 });
             });
+            
+            // 🔐 Aplicar permisos a los botones
+            if (typeof applyButtonPermissions === 'function') {
+                applyButtonPermissions('guardia');
+            }
         }
 
         // ==================== FUNCIONES DE GUARDIAS ====================
@@ -3169,6 +3497,11 @@
             tbody.querySelectorAll('.delete-plaza-btn').forEach(btn => {
                 btn.addEventListener('click', () => deletePlaza(parseInt(btn.dataset.id)));
             });
+            
+            // 🔐 Aplicar permisos a los botones
+            if (typeof applyButtonPermissions === 'function') {
+                applyButtonPermissions('plaza');
+            }
         }
 
         async function showPlazaForm(plazaId = null) {
@@ -3358,6 +3691,11 @@
             tbody.querySelectorAll('.delete-admin-btn').forEach(btn => {
                 btn.addEventListener('click', () => deleteAdmin(parseInt(btn.dataset.id)));
             });
+            
+            // 🔐 Aplicar permisos a los botones
+            if (typeof applyButtonPermissions === 'function') {
+                applyButtonPermissions('administradore');
+            }
         }
 
         async function showAdminForm(adminId = null) {
@@ -3950,6 +4288,11 @@
                     </td>
                 </tr>
             `).join('');
+            
+            // 🔐 Aplicar permisos a los botones
+            if (typeof applyButtonPermissions === 'function') {
+                applyButtonPermissions('casa');
+            }
         }
 
         async function showCasaForm(casaId = null) {
@@ -4236,6 +4579,11 @@
                     </tr>
                 `;
             }).join('');
+            
+            // 🔐 Aplicar permisos a los botones
+            if (typeof applyButtonPermissions === 'function') {
+                applyButtonPermissions('residente');
+            }
         }
 
         async function showResidenteForm(residenteId = null) {
@@ -4660,6 +5008,11 @@
                     </tr>
                 `;
             }).join('');
+            
+            // 🔐 Aplicar permisos a los botones
+            if (typeof applyButtonPermissions === 'function') {
+                applyButtonPermissions('mascota');
+            }
         }
 
         async function showMascotaForm(mascotaId = null) {
@@ -5304,6 +5657,11 @@
                     </tr>
                 `;
             }).join('');
+            
+            // 🔐 Aplicar permisos a los botones
+            if (typeof applyButtonPermissions === 'function') {
+                applyButtonPermissions('pago');
+            }
         }
 
         // Variable global para almacenar montos de la casa seleccionada
@@ -5927,6 +6285,11 @@
                     </tr>
                 `;
             }).join('');
+            
+            // 🔐 Aplicar permisos a los botones
+            if (typeof applyButtonPermissions === 'function') {
+                applyButtonPermissions('vehiculo');
+            }
         }
 
         async function showVehiculoForm(patente = null) {
@@ -6349,6 +6712,11 @@
                     </tr>
                 `;
             }).join('');
+            
+            // 🔐 Aplicar permisos a los botones
+            if (typeof applyButtonPermissions === 'function') {
+                applyButtonPermissions('acceso');
+            }
         }
 
         async function showRegistrarAccesoForm() {
@@ -6785,8 +7153,16 @@
         });
 
         // Función para inicializar el panel después de verificar sesión
-        function initializeAdminPanel() {
+        async function initializeAdminPanel() {
             console.log('✅ Sesión válida, iniciando panel...');
+            
+            // 🔐 Inicializar sistema RBAC
+            console.log('🔐 Inicializando sistema de permisos...');
+            const rbacInitialized = await initializeRBAC();
+            
+            if (!rbacInitialized) {
+                console.warn('⚠️ RBAC no se pudo inicializar, continuando sin restricciones');
+            }
             
             // Test de funciones críticas
             console.log('🧪 Verificando funciones disponibles:');
@@ -6804,6 +7180,11 @@
             loadDashboardStats();
             
             console.log('🎉 Panel de administración iniciado correctamente!');
+            
+            // Mostrar info de permisos en consola
+            if (rbacInitialized) {
+                console.log('📋 Información de permisos:', getPermissionsInfo());
+            }
             
             // Mostrar confirmación al usuario
             Swal.fire({
@@ -6912,6 +7293,672 @@
             // Establecer fechas por defecto
             setupDefaultDates();
         }, 3000);
+
+        // ==================== GESTIÓN DE ROLES Y PERMISOS (FASE 5) ====================
+
+        // Variables globales para roles
+        let rolesGlobal = [];
+        let permisosGlobal = [];
+        let usuariosConRolesGlobal = [];
+        let auditoriaGlobal = [];
+
+        // Cargar usuarios con sus roles asignados
+        async function refreshUsuariosConRoles() {
+            try {
+                const response = await authenticatedFetch('/api/roles/usuarios-con-roles');
+                if (!response || !response.ok) {
+                    throw new Error('Error al cargar usuarios con roles');
+                }
+                
+                const data = await response.json();
+                if (data.success) {
+                    usuariosConRolesGlobal = data.data;
+                    renderUsuariosConRolesTable();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire('Error', 'No se pudieron cargar los usuarios con roles', 'error');
+            }
+        }
+
+        // Renderizar tabla de usuarios con roles
+        function renderUsuariosConRolesTable() {
+            const tbody = document.getElementById('usuariosRolesTableBody');
+            
+            if (!usuariosConRolesGlobal || usuariosConRolesGlobal.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No hay usuarios con roles asignados</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = usuariosConRolesGlobal.map(user => {
+                const roles = user.roles.map(r => 
+                    `<span class="badge bg-primary me-1">${r.nombre}</span>`
+                ).join('');
+                
+                const scopes = user.scopes.map(s => 
+                    s.scope_type ? `<span class="badge bg-info me-1">${s.scope_type}: ${s.scope_name || 'N/A'}</span>` : '<span class="badge bg-success">Global</span>'
+                ).join('');
+
+                const nivel = user.nivel_prioridad || 0;
+                const ultimoCambio = user.ultimo_cambio_permisos ? 
+                    new Date(user.ultimo_cambio_permisos).toLocaleDateString('es-CL') : 
+                    'Nunca';
+
+                return `
+                    <tr>
+                        <td><strong>${escapeHtml(user.nombre)}</strong></td>
+                        <td>${escapeHtml(user.email)}</td>
+                        <td>${roles || '<span class="text-muted">Sin roles</span>'}</td>
+                        <td>${scopes || '<span class="text-muted">—</span>'}</td>
+                        <td><span class="badge bg-secondary">${nivel}</span></td>
+                        <td><small class="text-muted">${ultimoCambio}</small></td>
+                        <td>
+                            <button class="btn btn-sm btn-primary me-1" onclick="showAsignarRolModal(${user.id}, '${escapeHtml(user.nombre)}')">
+                                <i class="fas fa-user-plus"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="showRevocarRolModal(${user.id}, '${escapeHtml(user.nombre)}')">
+                                <i class="fas fa-user-minus"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Mostrar modal para asignar rol
+        async function showAsignarRolModal(userId, userName) {
+            document.getElementById('asignarRolModalTitle').textContent = 'Asignar Rol';
+            document.getElementById('usuarioSeleccionadoNombre').textContent = `Usuario: ${userName}`;
+            document.getElementById('asignarRolUsuarioId').value = userId;
+            document.getElementById('asignarRolMotivo').value = '';
+            
+            // Cargar roles disponibles
+            try {
+                const response = await authenticatedFetch('/api/roles');
+                if (response && response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        rolesGlobal = data.data;
+                        const select = document.getElementById('asignarRolRolId');
+                        select.innerHTML = '<option value="">Seleccione un rol...</option>' +
+                            rolesGlobal.map(r => `<option value="${r.id}">${r.nombre} (Nivel ${r.nivel_prioridad})</option>`).join('');
+                    }
+                }
+
+                // Cargar plazas para el selector de scope
+                const plazasResponse = await authenticatedFetch('/api/plazas?activo=true');
+                if (plazasResponse && plazasResponse.ok) {
+                    const plazasData = await plazasResponse.json();
+                    if (plazasData.success) {
+                        const plazaSelect = document.getElementById('asignarRolPlazaId');
+                        plazaSelect.innerHTML = '<option value="">Seleccione una plaza...</option>' +
+                            plazasData.data.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Error cargando roles:', error);
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('asignarRolModal'));
+            modal.show();
+        }
+
+        // Toggle campos de scope
+        function toggleScopeFields() {
+            const rolId = document.getElementById('asignarRolRolId').value;
+            const scopeFields = document.getElementById('scopeFields');
+            
+            if (rolId) {
+                scopeFields.style.display = 'block';
+            } else {
+                scopeFields.style.display = 'none';
+            }
+        }
+
+        // Toggle selector de plaza
+        function togglePlazaSelector() {
+            const scopeType = document.getElementById('asignarRolScopeType').value;
+            const plazaDiv = document.getElementById('plazaSelectorDiv');
+            
+            plazaDiv.style.display = scopeType === 'plaza' ? 'block' : 'none';
+        }
+
+        // Ejecutar asignación de rol
+        async function ejecutarAsignacionRol() {
+            const userId = document.getElementById('asignarRolUsuarioId').value;
+            const rolId = document.getElementById('asignarRolRolId').value;
+            const scopeType = document.getElementById('asignarRolScopeType').value || null;
+            const plazaId = scopeType === 'plaza' ? document.getElementById('asignarRolPlazaId').value : null;
+            const motivo = document.getElementById('asignarRolMotivo').value || 'Asignación manual desde panel';
+
+            if (!userId || !rolId) {
+                Swal.fire('Advertencia', 'Debe seleccionar un rol', 'warning');
+                return;
+            }
+
+            if (scopeType === 'plaza' && !plazaId) {
+                Swal.fire('Advertencia', 'Debe seleccionar una plaza', 'warning');
+                return;
+            }
+
+            try {
+                const response = await authenticatedFetch('/api/roles/asignar', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        user_id: parseInt(userId),
+                        role_id: parseInt(rolId),
+                        scope_type: scopeType,
+                        scope_id: plazaId ? parseInt(plazaId) : null,
+                        motivo: motivo
+                    })
+                });
+
+                if (!response) return;
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    Swal.fire('Éxito', 'Rol asignado correctamente', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('asignarRolModal')).hide();
+                    await refreshUsuariosConRoles();
+                } else {
+                    throw new Error(data.error || 'Error al asignar rol');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire('Error', error.message || 'No se pudo asignar el rol', 'error');
+            }
+        }
+
+        // Mostrar modal para revocar rol
+        async function showRevocarRolModal(userId, userName) {
+            try {
+                // Obtener roles actuales del usuario
+                const user = usuariosConRolesGlobal.find(u => u.id === userId);
+                if (!user || user.roles.length === 0) {
+                    Swal.fire('Información', 'Este usuario no tiene roles asignados', 'info');
+                    return;
+                }
+
+                const rolesOptions = user.roles.map(r => 
+                    `<option value="${r.id}">${r.nombre}</option>`
+                ).join('');
+
+                const result = await Swal.fire({
+                    title: 'Revocar Rol',
+                    html: `
+                        <p><strong>Usuario:</strong> ${userName}</p>
+                        <div class="mb-3">
+                            <label class="form-label">Seleccionar Rol a Revocar</label>
+                            <select class="form-select" id="revocarRolSelect">
+                                ${rolesOptions}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Motivo</label>
+                            <textarea class="form-control" id="revocarRolMotivo" rows="2"></textarea>
+                        </div>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'Revocar',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#dc3545',
+                    preConfirm: () => {
+                        const rolId = document.getElementById('revocarRolSelect').value;
+                        const motivo = document.getElementById('revocarRolMotivo').value;
+                        return {rolId, motivo};
+                    }
+                });
+
+                if (result.isConfirmed) {
+                    await ejecutarRevocacionRol(userId, result.value.rolId, result.value.motivo);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire('Error', 'No se pudo procesar la revocación', 'error');
+            }
+        }
+
+        // Ejecutar revocación de rol
+        async function ejecutarRevocacionRol(userId, rolId, motivo) {
+            try {
+                const response = await authenticatedFetch('/api/roles/revocar', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        user_id: parseInt(userId),
+                        role_id: parseInt(rolId),
+                        motivo: motivo || 'Revocación manual desde panel'
+                    })
+                });
+
+                if (!response) return;
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    Swal.fire('Éxito', 'Rol revocado correctamente', 'success');
+                    await refreshUsuariosConRoles();
+                } else {
+                    throw new Error(data.error || 'Error al revocar rol');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire('Error', error.message || 'No se pudo revocar el rol', 'error');
+            }
+        }
+
+        // Cargar y renderizar matriz de permisos
+        async function loadMatrizPermisos() {
+            try {
+                const [rolesResp, permisosResp] = await Promise.all([
+                    authenticatedFetch('/api/roles'),
+                    authenticatedFetch('/api/roles/permisos')
+                ]);
+
+                if (!rolesResp || !rolesResp.ok || !permisosResp || !permisosResp.ok) {
+                    throw new Error('Error al cargar datos');
+                }
+
+                const rolesData = await rolesResp.json();
+                const permisosData = await permisosResp.json();
+
+                if (rolesData.success && permisosData.success) {
+                    rolesGlobal = rolesData.data;
+                    permisosGlobal = permisosData.data;
+                    renderMatrizPermisos();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('matrizPermisosContainer').innerHTML = 
+                    '<p class="text-danger">Error al cargar la matriz de permisos</p>';
+            }
+        }
+
+        // Renderizar matriz de permisos
+        function renderMatrizPermisos() {
+            const container = document.getElementById('matrizPermisosContainer');
+            
+            // Agrupar permisos por módulo
+            const permisosPorModulo = {};
+            permisosGlobal.forEach(p => {
+                const modulo = p.codigo.split('.')[0];
+                if (!permisosPorModulo[modulo]) {
+                    permisosPorModulo[modulo] = [];
+                }
+                permisosPorModulo[modulo].push(p);
+            });
+
+            let html = '<div class="table-responsive" style="max-height: 600px; overflow-y: auto;">';
+            html += '<table class="table table-sm table-bordered table-hover sticky-header">';
+            html += '<thead class="table-dark"><tr><th class="sticky-left">Permiso</th>';
+            
+            // Encabezados de roles
+            rolesGlobal.forEach(rol => {
+                const lockIcon = rol.es_sistema ? '<i class="fas fa-lock fa-xs ms-1"></i>' : '';
+                html += `<th class="text-center">${rol.nombre}${lockIcon}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+
+            // Filas de permisos por módulo
+            Object.keys(permisosPorModulo).sort().forEach(modulo => {
+                html += `<tr class="table-secondary"><td colspan="${rolesGlobal.length + 1}"><strong>${modulo.toUpperCase()}</strong></td></tr>`;
+                
+                permisosPorModulo[modulo].forEach(permiso => {
+                    html += `<tr><td class="sticky-left"><small>${permiso.codigo}</small><br><small class="text-muted">${permiso.descripcion || ''}</small></td>`;
+                    
+                    rolesGlobal.forEach(rol => {
+                        const tienePermiso = rol.permisos && rol.permisos.includes(permiso.codigo);
+                        html += `<td class="text-center">${tienePermiso ? '<span class="badge bg-success">✓</span>' : '<span class="badge bg-secondary">—</span>'}</td>`;
+                    });
+                    html += '</tr>';
+                });
+            });
+
+            html += '</tbody></table></div>';
+            
+            // Agregar CSS para sticky header y columna
+            html += `
+                <style>
+                    .sticky-header thead {
+                        position: sticky;
+                        top: 0;
+                        z-index: 10;
+                    }
+                    .sticky-left {
+                        position: sticky;
+                        left: 0;
+                        background: white;
+                        z-index: 1;
+                    }
+                    .table-secondary .sticky-left {
+                        background: #e2e3e5;
+                    }
+                </style>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        // Cargar historial de auditoría
+        async function loadAuditoria() {
+            try {
+                const usuario = document.getElementById('filtroAuditoriaUsuario').value;
+                const accion = document.getElementById('filtroAuditoriaAccion').value;
+                const desde = document.getElementById('filtroAuditoriaDesde').value;
+                const hasta = document.getElementById('filtroAuditoriaHasta').value;
+
+                let query = '/api/roles/audit/recent?limit=50';
+                if (usuario) query += `&user_id=${usuario}`;
+                if (accion) query += `&accion=${accion}`;
+                if (desde) query += `&desde=${desde}`;
+                if (hasta) query += `&hasta=${hasta}`;
+
+                const response = await authenticatedFetch(query);
+                if (!response || !response.ok) {
+                    throw new Error('Error al cargar auditoría');
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    auditoriaGlobal = data.data;
+                    renderAuditoriaTable();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('auditoriaTableBody').innerHTML = 
+                    '<tr><td colspan="7" class="text-center text-danger">Error al cargar auditoría</td></tr>';
+            }
+        }
+
+        // Renderizar tabla de auditoría
+        function renderAuditoriaTable() {
+            const tbody = document.getElementById('auditoriaTableBody');
+            
+            if (!auditoriaGlobal || auditoriaGlobal.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No hay registros de auditoría</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = auditoriaGlobal.map(audit => {
+                const fecha = new Date(audit.created_at).toLocaleString('es-CL');
+                const accionBadge = {
+                    'asignar_rol': 'bg-success',
+                    'revocar_rol': 'bg-danger',
+                    'crear_rol': 'bg-primary',
+                    'eliminar_rol': 'bg-dark'
+                }[audit.accion] || 'bg-secondary';
+
+                return `
+                    <tr>
+                        <td><small>${fecha}</small></td>
+                        <td>${escapeHtml(audit.ejecutor_nombre || 'Sistema')}</td>
+                        <td><span class="badge ${accionBadge}">${audit.accion.replace('_', ' ')}</span></td>
+                        <td>${escapeHtml(audit.target_nombre || 'N/A')}</td>
+                        <td>${escapeHtml(audit.rol_nombre || 'N/A')}</td>
+                        <td><small>${escapeHtml(audit.motivo || '—')}</small></td>
+                        <td><small class="text-muted">${audit.ip_address || '—'}</small></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Mostrar modal para crear rol personalizado
+        async function showCrearRolPersonalizadoModal() {
+            try {
+                // Cargar permisos disponibles
+                const response = await authenticatedFetch('/api/roles/permisos');
+                if (!response || !response.ok) {
+                    throw new Error('Error al cargar permisos');
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    permisosGlobal = data.data;
+                    renderPermisosChecklist();
+                }
+
+                // Establecer nivel del usuario actual
+                const userInfo = window.UserPermissions || {};
+                document.getElementById('nivelUsuarioActual').textContent = userInfo.nivel_prioridad || 'N/A';
+
+                const modal = new bootstrap.Modal(document.getElementById('crearRolModal'));
+                modal.show();
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire('Error', 'No se pudo abrir el formulario', 'error');
+            }
+        }
+
+        // Renderizar checklist de permisos
+        function renderPermisosChecklist() {
+            const container = document.getElementById('permisosChecklistContainer');
+            
+            // Agrupar por módulo
+            const permisosPorModulo = {};
+            permisosGlobal.forEach(p => {
+                const modulo = p.codigo.split('.')[0];
+                if (!permisosPorModulo[modulo]) {
+                    permisosPorModulo[modulo] = [];
+                }
+                permisosPorModulo[modulo].push(p);
+            });
+
+            let html = '';
+            Object.keys(permisosPorModulo).sort().forEach(modulo => {
+                html += `<div class="card mb-2">`;
+                html += `<div class="card-header bg-light py-2"><strong>${modulo.toUpperCase()}</strong></div>`;
+                html += `<div class="card-body py-2">`;
+                
+                permisosPorModulo[modulo].forEach(permiso => {
+                    html += `
+                        <div class="form-check">
+                            <input class="form-check-input permiso-checkbox" type="checkbox" value="${permiso.id}" id="permiso_${permiso.id}">
+                            <label class="form-check-label" for="permiso_${permiso.id}">
+                                <code>${permiso.codigo}</code> - <small>${permiso.descripcion || ''}</small>
+                            </label>
+                        </div>
+                    `;
+                });
+                
+                html += `</div></div>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Seleccionar/deseleccionar todos los permisos
+        function seleccionarTodosPermisos(seleccionar) {
+            document.querySelectorAll('.permiso-checkbox').forEach(checkbox => {
+                checkbox.checked = seleccionar;
+            });
+        }
+
+        // Guardar rol personalizado
+        async function guardarRolPersonalizado() {
+            const codigo = document.getElementById('nuevoRolCodigo').value.trim();
+            const nombre = document.getElementById('nuevoRolNombre').value.trim();
+            const descripcion = document.getElementById('nuevoRolDescripcion').value.trim();
+            const nivel = parseInt(document.getElementById('nuevoRolNivel').value);
+            const color = document.getElementById('nuevoRolColor').value.trim() || null;
+
+            // Validaciones
+            if (!codigo || !nombre) {
+                Swal.fire('Advertencia', 'Debe completar código y nombre del rol', 'warning');
+                return;
+            }
+
+            if (!/^[a-z0-9_]+$/.test(codigo)) {
+                Swal.fire('Advertencia', 'El código solo puede contener letras minúsculas, números y guiones bajos', 'warning');
+                return;
+            }
+
+            if (nivel < 1 || nivel > 99) {
+                Swal.fire('Advertencia', 'El nivel debe estar entre 1 y 99', 'warning');
+                return;
+            }
+
+            // Recopilar permisos seleccionados
+            const permisosSeleccionados = [];
+            document.querySelectorAll('.permiso-checkbox:checked').forEach(checkbox => {
+                permisosSeleccionados.push(parseInt(checkbox.value));
+            });
+
+            if (permisosSeleccionados.length === 0) {
+                Swal.fire('Advertencia', 'Debe seleccionar al menos un permiso', 'warning');
+                return;
+            }
+
+            try {
+                const response = await authenticatedFetch('/api/roles', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        codigo,
+                        nombre,
+                        descripcion,
+                        nivel_prioridad: nivel,
+                        color,
+                        permisos: permisosSeleccionados
+                    })
+                });
+
+                if (!response) return;
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    Swal.fire('Éxito', 'Rol personalizado creado correctamente', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('crearRolModal')).hide();
+                    await loadRolesPersonalizados();
+                } else {
+                    throw new Error(data.error || 'Error al crear rol');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire('Error', error.message || 'No se pudo crear el rol', 'error');
+            }
+        }
+
+        // Cargar roles personalizados
+        async function loadRolesPersonalizados() {
+            try {
+                const response = await authenticatedFetch('/api/roles');
+                if (!response || !response.ok) {
+                    throw new Error('Error al cargar roles');
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    rolesGlobal = data.data;
+                    renderRolesPersonalizadosTable();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('rolesPersonalizadosTableBody').innerHTML = 
+                    '<tr><td colspan="7" class="text-center text-danger">Error al cargar roles</td></tr>';
+            }
+        }
+
+        // Renderizar tabla de roles personalizados
+        function renderRolesPersonalizadosTable() {
+            const tbody = document.getElementById('rolesPersonalizadosTableBody');
+            
+            if (!rolesGlobal || rolesGlobal.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No hay roles registrados</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = rolesGlobal.map(rol => {
+                const sistemaBadge = rol.es_sistema ? 
+                    '<span class="badge bg-warning"><i class="fas fa-lock"></i> Sistema</span>' : 
+                    '<span class="badge bg-success">Personalizado</span>';
+                
+                const cantidadPermisos = rol.permisos ? rol.permisos.length : 0;
+
+                const acciones = !rol.es_sistema ? `
+                    <button class="btn btn-sm btn-danger" onclick="eliminarRolPersonalizado(${rol.id}, '${escapeHtml(rol.nombre)}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                ` : '<span class="text-muted">Protegido</span>';
+
+                return `
+                    <tr>
+                        <td><code>${rol.codigo}</code></td>
+                        <td>${escapeHtml(rol.nombre)}</td>
+                        <td><small>${escapeHtml(rol.descripcion || '—')}</small></td>
+                        <td><span class="badge bg-secondary">${rol.nivel_prioridad}</span></td>
+                        <td><span class="badge bg-info">${cantidadPermisos} permisos</span></td>
+                        <td>${sistemaBadge}</td>
+                        <td>${acciones}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Eliminar rol personalizado
+        async function eliminarRolPersonalizado(rolId, rolNombre) {
+            const result = await Swal.fire({
+                title: '¿Confirmar eliminación?',
+                html: `Se eliminará el rol: <strong>${rolNombre}</strong><br><small class="text-danger">Los usuarios con este rol lo perderán</small>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (!result.isConfirmed) return;
+
+            try {
+                const response = await authenticatedFetch(`/api/roles/${rolId}`, {
+                    method: 'DELETE'
+                });
+
+                if (!response) return;
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    Swal.fire('Éxito', 'Rol eliminado correctamente', 'success');
+                    await loadRolesPersonalizados();
+                } else {
+                    throw new Error(data.error || 'Error al eliminar rol');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire('Error', error.message || 'No se pudo eliminar el rol', 'error');
+            }
+        }
+
+        // Inicializar carga cuando se muestra la sección de roles
+        document.addEventListener('DOMContentLoaded', () => {
+            // Observer para detectar cuando se muestra la sección de roles
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.target.id === 'rolesSection' && !mutation.target.classList.contains('section-hidden')) {
+                        console.log('🔐 Sección de roles visible - cargando datos...');
+                        refreshUsuariosConRoles();
+                        loadAuditoria();
+                        loadRolesPersonalizados();
+                    }
+                });
+            });
+
+            const rolesSection = document.getElementById('rolesSection');
+            if (rolesSection) {
+                observer.observe(rolesSection, { attributes: true, attributeFilter: ['class'] });
+            }
+
+            // Cargar matriz cuando se hace clic en el tab
+            const matrizTab = document.getElementById('matriz-permisos-tab');
+            if (matrizTab) {
+                matrizTab.addEventListener('shown.bs.tab', () => {
+                    if (!permisosGlobal || permisosGlobal.length === 0) {
+                        loadMatrizPermisos();
+                    }
+                });
+            }
+        });
+
+        // ==================== FIN GESTIÓN DE ROLES (FASE 5) ====================
     </script>
 
     <!-- Supabase JS Client para Storage -->
