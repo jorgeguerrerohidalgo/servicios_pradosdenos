@@ -10,6 +10,10 @@ const helmet = require('helmet');
 const path = require('path');
 const app = express();
 
+// Declaración global de funciones de cron jobs
+let initCronJobs = null;
+let stopCronJobs = null;
+
 // Variables de entorno para producción
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -169,7 +173,6 @@ try {
   console.log('✅ acceso.routes importado');
   
   // Importar tareas programadas (cron jobs)
-  let initCronJobs, stopCronJobs;
   try {
     console.log('📦 Importando cronJobs...');
     const cronModule = require('./cronJobs');
