@@ -538,18 +538,18 @@ router.put('/admins/:id', requireAuth, requirePermission('administradores.editar
     
     params.push(id);
     
-    const result = await query(`
+    const result = await pool.query(`
       UPDATE admin_users 
       SET ${updateFields.join(', ')} 
       WHERE id = $${paramIndex}
       RETURNING id, nombre, apellido_paterno, apellido_materno, email, telefono, activo, created_at
     `, params);
     
-    if (result.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Administrador no encontrado' });
     }
     
-    res.json({ success: true, admin: result[0] });
+    res.json({ success: true, admin: result.rows[0] });
   } catch (error) {
     console.error('Error actualizando administrador:', error);
     res.status(500).json({ success: false, message: 'Error interno del servidor' });
@@ -566,8 +566,8 @@ router.delete('/admins/:id', requireAuth, requirePermission('administradores.eli
       return res.status(400).json({ success: false, message: 'No puedes eliminar tu propia cuenta' });
     }
     
-    const result = await query('DELETE FROM admin_users WHERE id = $1 RETURNING id', [id]);
-    if (result.length === 0) {
+    const result = await pool.query('DELETE FROM admin_users WHERE id = $1 RETURNING id', [id]);
+    if (result.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Administrador no encontrado' });
     }
     
