@@ -169,9 +169,19 @@ try {
   console.log('✅ acceso.routes importado');
   
   // Importar tareas programadas (cron jobs)
-  console.log('📦 Importando cronJobs...');
-  const { initCronJobs, stopCronJobs } = require('./cronJobs');
-  console.log('✅ cronJobs importado');
+  let initCronJobs, stopCronJobs;
+  try {
+    console.log('📦 Importando cronJobs...');
+    const cronModule = require('./cronJobs');
+    initCronJobs = cronModule.initCronJobs;
+    stopCronJobs = cronModule.stopCronJobs;
+    console.log('✅ cronJobs importado');
+  } catch (error) {
+    console.warn('⚠️  No se pudo importar cronJobs:', error.message);
+    console.warn('Sistema continuará sin automatización de estados de pagos');
+    initCronJobs = null;
+    stopCronJobs = null;
+  }
   
   console.log('✅ Todas las rutas importadas correctamente');
 
@@ -340,11 +350,15 @@ async function startServer() {
       console.log('✅ Servidor iniciado correctamente');
       
       // Inicializar tareas programadas (cron jobs)
-      try {
-        initCronJobs();
-      } catch (error) {
-        console.error('⚠️  Error al inicializar tareas programadas:', error.message);
-        console.log('Sistema continuará sin automatización de estados de pagos');
+      if (initCronJobs && typeof initCronJobs === 'function') {
+        try {
+          initCronJobs();
+        } catch (error) {
+          console.error('⚠️  Error al inicializar tareas programadas:', error.message);
+          console.log('Sistema continuará sin automatización de estados de pagos');
+        }
+      } else {
+        console.log('⚠️  Cron jobs no disponibles - sistema continuará sin automatización de pagos');
       }
     });
     
@@ -392,10 +406,12 @@ process.on('SIGTERM', () => {
   console.log('🛑 Recibido SIGTERM, cerrando servidor gracefully...');
   
   // Detener tareas programadas
-  try {
-    stopCronJobs();
-  } catch (error) {
-    console.error('Error al detener cron jobs:', error.message);
+  if (stopCronJobs && typeof stopCronJobs === 'function') {
+    try {
+      stopCronJobs();
+    } catch (error) {
+      console.error('Error al detener cron jobs:', error.message);
+    }
   }
   
   process.exit(0);

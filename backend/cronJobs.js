@@ -5,8 +5,28 @@
  * Fecha: 19/05/2026
  */
 
-const cron = require('node-cron');
+let cron;
+try {
+    cron = require('node-cron');
+} catch (error) {
+    console.warn('⚠️  node-cron no disponible:', error.message);
+    console.warn('Las tareas programadas no estarán disponibles');
+}
+
 const { pool } = require('./utils/db');
+
+// Si node-cron no está disponible, exportar funciones vacías
+if (!cron) {
+    module.exports = {
+        initCronJobs: () => {
+            console.log('⚠️  Cron jobs no disponibles (node-cron no instalado)');
+            console.log('Para habilitar automatización, instala: npm install node-cron');
+        },
+        stopCronJobs: () => {},
+        actualizarEstadosPagos: null
+    };
+    return;
+}
 
 /**
  * Actualizar estados de pagos vencidos

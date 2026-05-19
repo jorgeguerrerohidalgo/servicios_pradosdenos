@@ -49,8 +49,17 @@ const pagosRoutes = require('./routes/pagos.routes');
 const vehiculosRoutes = require('./routes/vehiculos.routes');
 const accesoRoutes = require('./routes/acceso.routes');
 
-// Importar tareas programadas (cron jobs)
-const { initCronJobs, stopCronJobs } = require('./cronJobs');
+// Importar tareas programadas (cron jobs) con manejo de errores
+let initCronJobs, stopCronJobs;
+try {
+  const cronModule = require('./cronJobs');
+  initCronJobs = cronModule.initCronJobs;
+  stopCronJobs = cronModule.stopCronJobs;
+} catch (error) {
+  console.warn('⚠️  No se pudo importar cronJobs:', error.message);
+  initCronJobs = null;
+  stopCronJobs = null;
+}
 
 // Variables de entorno para producción
 const PORT = process.env.PORT || 3000;
@@ -350,11 +359,15 @@ app.listen(PORT, '0.0.0.0', async () => {
   }
   
   // Inicializar tareas programadas (cron jobs)
-  try {
-    initCronJobs();
-  } catch (error) {
-    console.error('⚠️  Error al inicializar tareas programadas:', error.message);
-    console.log('Sistema continuará sin automatización de estados de pagos');
+  if (initCronJobs && typeof initCronJobs === 'function') {
+    try {
+      initCronJobs();
+    } catch (error) {
+      console.error('⚠️  Error al inicializar tareas programadas:', error.message);
+      console.log('Sistema continuará sin automatización de estados de pagos');
+    }
+  } else {
+    console.log('⚠️  Cron jobs no disponibles - sistema continuará sin automatización de pagos');
   }
   
   // Debug: Verificar rutas de archivos (con manejo de errores)
@@ -391,10 +404,12 @@ process.on('SIGTERM', () => {
   console.log('SIGTERM recibido, cerrando servidor gracefully...');
   
   // Detener tareas programadas
-  try {
-    stopCronJobs();
-  } catch (error) {
-    console.error('Error al detener cron jobs:', error.message);
+  if (stopCronJobs && typeof stopCronJobs === 'function') {
+    try {
+      stopCronJobs();
+    } catch (error) {
+      console.error('Error al detener cron jobs:', error.message);
+    }
   }
   process.exit(0);
 });
