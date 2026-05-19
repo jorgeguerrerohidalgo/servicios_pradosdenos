@@ -239,9 +239,9 @@ DECLARE
   v_fecha_vencimiento DATE;
   v_casa RECORD;
 BEGIN
-  -- Si no se proporciona fecha de vencimiento, usar el último día del mes
+  -- Si no se proporciona fecha de vencimiento, usar el día 5 del mes
   IF p_fecha_vencimiento IS NULL THEN
-    v_fecha_vencimiento := (DATE_TRUNC('MONTH', TO_DATE(p_periodo || '-01', 'YYYY-MM-DD')) + INTERVAL '1 MONTH - 1 DAY')::DATE;
+    v_fecha_vencimiento := TO_DATE(p_periodo || '-05', 'YYYY-MM-DD');
   ELSE
     v_fecha_vencimiento := p_fecha_vencimiento;
   END IF;
