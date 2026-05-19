@@ -250,7 +250,8 @@ router.post('/', async (req, res) => {
             color,
             certificado_vacunas,
             fecha_ultima_vacuna,
-            observaciones
+            observaciones,
+            foto_url
         } = req.body;
         
         // Validaciones
@@ -314,8 +315,8 @@ router.post('/', async (req, res) => {
             `INSERT INTO mascotas (
                 casa_id, residente_id, nombre, tipo, raza, 
                 fecha_nacimiento, genero, color, 
-                certificado_vacunas, fecha_ultima_vacuna, observaciones
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                certificado_vacunas, fecha_ultima_vacuna, observaciones, foto_url
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
             RETURNING *`,
             [
                 casa_id,
@@ -328,7 +329,8 @@ router.post('/', async (req, res) => {
                 color || null,
                 certificado_vacunas || false,
                 fecha_ultima_vacuna || null,
-                observaciones || null
+                observaciones || null,
+                foto_url || null
             ]
         );
         
@@ -368,7 +370,8 @@ router.put('/:id', async (req, res) => {
             certificado_vacunas,
             fecha_ultima_vacuna,
             observaciones,
-            activo
+            activo,
+            foto_url
         } = req.body;
         
         // Verificar que la mascota existe
@@ -450,8 +453,9 @@ router.put('/:id', async (req, res) => {
                 certificado_vacunas = COALESCE($9, certificado_vacunas),
                 fecha_ultima_vacuna = $10,
                 observaciones = $11,
-                activo = COALESCE($12, activo)
-            WHERE id = $13
+                activo = COALESCE($12, activo),
+                foto_url = $13
+            WHERE id = $14
             RETURNING *`,
             [
                 casa_id,
@@ -466,6 +470,7 @@ router.put('/:id', async (req, res) => {
                 fecha_ultima_vacuna,
                 observaciones,
                 activo,
+                foto_url,
                 id
             ]
         );
