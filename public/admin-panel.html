@@ -4617,8 +4617,11 @@
                     `;
                 } else {
                     console.log(`📷 Mascota "${mascota.mascota_nombre}" NO tiene foto`);
-                    // Usar fa-camera en lugar de fa-camera-slash (mejor compatibilidad)
-                    fotoIndicador = '<i class="fas fa-camera text-muted fa-2x" title="Sin foto" style="opacity: 0.25; font-weight: 900;"></i>';
+                    // Icono clickeable que abre el modal de edición para subir foto
+                    fotoIndicador = `<i class="fas fa-camera text-muted fa-2x" 
+                                        title="Click para subir foto" 
+                                        style="opacity: 0.25; font-weight: 900; cursor: pointer;" 
+                                        onclick="showMascotaForm(${mascota.id})"></i>`;
                 }
                 
                 return `
