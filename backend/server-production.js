@@ -168,6 +168,11 @@ try {
   const accesoRoutes = require('./routes/acceso.routes');
   console.log('✅ acceso.routes importado');
   
+  // Importar tareas programadas (cron jobs)
+  console.log('📦 Importando cronJobs...');
+  const { initCronJobs, stopCronJobs } = require('./cronJobs');
+  console.log('✅ cronJobs importado');
+  
   console.log('✅ Todas las rutas importadas correctamente');
 
   // Configurar rutas EN EL ORDEN CORRECTO
@@ -333,6 +338,14 @@ async function startServer() {
       }
       
       console.log('✅ Servidor iniciado correctamente');
+      
+      // Inicializar tareas programadas (cron jobs)
+      try {
+        initCronJobs();
+      } catch (error) {
+        console.error('⚠️  Error al inicializar tareas programadas:', error.message);
+        console.log('Sistema continuará sin automatización de estados de pagos');
+      }
     });
     
     // Manejo de errores del servidor
@@ -377,6 +390,14 @@ process.on('unhandledRejection', (reason, promise) => {
 // Manejo de señales del sistema
 process.on('SIGTERM', () => {
   console.log('🛑 Recibido SIGTERM, cerrando servidor gracefully...');
+  
+  // Detener tareas programadas
+  try {
+    stopCronJobs();
+  } catch (error) {
+    console.error('Error al detener cron jobs:', error.message);
+  }
+  
   process.exit(0);
 });
 

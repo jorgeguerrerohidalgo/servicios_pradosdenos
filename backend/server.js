@@ -49,6 +49,9 @@ const pagosRoutes = require('./routes/pagos.routes');
 const vehiculosRoutes = require('./routes/vehiculos.routes');
 const accesoRoutes = require('./routes/acceso.routes');
 
+// Importar tareas programadas (cron jobs)
+const { initCronJobs, stopCronJobs } = require('./cronJobs');
+
 // Variables de entorno para producción
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -346,6 +349,14 @@ app.listen(PORT, '0.0.0.0', async () => {
     console.log('⚠️  Sistema funcionará sin logs de seguridad avanzados');
   }
   
+  // Inicializar tareas programadas (cron jobs)
+  try {
+    initCronJobs();
+  } catch (error) {
+    console.error('⚠️  Error al inicializar tareas programadas:', error.message);
+    console.log('Sistema continuará sin automatización de estados de pagos');
+  }
+  
   // Debug: Verificar rutas de archivos (con manejo de errores)
   const publicPaths = [
     path.join(__dirname, 'public'),
@@ -378,6 +389,13 @@ app.listen(PORT, '0.0.0.0', async () => {
 // Manejo graceful shutdown
 process.on('SIGTERM', () => {
   console.log('SIGTERM recibido, cerrando servidor gracefully...');
+  
+  // Detener tareas programadas
+  try {
+    stopCronJobs();
+  } catch (error) {
+    console.error('Error al detener cron jobs:', error.message);
+  }
   process.exit(0);
 });
 

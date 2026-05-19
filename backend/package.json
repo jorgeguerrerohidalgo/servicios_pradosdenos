@@ -22,6 +22,7 @@
     "express-session": "^1.17.3",
     "helmet": "^7.2.0",
     "jsonwebtoken": "^9.0.2",
+    "node-cron": "^3.0.3",
     "pg": "^8.11.0",
     "sqlite3": "^5.1.7",
     "uuid": "^9.0.1",

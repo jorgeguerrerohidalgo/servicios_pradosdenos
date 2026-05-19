@@ -583,4 +583,35 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
+// ==================== POST: Actualizar estados de pagos automáticamente ====================
+/**
+ * POST /api/pagos/actualizar-estados
+ * Ejecuta la función que actualiza automáticamente pagos pendientes a vencidos
+ * Esta función debe ejecutarse diariamente (puede usarse con cron job)
+ */
+router.post('/actualizar-estados', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM actualizar_estados_pagos()');
+        
+        const { actualizados, mensaje } = result.rows[0];
+        
+        console.log(`✅ Actualización automática de estados ejecutada: ${mensaje}`);
+        
+        res.json({
+            success: true,
+            message: mensaje,
+            actualizados: actualizados,
+            fecha_ejecucion: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('❌ Error al actualizar estados de pagos:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al actualizar estados de pagos',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;
