@@ -57,6 +57,9 @@ Debe ejecutarse diariamente mediante un proceso programado.';
 -- Actualiza el estado a 'pagado' independientemente de si estaba vencido
 -- REEMPLAZA la función de migración 004 con validaciones mejoradas
 
+-- Eliminar función anterior (tiene firma diferente)
+DROP FUNCTION IF EXISTS registrar_pago(INTEGER, VARCHAR, VARCHAR, TIMESTAMPTZ);
+
 CREATE OR REPLACE FUNCTION registrar_pago(
     p_pago_id INTEGER,
     p_metodo_pago VARCHAR(30),
