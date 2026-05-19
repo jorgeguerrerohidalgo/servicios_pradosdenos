@@ -188,6 +188,7 @@ router.get('/morosas', async (req, res) => {
             SELECT 
                 c.id as casa_id,
                 c.numero_casa,
+                c.direccion,
                 pl.nombre as plaza_nombre,
                 COALESCE(
                     (SELECT COUNT(*) 

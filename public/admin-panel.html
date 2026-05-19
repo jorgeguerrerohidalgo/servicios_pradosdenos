@@ -1533,7 +1533,9 @@
                         <table class="table table-striped">
                             <thead class="table-dark">
                                 <tr>
+                                    <th>Plaza</th>
                                     <th>Casa</th>
+                                    <th>Dirección</th>
                                     <th>Pagos Vencidos</th>
                                     <th>Deuda Total</th>
                                     <th>Acciones</th>
@@ -5707,7 +5709,7 @@
                     const tbody = document.getElementById('casasMorosasTableBody');
                     
                     if (data.data.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-success"><i class="fas fa-check-circle me-2"></i>¡No hay casas morosas!</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-success"><i class="fas fa-check-circle me-2"></i>¡No hay casas morosas!</td></tr>';
                     } else {
                         tbody.innerHTML = data.data.map(casa => {
                             const deuda = '$' + formatCLP(casa.deuda_total);
@@ -5719,8 +5721,10 @@
                             
                             return `
                                 <tr>
+                                    <td><span class="badge bg-info">${escapeHtml(casa.plaza_nombre)}</span></td>
                                     <td><strong>${escapeHtml(casa.numero_casa)}</strong></td>
-                                    <td>${estadoBadge}</td>
+                                    <td><small>${escapeHtml(casa.direccion || '-')}</small></td>
+                                    <td class="text-center">${estadoBadge}</td>
                                     <td class="text-end"><strong>${deuda}</strong></td>
                                     <td>
                                         <button class="btn btn-sm btn-info" onclick="filterPagosByCasa(${casa.casa_id})">
