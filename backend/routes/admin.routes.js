@@ -506,14 +506,15 @@ router.post('/admins', requireAuth, requirePermission('administradores.crear'), 
     console.error('Hint:', error.hint);
     console.error('Stack:', error.stack);
     
-    // Retornar error más detallado en desarrollo
+    // TEMPORAL: Retornar error detallado SIEMPRE para diagnóstico
     res.status(500).json({ 
       success: false, 
       message: 'Error interno del servidor',
-      error: process.env.NODE_ENV === 'production' ? undefined : {
+      error: {
         message: error.message,
         code: error.code,
-        detail: error.detail
+        detail: error.detail,
+        hint: error.hint
       }
     });
   }
