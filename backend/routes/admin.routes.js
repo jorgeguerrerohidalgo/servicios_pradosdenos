@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
-const { query } = require('../utils/db');
+const { query, pool } = require('../utils/db');
 const { requireAuth, requireAdmin, requireAuthAdmin } = require('../middleware/sessionAuth');
 const { requirePermission } = require('../middleware/rbac');
 
@@ -463,22 +463,23 @@ router.post('/admins', requireAuth, requirePermission('administradores.crear'), 
       return res.status(400).json({ success: false, message: 'Faltan campos requeridos' });
     }
     
-    // Verificar si el email ya existe
-    const existingAdmin = await query('SELECT id FROM admin_users WHERE email = $1', [email]);
-    if (existingAdmin.length > 0) {
+    // Verificar si el email ya existe (usando pool directamente para PostgreSQL)
+    const existingCheck = await pool.query('SELECT id FROM admin_users WHERE email = $1', [email]);
+    if (existingCheck.rows.length > 0) {
       return res.status(400).json({ success: false, message: 'El email ya está registrado' });
     }
     
     // Hash de la contraseña
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    const result = await query(`
+    // Insertar usando pool directamente (PostgreSQL nativo)
+    const result = await pool.query(`
       INSERT INTO admin_users (nombre, apellido_paterno, apellido_materno, email, telefono, password_hash, activo) 
       VALUES ($1, $2, $3, $4, $5, $6, true) 
       RETURNING id, nombre, apellido_paterno, apellido_materno, email, telefono, activo, created_at
     `, [nombre, apellido_paterno, apellido_materno || null, email, telefono || null, hashedPassword]);
     
-    res.json({ success: true, admin: result[0] });
+    res.json({ success: true, admin: result.rows[0] });
   } catch (error) {
     console.error('Error creando administrador:', error);
     res.status(500).json({ success: false, message: 'Error interno del servidor' });
