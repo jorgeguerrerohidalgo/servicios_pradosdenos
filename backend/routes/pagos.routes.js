@@ -180,23 +180,46 @@ router.get('/estadisticas/periodo', async (req, res) => {
 // ==================== GET: Casas morosas ====================
 /**
  * GET /api/pagos/morosas
- * Obtiene lista de casas con pagos vencidos
+ * Obtiene lista de casas morosas: sin pagos o con pagos vencidos
  */
 router.get('/morosas', async (req, res) => {
     try {
         const result = await pool.query(`
-            SELECT DISTINCT
+            SELECT 
                 c.id as casa_id,
                 c.numero_casa,
-                COUNT(p.id) as pagos_vencidos,
-                SUM(p.monto) as deuda_total
+                pl.nombre as plaza_nombre,
+                COALESCE(
+                    (SELECT COUNT(*) 
+                     FROM pagos p 
+                     WHERE p.casa_id = c.id 
+                     AND p.estado = 'vencido' 
+                     AND p.activo = true), 
+                    0
+                ) as pagos_vencidos,
+                COALESCE(
+                    (SELECT SUM(p.monto) 
+                     FROM pagos p 
+                     WHERE p.casa_id = c.id 
+                     AND p.estado = 'vencido' 
+                     AND p.activo = true), 
+                    0
+                ) as deuda_total,
+                (SELECT COUNT(*) 
+                 FROM pagos p 
+                 WHERE p.casa_id = c.id 
+                 AND p.activo = true) as total_pagos
             FROM casas c
-            INNER JOIN pagos p ON c.id = p.casa_id
-            WHERE p.estado = 'vencido'
-                AND p.activo = true
-                AND c.activo = true
-            GROUP BY c.id, c.numero_casa
-            ORDER BY deuda_total DESC
+            INNER JOIN plazas pl ON c.plaza_id = pl.id
+            WHERE c.activo = true
+            AND (
+                -- Casas sin ningún pago registrado
+                (SELECT COUNT(*) FROM pagos p WHERE p.casa_id = c.id AND p.activo = true) = 0
+                OR
+                -- Casas con pagos vencidos
+                (SELECT COUNT(*) FROM pagos p WHERE p.casa_id = c.id AND p.estado = 'vencido' AND p.activo = true) > 0
+            )
+            ORDER BY total_pagos ASC, deuda_total DESC
         `);
         
         res.json({

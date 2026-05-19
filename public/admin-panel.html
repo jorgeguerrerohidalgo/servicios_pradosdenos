@@ -5712,10 +5712,15 @@
                         tbody.innerHTML = data.data.map(casa => {
                             const deuda = '$' + formatCLP(casa.deuda_total);
                             
+                            // Diferenciar casas sin pagos vs con pagos vencidos
+                            const estadoBadge = casa.total_pagos === 0 
+                                ? '<span class="badge bg-secondary">Sin pagos</span>' 
+                                : `<span class="badge bg-danger">${casa.pagos_vencidos} vencidos</span>`;
+                            
                             return `
                                 <tr>
                                     <td><strong>${escapeHtml(casa.numero_casa)}</strong></td>
-                                    <td><span class="badge bg-danger">${casa.pagos_vencidos}</span></td>
+                                    <td>${estadoBadge}</td>
                                     <td class="text-end"><strong>${deuda}</strong></td>
                                     <td>
                                         <button class="btn btn-sm btn-info" onclick="filterPagosByCasa(${casa.casa_id})">
