@@ -8,10 +8,11 @@
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../utils/db');
-const { requireAuthAdmin } = require('../middleware/sessionAuth');
+const { requireAuth, requireAuthAdmin } = require('../middleware/sessionAuth');
+const { requirePermission } = require('../middleware/rbac');
 
 // Aplicar middleware de autenticación a todas las rutas
-router.use(requireAuthAdmin);
+router.use(requireAuth);
 
 // ==================== GET: Listar mascotas ====================
 /**
@@ -237,7 +238,7 @@ router.get('/:id', async (req, res) => {
  * POST /api/mascotas
  * Crea una nueva mascota
  */
-router.post('/', async (req, res) => {
+router.post('/', requirePermission('mascotas.crear'), async (req, res) => {
     try {
         const { 
             casa_id, 
@@ -355,7 +356,7 @@ router.post('/', async (req, res) => {
  * PUT /api/mascotas/:id
  * Actualiza una mascota existente
  */
-router.put('/:id', async (req, res) => {
+router.put('/:id', requirePermission('mascotas.editar'), async (req, res) => {
     try {
         const { id } = req.params;
         const { 
@@ -496,7 +497,7 @@ router.put('/:id', async (req, res) => {
  * DELETE /api/mascotas/:id
  * Realiza soft delete de una mascota
  */
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requirePermission('mascotas.eliminar'), async (req, res) => {
     try {
         const { id } = req.params;
         

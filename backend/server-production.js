@@ -172,6 +172,10 @@ try {
   const accesoRoutes = require('./routes/acceso.routes');
   console.log('✅ acceso.routes importado');
   
+  console.log('📦 Importando roles.routes (RBAC)...');
+  const rolesRoutes = require('./routes/roles.routes');
+  console.log('✅ roles.routes importado');
+  
   // Importar tareas programadas (cron jobs)
   try {
     console.log('📦 Importando cronJobs...');
@@ -205,6 +209,7 @@ try {
   app.use('/api/pagos', pagosRoutes);
   app.use('/api/vehiculos', vehiculosRoutes);
   app.use('/api/acceso', accesoRoutes);
+  app.use('/api/roles', rolesRoutes);
   
   app.use('/api', publicRoutes); // Para /api/plazas - DEBE IR AL FINAL
 

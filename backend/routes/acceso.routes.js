@@ -7,10 +7,11 @@
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../utils/db');
-const { requireAuthAdmin } = require('../middleware/sessionAuth');
+const { requireAuth, requireAuthAdmin } = require('../middleware/sessionAuth');
+const { requirePermission } = require('../middleware/rbac');
 
 // Aplicar middleware de autenticación a todas las rutas
-router.use(requireAuthAdmin);
+router.use(requireAuth);
 
 /**
  * GET /api/acceso
@@ -229,7 +230,7 @@ router.get('/estadisticas', async (req, res) => {
  * Verifica si un vehículo puede acceder sin registrar el acceso
  * Body: { patente }
  */
-router.post('/verificar', async (req, res) => {
+router.post('/verificar', requirePermission('acceso.leer'), async (req, res) => {
     try {
         const { patente } = req.body;
         
@@ -266,7 +267,7 @@ router.post('/verificar', async (req, res) => {
  * Registra un acceso (entrada o salida) con verificación automática de morosidad
  * Body: { patente, tipo_acceso, usuario_registro, observaciones }
  */
-router.post('/registrar', async (req, res) => {
+router.post('/registrar', requirePermission('acceso.crear'), async (req, res) => {
     try {
         const { patente, tipo_acceso, usuario_registro, observaciones } = req.body;
         
@@ -336,7 +337,7 @@ router.post('/registrar', async (req, res) => {
  * Crea un registro de acceso manual (sin usar la función automática)
  * Útil para registros históricos o correcciones
  */
-router.post('/', async (req, res) => {
+router.post('/', requirePermission('acceso.crear'), async (req, res) => {
     try {
         const {
             vehiculo_patente,
@@ -423,7 +424,7 @@ router.post('/', async (req, res) => {
  * DELETE /api/acceso/:id
  * Soft delete de un registro de acceso
  */
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requirePermission('acceso.eliminar'), async (req, res) => {
     try {
         const { id } = req.params;
         

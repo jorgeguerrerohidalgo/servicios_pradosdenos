@@ -8,10 +8,11 @@
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../utils/db');
-const { requireAuthAdmin } = require('../middleware/sessionAuth');
+const { requireAuth, requireAuthAdmin } = require('../middleware/sessionAuth');
+const { requirePermission } = require('../middleware/rbac');
 
 // Aplicar middleware de autenticación a todas las rutas
-router.use(requireAuthAdmin);
+router.use(requireAuth);
 
 // ==================== GET: Listar pagos ====================
 /**
@@ -250,7 +251,7 @@ router.get('/morosas', async (req, res) => {
  * POST /api/pagos
  * Crea un pago manual
  */
-router.post('/', async (req, res) => {
+router.post('/', requirePermission('pagos.crear'), async (req, res) => {
     try {
         const { 
             casa_id, 
@@ -353,7 +354,7 @@ router.post('/', async (req, res) => {
  * Genera pagos automáticamente para todas las casas en un período
  * Body: { periodo, fecha_vencimiento }
  */
-router.post('/generar-periodo', async (req, res) => {
+router.post('/generar-periodo', requirePermission('pagos.crear'), async (req, res) => {
     try {
         const { periodo, fecha_vencimiento } = req.body;
         
@@ -406,7 +407,7 @@ router.post('/generar-periodo', async (req, res) => {
  * Marca un pago como pagado
  * Body: { metodo_pago, numero_comprobante, fecha_pago }
  */
-router.put('/:id/registrar', async (req, res) => {
+router.put('/:id/registrar', requirePermission('pagos.editar'), async (req, res) => {
     try {
         const { id } = req.params;
         const { metodo_pago, numero_comprobante, fecha_pago } = req.body;
@@ -466,7 +467,7 @@ router.put('/:id/registrar', async (req, res) => {
  * PUT /api/pagos/:id
  * Actualiza un pago existente
  */
-router.put('/:id', async (req, res) => {
+router.put('/:id', requirePermission('pagos.editar'), async (req, res) => {
     try {
         const { id } = req.params;
         const { 
@@ -543,7 +544,7 @@ router.put('/:id', async (req, res) => {
  * DELETE /api/pagos/:id
  * Realiza soft delete de un pago
  */
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requirePermission('pagos.eliminar'), async (req, res) => {
     try {
         const { id } = req.params;
         
@@ -595,7 +596,7 @@ router.delete('/:id', async (req, res) => {
  * Ejecuta la función que actualiza automáticamente pagos pendientes a vencidos
  * Esta función debe ejecutarse diariamente (puede usarse con cron job)
  */
-router.post('/actualizar-estados', async (req, res) => {
+router.post('/actualizar-estados', requirePermission('pagos.editar'), async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM actualizar_estados_pagos()');
         

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../utils/db');
 const { requireAuth, requireAdmin, requireAuthAdmin } = require('../middleware/sessionAuth');
+const { requirePermission } = require('../middleware/rbac');
 
 // ==================== DOCUMENTOS COMUNITARIOS ====================
 
@@ -313,7 +314,7 @@ router.get('/admin/:id', requireAuthAdmin, async (req, res) => {
 });
 
 // POST /api/documentos/admin - Crear documento (admin)
-router.post('/admin', requireAuthAdmin, async (req, res) => {
+router.post('/admin', requireAuth, requirePermission('documentos.crear'), async (req, res) => {
     try {
         console.log('📄 Creando documento - Datos recibidos:', req.body);
         console.log('📄 Usuario en sesión:', req.user);
@@ -412,7 +413,7 @@ router.post('/admin', requireAuthAdmin, async (req, res) => {
 });
 
 // PUT /api/documentos/admin/:id - Actualizar documento (admin)
-router.put('/admin/:id', requireAuthAdmin, async (req, res) => {
+router.put('/admin/:id', requireAuth, requirePermission('documentos.editar'), async (req, res) => {
     try {
         const { id } = req.params;
         const {
@@ -474,7 +475,7 @@ router.put('/admin/:id', requireAuthAdmin, async (req, res) => {
 });
 
 // DELETE /api/documentos/admin/:id - Eliminar documento (admin)
-router.delete('/admin/:id', requireAuthAdmin, async (req, res) => {
+router.delete('/admin/:id', requireAuth, requirePermission('documentos.eliminar'), async (req, res) => {
     try {
         const { id } = req.params;
         

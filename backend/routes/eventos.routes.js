@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { query, pool } = require('../utils/db');
 const { requireAuth, requireAdmin, requireAuthAdmin } = require('../middleware/sessionAuth');
+const { requirePermission } = require('../middleware/rbac');
 
 // ==================== EVENTOS VECINALES ====================
 
@@ -165,7 +166,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/eventos/inscribir/:id - Inscribirse a un evento (requiere autenticación)
-router.post('/inscribir/:id', requireAuthAdmin, async (req, res) => {
+router.post('/inscribir/:id', requireAuth, requirePermission('eventos.editar'), async (req, res) => {
     try {
         const { id } = req.params;
         const { comentarios } = req.body;
@@ -243,7 +244,7 @@ router.post('/inscribir/:id', requireAuthAdmin, async (req, res) => {
 });
 
 // DELETE /api/eventos/desinscribir/:id - Cancelar inscripción a evento
-router.delete('/desinscribir/:id', requireAuthAdmin, async (req, res) => {
+router.delete('/desinscribir/:id', requireAuth, requirePermission('eventos.editar'), async (req, res) => {
     try {
         const { id } = req.params;
         
@@ -371,7 +372,7 @@ router.get('/admin/:id', requireAuthAdmin, async (req, res) => {
 });
 
 // POST /api/eventos/admin - Crear evento (admin)
-router.post('/admin', requireAuthAdmin, async (req, res) => {
+router.post('/admin', requireAuth, requirePermission('eventos.crear'), async (req, res) => {
     try {
         console.log('🎯 Creando evento - Datos recibidos:', req.body);
         console.log('🎯 Usuario en sesión:', req.user);
@@ -490,7 +491,7 @@ router.post('/admin', requireAuthAdmin, async (req, res) => {
 });
 
 // PUT /api/eventos/admin/:id - Actualizar evento (admin)
-router.put('/admin/:id', requireAuthAdmin, async (req, res) => {
+router.put('/admin/:id', requireAuth, requirePermission('eventos.editar'), async (req, res) => {
     try {
         const { id } = req.params;
         const {
@@ -545,7 +546,7 @@ router.put('/admin/:id', requireAuthAdmin, async (req, res) => {
 });
 
 // DELETE /api/eventos/admin/:id - Eliminar evento (admin)
-router.delete('/admin/:id', requireAuthAdmin, async (req, res) => {
+router.delete('/admin/:id', requireAuth, requirePermission('eventos.eliminar'), async (req, res) => {
     try {
         const { id } = req.params;
         

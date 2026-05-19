@@ -7,10 +7,11 @@
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../utils/db');
-const { requireAuthAdmin } = require('../middleware/sessionAuth');
+const { requireAuth, requireAuthAdmin } = require('../middleware/sessionAuth');
+const { requirePermission } = require('../middleware/rbac');
 
 // Aplicar middleware de autenticación a todas las rutas
-router.use(requireAuthAdmin);
+router.use(requireAuth);
 
 /**
  * GET /api/vehiculos
@@ -195,7 +196,7 @@ router.get('/:patente', async (req, res) => {
  * POST /api/vehiculos
  * Crea un nuevo vehículo
  */
-router.post('/', async (req, res) => {
+router.post('/', requirePermission('vehiculos.crear'), async (req, res) => {
     try {
         const {
             patente,
@@ -329,7 +330,7 @@ router.post('/', async (req, res) => {
  * PUT /api/vehiculos/:patente
  * Actualiza información de un vehículo existente
  */
-router.put('/:patente', async (req, res) => {
+router.put('/:patente', requirePermission('vehiculos.editar'), async (req, res) => {
     try {
         const { patente } = req.params;
         const patenteUpper = patente.toUpperCase();
@@ -507,7 +508,7 @@ router.put('/:patente', async (req, res) => {
  * DELETE /api/vehiculos/:patente
  * Soft delete de un vehículo
  */
-router.delete('/:patente', async (req, res) => {
+router.delete('/:patente', requirePermission('vehiculos.eliminar'), async (req, res) => {
     try {
         const { patente } = req.params;
         const patenteUpper = patente.toUpperCase();

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../utils/db');
 const { requireAuth, requireAdmin, requireAuthAdmin } = require('../middleware/sessionAuth');
+const { requirePermission } = require('../middleware/rbac');
 
 // ==================== GESTIÓN DE RESIDENTES ====================
 
@@ -213,7 +214,7 @@ router.get('/:id', requireAuthAdmin, async (req, res) => {
 });
 
 // POST /api/residentes - Crear nuevo residente
-router.post('/', requireAdmin, async (req, res) => {
+router.post('/', requireAuth, requirePermission('residentes.crear'), async (req, res) => {
     try {
         const { 
             casa_id,
@@ -335,7 +336,7 @@ router.post('/', requireAdmin, async (req, res) => {
 });
 
 // PUT /api/residentes/:id - Actualizar residente existente
-router.put('/:id', requireAdmin, async (req, res) => {
+router.put('/:id', requireAuth, requirePermission('residentes.editar'), async (req, res) => {
     try {
         const { id } = req.params;
         const { 
@@ -499,7 +500,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
 });
 
 // DELETE /api/residentes/:id - Eliminar residente (soft delete)
-router.delete('/:id', requireAdmin, async (req, res) => {
+router.delete('/:id', requireAuth, requirePermission('residentes.eliminar'), async (req, res) => {
     try {
         const { id } = req.params;
         

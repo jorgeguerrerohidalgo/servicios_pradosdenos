@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../utils/db');
 const { requireAuth, requireAdmin, requireAuthAdmin } = require('../middleware/sessionAuth');
+const { requirePermission } = require('../middleware/rbac');
 
 // ==================== GESTIÓN DE CASAS ====================
 
@@ -134,7 +135,7 @@ router.get('/:id', requireAuthAdmin, async (req, res) => {
 });
 
 // POST /api/casas - Crear nueva casa
-router.post('/', requireAdmin, async (req, res) => {
+router.post('/', requireAuth, requirePermission('casas.crear'), async (req, res) => {
     try {
         const { 
             numero_casa, 
@@ -235,7 +236,7 @@ router.post('/', requireAdmin, async (req, res) => {
 });
 
 // PUT /api/casas/:id - Actualizar casa existente
-router.put('/:id', requireAdmin, async (req, res) => {
+router.put('/:id', requireAuth, requirePermission('casas.editar'), async (req, res) => {
     try {
         const { id } = req.params;
         const { 
@@ -389,7 +390,7 @@ router.put('/:id', requireAdmin, async (req, res) => {
 });
 
 // DELETE /api/casas/:id - Eliminar casa (soft delete)
-router.delete('/:id', requireAdmin, async (req, res) => {
+router.delete('/:id', requireAuth, requirePermission('casas.eliminar'), async (req, res) => {
     try {
         const { id } = req.params;
         

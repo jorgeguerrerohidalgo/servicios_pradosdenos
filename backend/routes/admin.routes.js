@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const { query } = require('../utils/db');
 const { requireAuth, requireAdmin, requireAuthAdmin } = require('../middleware/sessionAuth');
+const { requirePermission } = require('../middleware/rbac');
 
 // ==================== GESTIÓN DE GUARDIAS ====================
 
@@ -59,7 +60,7 @@ router.get('/guardias/:id', requireAuthAdmin, async (req, res) => {
 });
 
 // Crear nuevo guardia
-router.post('/guardias', requireAdmin, async (req, res) => {
+router.post('/guardias', requireAuth, requirePermission('guardias.crear'), async (req, res) => {
   try {
     const { nombre, rut, email, telefono, password } = req.body;
     
@@ -125,7 +126,7 @@ async function generateUniqueValidationCode() {
 }
 
 // Actualizar guardia
-router.put('/guardias/:id', requireAdmin, async (req, res) => {
+router.put('/guardias/:id', requireAuth, requirePermission('guardias.editar'), async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, rut, email, telefono, activo, password } = req.body;
@@ -201,7 +202,7 @@ router.put('/guardias/:id', requireAdmin, async (req, res) => {
 });
 
 // Eliminar guardia
-router.delete('/guardias/:id', requireAdmin, async (req, res) => {
+router.delete('/guardias/:id', requireAuth, requirePermission('guardias.eliminar'), async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -228,7 +229,7 @@ router.delete('/guardias/:id', requireAdmin, async (req, res) => {
 });
 
 // Regenerar código de validación para un guardia
-router.post('/guardias/:id/regenerar-codigo', requireAdmin, async (req, res) => {
+router.post('/guardias/:id/regenerar-codigo', requireAuth, requirePermission('guardias.editar'), async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -307,7 +308,7 @@ router.get('/plazas/:id', requireAuthAdmin, async (req, res) => {
 });
 
 // Crear nueva plaza
-router.post('/plazas', requireAdmin, async (req, res) => {
+router.post('/plazas', requireAuth, requirePermission('plazas.crear'), async (req, res) => {
   try {
     const { nombre, direccion, descripcion } = req.body;
     
@@ -329,7 +330,7 @@ router.post('/plazas', requireAdmin, async (req, res) => {
 });
 
 // Actualizar plaza
-router.put('/plazas/:id', requireAdmin, async (req, res) => {
+router.put('/plazas/:id', requireAuth, requirePermission('plazas.editar'), async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, direccion, descripcion, activo } = req.body;
@@ -383,7 +384,7 @@ router.put('/plazas/:id', requireAdmin, async (req, res) => {
 });
 
 // Eliminar plaza
-router.delete('/plazas/:id', requireAdmin, async (req, res) => {
+router.delete('/plazas/:id', requireAuth, requirePermission('plazas.eliminar'), async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -454,7 +455,7 @@ router.get('/admins/:id', requireAuthAdmin, async (req, res) => {
 });
 
 // Crear nuevo administrador
-router.post('/admins', requireAdmin, async (req, res) => {
+router.post('/admins', requireAuth, requirePermission('administradores.crear'), async (req, res) => {
   try {
     const { nombre, apellido_paterno, apellido_materno, email, telefono, password } = req.body;
     
@@ -485,7 +486,7 @@ router.post('/admins', requireAdmin, async (req, res) => {
 });
 
 // Actualizar administrador
-router.put('/admins/:id', requireAdmin, async (req, res) => {
+router.put('/admins/:id', requireAuth, requirePermission('administradores.editar'), async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, apellido_paterno, apellido_materno, email, telefono, activo, password } = req.body;
@@ -555,7 +556,7 @@ router.put('/admins/:id', requireAdmin, async (req, res) => {
 });
 
 // Eliminar administrador
-router.delete('/admins/:id', requireAdmin, async (req, res) => {
+router.delete('/admins/:id', requireAuth, requirePermission('administradores.eliminar'), async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -579,7 +580,7 @@ router.delete('/admins/:id', requireAdmin, async (req, res) => {
 // ==================== REPORTES Y ESTADÍSTICAS ====================
 
 // Estadísticas generales
-router.get('/stats', requireAdmin, async (req, res) => {
+router.get('/stats', requireAuth, requirePermission('dashboard.leer'), async (req, res) => {
   try {
     console.log('Obteniendo estadísticas del dashboard...');
     
@@ -620,7 +621,7 @@ router.get('/stats', requireAdmin, async (req, res) => {
 });
 
 // Reporte de actividad por fechas
-router.get('/reports/activity', requireAdmin, async (req, res) => {
+router.get('/reports/activity', requireAuth, requirePermission('reportes.leer'), async (req, res) => {
   try {
     const { fecha_inicio, fecha_fin } = req.query;
     
@@ -687,7 +688,7 @@ router.get('/reports/recent', requireAuthAdmin, async (req, res) => {
 });
 
 // Reporte completo de checkins con filtros y ordenamiento
-router.get('/reports/checkins', requireAdmin, async (req, res) => {
+router.get('/reports/checkins', requireAuth, requirePermission('reportes.leer'), async (req, res) => {
   try {
     const { fecha_inicio, fecha_fin, orden_campo, orden_direccion } = req.query;
     
@@ -773,7 +774,7 @@ router.get('/reports/checkins', requireAdmin, async (req, res) => {
 
 // ==================== ENDPOINT TEMPORAL: GENERAR TOKENS ====================
 // Endpoint temporal para generar tokens automáticamente para plazas sin token
-router.post('/generate-tokens', requireAdmin, async (req, res) => {
+router.post('/generate-tokens', requireAuth, requirePermission('tokens.crear'), async (req, res) => {
   try {
     console.log('=== GENERANDO TOKENS FALTANTES ===');
     
@@ -853,7 +854,7 @@ router.post('/generate-tokens', requireAdmin, async (req, res) => {
 // ==================== CORRECCIÓN DE DUPLICADOS ====================
 
 // Verificar duplicados de plazas
-router.get('/check-duplicates', requireAdmin, async (req, res) => {
+router.get('/check-duplicates', requireAuth, requirePermission('dashboard.leer'), async (req, res) => {
   try {
     console.log('🔍 Verificando duplicados de plazas...');
     
@@ -905,7 +906,7 @@ router.get('/check-duplicates', requireAdmin, async (req, res) => {
 });
 
 // Corregir duplicados de plazas
-router.post('/fix-duplicates', requireAdmin, async (req, res) => {
+router.post('/fix-duplicates', requireAuth, requirePermission('dashboard.editar'), async (req, res) => {
   try {
     console.log('🛠️ Iniciando corrección de duplicados...');
     

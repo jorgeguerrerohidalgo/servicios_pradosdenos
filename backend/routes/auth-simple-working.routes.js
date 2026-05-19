@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../utils/db');
 const bcrypt = require('bcrypt');
+const { getUserPermissions, getUserRoles, getMaxPriority } = require('../utils/permissions');
 
 router.post('/login', async (req, res) => {
     try {
@@ -135,20 +136,51 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Credenciales inválidas' });
         }
         
-        console.log('✅ Password match - creating session');
+        console.log('✅ Password match - loading permissions and roles');
         
-        // Crear sesión
+        // Cargar permisos y roles del sistema RBAC
+        const permissions = await getUserPermissions(user.id);
+        const roles = await getUserRoles(user.id);
+        
+        console.log('✅ Loaded permissions:', permissions.length);
+        console.log('✅ Loaded roles:', roles.length);
+        
+        // Calcular nivel de prioridad máximo
+        const nivelPrioridad = getMaxPriority(roles);
+        
+        // Extraer scopes de los roles
+        const scopes = roles.map(r => ({
+            scope_type: r.scope_type,
+            scope_id: r.scope_id,
+            plaza_nombre: r.plaza_nombre
+        })).filter(s => s.scope_type);
+        
+        console.log('✅ User level:', nivelPrioridad);
+        console.log('✅ Scopes:', scopes.length);
+        
+        // Crear sesión enriquecida con RBAC
         const userName = user.nombre || user.email;
         
         req.session.guardia = {
             id: user.id,
             nombre: userName,
             email: user.email,
-            tipo: userType,
+            tipo: nivelPrioridad >= 80 ? 'admin' : 'guardia',  // Compatibilidad con código legacy
+            roles: roles.map(r => ({ 
+                codigo: r.codigo, 
+                nombre: r.nombre,
+                nivel_prioridad: r.nivel_prioridad 
+            })),
+            permissions: permissions,
+            nivel_prioridad: nivelPrioridad,
+            scopes: scopes,
+            plaza_id: user.plaza_id || null,  // Plaza principal del usuario
             loginTime: new Date().toISOString()
         };
         
-        console.log('✅ Session created successfully');
+        console.log('✅ Session created successfully with RBAC data');
+        console.log('📋 Permissions:', permissions.slice(0, 5), permissions.length > 5 ? `... (+${permissions.length - 5} more)` : '');
+        console.log('🎭 Roles:', roles.map(r => r.nombre).join(', '));
         
         return res.json({
             message: 'Login exitoso',
@@ -156,7 +188,10 @@ router.post('/login', async (req, res) => {
                 id: user.id,
                 nombre: userName,
                 email: user.email,
-                tipo: userType
+                tipo: nivelPrioridad >= 80 ? 'admin' : 'guardia',
+                roles: roles.map(r => r.nombre),
+                nivel_prioridad: nivelPrioridad,
+                permissions_count: permissions.length
             }
         });
         
