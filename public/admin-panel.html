@@ -631,6 +631,7 @@
                 <table class="table table-striped">
                     <thead class="table-dark">
                         <tr>
+                            <th style="text-align: center;"><i class="fas fa-camera"></i></th>
                             <th>Nombre</th>
                             <th>Tipo</th>
                             <th>Raza</th>
@@ -644,7 +645,7 @@
                         </tr>
                     </thead>
                     <tbody id="mascotasTableBody">
-                        <tr><td colspan="10" class="text-center">Cargando mascotas...</td></tr>
+                        <tr><td colspan="11" class="text-center">Cargando mascotas...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -4592,7 +4593,7 @@
             const tbody = document.getElementById('mascotasTableBody');
             
             if (mascotas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10" class="text-center">No hay mascotas registradas</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="11" class="text-center">No hay mascotas registradas</td></tr>';
                 return;
             }
             
@@ -4601,8 +4602,23 @@
                 const tipoIcono = mascota.tipo === 'perro' ? 'fa-dog' : mascota.tipo === 'gato' ? 'fa-cat' : 'fa-paw';
                 const duenoTexto = mascota.dueno_nombre === 'COMUNITARIA' ? '<span class="badge bg-info">Comunitaria</span>' : escapeHtml(mascota.dueno_nombre);
                 
+                // Indicador de foto
+                let fotoIndicador;
+                if (mascota.foto_url) {
+                    fotoIndicador = `
+                        <img src="${escapeHtml(mascota.foto_url)}" 
+                             alt="Foto de ${escapeHtml(mascota.mascota_nombre)}" 
+                             style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px; cursor: pointer;"
+                             onclick="Swal.fire({imageUrl: '${escapeHtml(mascota.foto_url)}', imageAlt: '${escapeHtml(mascota.mascota_nombre)}', showConfirmButton: false, imageWidth: 400})" 
+                             title="Click para ampliar">
+                    `;
+                } else {
+                    fotoIndicador = '<i class="fas fa-camera-slash text-muted" title="Sin foto"></i>';
+                }
+                
                 return `
                     <tr>
+                        <td style="text-align: center;">${fotoIndicador}</td>
                         <td>
                             <i class="fas ${tipoIcono} me-1"></i>
                             ${escapeHtml(mascota.mascota_nombre)}
@@ -4679,9 +4695,17 @@
                                 document.getElementById('mascotaConDueno').checked = true;
                                 await onTipoMascotaChange();
                                 await onMascotaPlazaChange();
+                                
+                                // Asignar casa y esperar a que cargue residentes
                                 document.getElementById('mascotaCasa').value = mascota.casa_id;
                                 await loadResidentesPorCasa();
+                                
+                                // IMPORTANTE: Esperar 100ms para que el DOM se actualice
+                                await new Promise(resolve => setTimeout(resolve, 100));
+                                
+                                // Ahora sí asignar el residente
                                 document.getElementById('mascotaResidente').value = mascota.residente_id;
+                                console.log('✅ Dueño asignado:', mascota.residente_id);
                             } else {
                                 document.getElementById('mascotaComunitaria').checked = true;
                                 await onTipoMascotaChange();
@@ -4744,53 +4768,7 @@
                                     `<option value="${casa.id}">${casa.direccion}</option>`
                                 ).join('');
                             
-                            // Agregar event listener para cargar residentes cuando se selecciona una casa
-                            selectCasa.onchange = async function() {
-                                console.log('🔔 Casa seleccionada - disparando carga de residentes');
-                                const casaId = this.value;
-                                const selectResidente = document.getElementById('mascotaResidente');
-                                
-                                console.log('🏠 Casa ID seleccionado:', casaId);
-                                
-                                if (!casaId) {
-                                    console.log('⚠️ No hay casa_id');
-                                    selectResidente.disabled = true;
-                                    selectResidente.innerHTML = '<option value="">Primero seleccione casa...</option>';
-                                    return;
-                                }
-                                
-                                try {
-                                    console.log(`📡 Consultando residentes: /api/residentes/casa/${casaId}`);
-                                    const response = await authenticatedFetch(`/api/residentes/casa/${casaId}`);
-                                    console.log('📥 Respuesta recibida:', response ? response.status : 'null');
-                                    
-                                    if (response && response.ok) {
-                                        const data = await response.json();
-                                        console.log('📊 Datos de residentes:', data);
-                                        
-                                        if (data.success && data.data.length > 0) {
-                                            console.log(`✅ ${data.data.length} residentes encontrados`);
-                                            selectResidente.disabled = false;
-                                            selectResidente.innerHTML = '<option value="">Seleccione un residente...</option>' +
-                                                data.data.map(residente => 
-                                                    `<option value="${residente.id}">${residente.nombre} ${residente.apellido_paterno}</option>`
-                                                ).join('');
-                                        } else {
-                                            console.log('⚠️ No hay residentes en esta casa');
-                                            selectResidente.disabled = true;
-                                            selectResidente.innerHTML = '<option value="">No hay residentes en esta casa</option>';
-                                        }
-                                    } else {
-                                        console.error('❌ Respuesta no OK:', response ? response.status : 'null');
-                                        selectResidente.disabled = true;
-                                        selectResidente.innerHTML = '<option value="">Error al cargar residentes</option>';
-                                    }
-                                } catch (error) {
-                                    console.error('❌ ERROR al cargar residentes:', error);
-                                    selectResidente.disabled = true;
-                                    selectResidente.innerHTML = '<option value="">Error al cargar residentes</option>';
-                                }
-                            };
+                            // NO sobrescribir el onchange - ya está definido en el HTML como onchange="loadResidentesPorCasa()"
                         } else {
                             console.log('⚠️ No hay casas en esta plaza');
                             selectCasa.disabled = true;
@@ -7012,9 +6990,22 @@
                 document.getElementById('mascotaFotoImg').src = photoURL;
                 document.getElementById('mascotaFotoPreview').style.display = 'block';
                 document.getElementById('mascotaFotoHidden').value = photoURL;
+                
+                // Agregar indicador visual de que hay foto actual
+                const previewDiv = document.getElementById('mascotaFotoPreview');
+                if (!previewDiv.querySelector('.badge-foto-actual')) {
+                    const badge = document.createElement('div');
+                    badge.className = 'badge bg-success badge-foto-actual mb-2';
+                    badge.innerHTML = '<i class="fas fa-check-circle"></i> Foto actual';
+                    previewDiv.insertBefore(badge, previewDiv.firstChild);
+                }
             } else {
                 document.getElementById('mascotaFotoPreview').style.display = 'none';
                 document.getElementById('mascotaFotoHidden').value = '';
+                
+                // Remover badge si existe
+                const badge = document.querySelector('.badge-foto-actual');
+                if (badge) badge.remove();
             }
         }
         
@@ -7026,6 +7017,10 @@
             document.getElementById('mascotaFotoFile').value = '';
             document.getElementById('mascotaFotoHidden').value = '';
             document.getElementById('mascotaFotoImg').src = '';
+            
+            // Remover badge
+            const badge = document.querySelector('.badge-foto-actual');
+            if (badge) badge.remove();
         }
     </script>
 </body>
