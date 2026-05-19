@@ -1049,12 +1049,11 @@
                                             <th>Roles Actuales</th>
                                             <th>Alcance</th>
                                             <th>Nivel</th>
-                                            <th>Último Cambio</th>
                                             <th>Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody id="usuariosRolesTableBody">
-                                        <tr><td colspan="7" class="text-center">Cargando...</td></tr>
+                                        <tr><td colspan="6" class="text-center">Cargando...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -7328,37 +7327,52 @@
             const tbody = document.getElementById('usuariosRolesTableBody');
             
             if (!usuariosConRolesGlobal || usuariosConRolesGlobal.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No hay usuarios con roles asignados</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No hay usuarios con roles asignados</td></tr>';
                 return;
             }
 
             tbody.innerHTML = usuariosConRolesGlobal.map(user => {
-                const roles = user.roles.map(r => 
-                    `<span class="badge bg-primary me-1">${r.nombre}</span>`
-                ).join('');
+                // Filtrar roles que tienen un role_id (no nulos)
+                const rolesActivos = (user.roles || []).filter(r => r.role_id !== null);
                 
-                const scopes = user.scopes.map(s => 
-                    s.scope_type ? `<span class="badge bg-info me-1">${s.scope_type}: ${s.scope_name || 'N/A'}</span>` : '<span class="badge bg-success">Global</span>'
-                ).join('');
+                // Renderizar badges de roles
+                const rolesBadges = rolesActivos.length > 0 
+                    ? rolesActivos.map(r => `<span class="badge bg-primary me-1">${escapeHtml(r.role_nombre)}</span>`).join('')
+                    : '<span class="text-muted">Sin roles</span>';
+                
+                // Extraer scopes de los roles (cada rol tiene su scope)
+                const scopesBadges = rolesActivos.length > 0
+                    ? rolesActivos.map(r => {
+                        if (!r.scope_type) {
+                            return '<span class="badge bg-success me-1">Global</span>';
+                        }
+                        const scopeName = r.plaza_nombre || r.scope_id || 'N/A';
+                        return `<span class="badge bg-info me-1">${r.scope_type}: ${scopeName}</span>`;
+                    }).join('')
+                    : '<span class="text-muted">—</span>';
 
-                const nivel = user.nivel_prioridad || 0;
-                const ultimoCambio = user.ultimo_cambio_permisos ? 
-                    new Date(user.ultimo_cambio_permisos).toLocaleDateString('es-CL') : 
-                    'Nunca';
+                // Obtener el nivel de prioridad más alto de los roles asignados
+                const nivelMaximo = rolesActivos.length > 0
+                    ? Math.max(...rolesActivos.map(r => r.nivel_prioridad || 0))
+                    : 0;
+
+                // Fecha de asignación más reciente
+                const fechaAsignacion = rolesActivos.length > 0 && rolesActivos[0].asignado_en
+                    ? new Date(rolesActivos[0].asignado_en).toLocaleDateString('es-CL')
+                    : 'N/A';
 
                 return `
                     <tr>
                         <td><strong>${escapeHtml(user.nombre)}</strong></td>
                         <td>${escapeHtml(user.email)}</td>
-                        <td>${roles || '<span class="text-muted">Sin roles</span>'}</td>
-                        <td>${scopes || '<span class="text-muted">—</span>'}</td>
-                        <td><span class="badge bg-secondary">${nivel}</span></td>
-                        <td><small class="text-muted">${ultimoCambio}</small></td>
+                        <td>${rolesBadges}</td>
+                        <td>${scopesBadges}</td>
+                        <td><span class="badge bg-secondary">${nivelMaximo}</span></td>
                         <td>
-                            <button class="btn btn-sm btn-primary me-1" onclick="showAsignarRolModal(${user.id}, '${escapeHtml(user.nombre)}')">
+                            <button class="btn btn-sm btn-primary me-1" onclick="showAsignarRolModal(${user.user_id}, '${escapeHtml(user.nombre)}')">
                                 <i class="fas fa-user-plus"></i>
                             </button>
-                            <button class="btn btn-sm btn-danger" onclick="showRevocarRolModal(${user.id}, '${escapeHtml(user.nombre)}')">
+                            <button class="btn btn-sm btn-danger" onclick="showRevocarRolModal(${user.user_id}, '${escapeHtml(user.nombre)}')">
                                 <i class="fas fa-user-minus"></i>
                             </button>
                         </td>
@@ -7476,14 +7490,22 @@
         async function showRevocarRolModal(userId, userName) {
             try {
                 // Obtener roles actuales del usuario
-                const user = usuariosConRolesGlobal.find(u => u.id === userId);
-                if (!user || user.roles.length === 0) {
+                const user = usuariosConRolesGlobal.find(u => u.user_id === userId);
+                if (!user) {
+                    Swal.fire('Información', 'Usuario no encontrado', 'info');
+                    return;
+                }
+                
+                // Filtrar roles activos (no nulos)
+                const rolesActivos = (user.roles || []).filter(r => r.role_id !== null);
+                
+                if (rolesActivos.length === 0) {
                     Swal.fire('Información', 'Este usuario no tiene roles asignados', 'info');
                     return;
                 }
 
-                const rolesOptions = user.roles.map(r => 
-                    `<option value="${r.id}">${r.nombre}</option>`
+                const rolesOptions = rolesActivos.map(r => 
+                    `<option value="${r.role_id}">${escapeHtml(r.role_nombre)}</option>`
                 ).join('');
 
                 const result = await Swal.fire({
