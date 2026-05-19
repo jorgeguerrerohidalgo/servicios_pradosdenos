@@ -5716,7 +5716,7 @@
                             // Diferenciar casas sin pagos vs con pagos vencidos
                             const estadoBadge = casa.total_pagos === 0 
                                 ? '<span class="badge bg-secondary">Sin pagos</span>' 
-                                : `<span class="badge bg-danger">${casa.pagos_vencidos} vencidos</span>`;
+                                : `<span class="badge bg-danger">${casa.meses_moroso} vencidos</span>`;
                             
                             return `
                                 <tr>
@@ -5912,7 +5912,7 @@
                         </td>
                         <td>
                             ${estadoMorosidadBadge[v.estado_morosidad] || '-'}
-                            ${v.pagos_vencidos > 0 ? `<br><small class="text-danger">${v.pagos_vencidos} mes(es) vencido(s)</small>` : ''}
+                            ${v.meses_moroso > 0 ? `<br><small class="text-danger">${v.meses_moroso} mes(es) vencido(s)</small>` : ''}
                             ${v.deuda_total > 0 ? `<br><small class="text-danger">Deuda: ${deudaFormatted}</small>` : ''}
                         </td>
                         <td>${accesoPermitidoBadge}</td>
@@ -6237,7 +6237,7 @@
                                     <td><strong>${v.patente}</strong></td>
                                     <td>${v.marca} ${v.modelo}</td>
                                     <td>${v.numero_casa}</td>
-                                    <td><span class="badge bg-danger">${v.pagos_vencidos}</span></td>
+                                    <td><span class="badge bg-danger">${v.meses_moroso}</span></td>
                                     <td class="text-danger"><strong>${deudaFormatted}</strong></td>
                                     <td><span class="badge bg-danger">${v.estado_morosidad.replace('_', ' ')}</span></td>
                                 </tr>
@@ -6478,7 +6478,7 @@
                             <div class="text-start">
                                 <p><strong>Patente:</strong> ${patente}</p>
                                 <p><strong>Morosidad:</strong> ${verificacion.morosidad ? '<span class="badge bg-warning">Con Morosidad</span>' : '<span class="badge bg-success">Al Día</span>'}</p>
-                                ${verificacion.pagos_vencidos ? `<p><strong>Pagos Vencidos:</strong> ${verificacion.pagos_vencidos} mes(es)</p>` : ''}
+                                ${verificacion.meses_moroso ? `<p><strong>Pagos Vencidos:</strong> ${verificacion.meses_moroso} mes(es)</p>` : ''}
                                 <p><strong>Deuda Total:</strong> ${deudaFormatted}</p>
                                 <hr>
                                 <p class="mb-0"><strong>Detalle:</strong> ${verificacion.motivo}</p>

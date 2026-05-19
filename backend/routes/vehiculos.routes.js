@@ -37,7 +37,7 @@ router.get('/', async (req, res) => {
                 anio,
                 tipo,
                 observaciones,
-                pagos_vencidos,
+                meses_moroso,
                 deuda_total,
                 estado_morosidad,
                 acceso_permitido,
