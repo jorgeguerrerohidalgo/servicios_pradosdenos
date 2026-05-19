@@ -8,8 +8,11 @@
 
 SET timezone = 'America/Santiago';
 
--- Actualizar vista v_pagos_completo con estado calculado
-CREATE OR REPLACE VIEW v_pagos_completo AS
+-- Eliminar vista anterior (tiene estructura diferente)
+DROP VIEW IF EXISTS v_pagos_completo;
+
+-- Crear vista v_pagos_completo con estado calculado
+CREATE VIEW v_pagos_completo AS
 SELECT 
   p.id,
   p.casa_id,
