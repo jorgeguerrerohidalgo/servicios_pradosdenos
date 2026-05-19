@@ -4592,6 +4592,8 @@
         function renderMascotasTable(mascotas) {
             const tbody = document.getElementById('mascotasTableBody');
             
+            console.log('🎨 Renderizando tabla de mascotas - Versión con columna de FOTO - Total:', mascotas.length);
+            
             if (mascotas.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="11" class="text-center">No hay mascotas registradas</td></tr>';
                 return;
@@ -4605,15 +4607,17 @@
                 // Indicador de foto
                 let fotoIndicador;
                 if (mascota.foto_url) {
+                    console.log(`📸 Mascota "${mascota.mascota_nombre}" TIENE foto:`, mascota.foto_url);
                     fotoIndicador = `
                         <img src="${escapeHtml(mascota.foto_url)}" 
                              alt="Foto de ${escapeHtml(mascota.mascota_nombre)}" 
-                             style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px; cursor: pointer;"
+                             style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid #28a745;"
                              onclick="Swal.fire({imageUrl: '${escapeHtml(mascota.foto_url)}', imageAlt: '${escapeHtml(mascota.mascota_nombre)}', showConfirmButton: false, imageWidth: 400})" 
                              title="Click para ampliar">
                     `;
                 } else {
-                    fotoIndicador = '<i class="fas fa-camera-slash text-muted" title="Sin foto"></i>';
+                    console.log(`📷 Mascota "${mascota.mascota_nombre}" NO tiene foto`);
+                    fotoIndicador = '<i class="fas fa-camera-slash text-muted fa-2x" title="Sin foto" style="opacity: 0.3;"></i>';
                 }
                 
                 return `
@@ -4692,20 +4696,36 @@
                             
                             // Determinar si es comunitaria o con dueño
                             if (mascota.residente_id) {
+                                console.log('🔄 Cargando mascota con dueño - residente_id:', mascota.residente_id, 'casa_id:', mascota.casa_id);
+                                
                                 document.getElementById('mascotaConDueno').checked = true;
                                 await onTipoMascotaChange();
                                 await onMascotaPlazaChange();
                                 
                                 // Asignar casa y esperar a que cargue residentes
                                 document.getElementById('mascotaCasa').value = mascota.casa_id;
-                                await loadResidentesPorCasa();
+                                console.log('🏠 Casa asignada:', mascota.casa_id);
                                 
-                                // IMPORTANTE: Esperar 100ms para que el DOM se actualice
-                                await new Promise(resolve => setTimeout(resolve, 100));
+                                await loadResidentesPorCasa();
+                                console.log('📋 Residentes cargados, esperando actualización DOM...');
+                                
+                                // IMPORTANTE: Esperar 200ms para que el DOM se actualice
+                                await new Promise(resolve => setTimeout(resolve, 200));
+                                
+                                // Verificar que el select tenga opciones
+                                const selectResidente = document.getElementById('mascotaResidente');
+                                console.log('👥 Opciones disponibles en select de residentes:', selectResidente.options.length);
                                 
                                 // Ahora sí asignar el residente
                                 document.getElementById('mascotaResidente').value = mascota.residente_id;
-                                console.log('✅ Dueño asignado:', mascota.residente_id);
+                                
+                                // Verificar que se asignó correctamente
+                                const valorAsignado = document.getElementById('mascotaResidente').value;
+                                if (valorAsignado == mascota.residente_id) {
+                                    console.log('✅ Dueño asignado CORRECTAMENTE:', mascota.residente_id);
+                                } else {
+                                    console.error('❌ ERROR: No se pudo asignar dueño. Esperado:', mascota.residente_id, 'Actual:', valorAsignado);
+                                }
                             } else {
                                 document.getElementById('mascotaComunitaria').checked = true;
                                 await onTipoMascotaChange();
