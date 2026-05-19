@@ -50,6 +50,7 @@ SELECT
   u.nombre,
   u.email,
   r.nombre as rol,
+  r.nivel_prioridad,
   STRING_AGG(p.codigo, ', ') as permisos_roles
 FROM admin_users u
 INNER JOIN user_roles ur ON u.id = ur.user_id AND ur.activo = TRUE
@@ -58,7 +59,7 @@ INNER JOIN role_permissions rp ON r.id = rp.role_id
 INNER JOIN permissions p ON rp.permission_id = p.id
 WHERE (p.codigo LIKE 'roles.%' OR p.codigo = '*.*')
   AND u.activo = TRUE
-GROUP BY u.id, u.nombre, u.email, r.nombre
+GROUP BY u.id, u.nombre, u.email, r.nombre, r.nivel_prioridad
 ORDER BY r.nivel_prioridad DESC;
 
 -- 4. Verificar timestamp de último cambio de permisos
