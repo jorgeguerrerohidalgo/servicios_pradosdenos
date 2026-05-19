@@ -223,6 +223,36 @@ router.put('/:id',
 // ========================================
 
 /**
+ * GET /api/roles/permisos
+ * Listar todos los permisos disponibles (alias simple)
+ */
+router.get('/permisos', 
+  requireAuth, 
+  requirePermission('roles.leer'), 
+  async (req, res) => {
+    try {
+      const result = await pool.query(`
+        SELECT 
+          id,
+          codigo,
+          modulo,
+          accion,
+          descripcion,
+          activo
+        FROM permissions
+        WHERE activo = TRUE
+        ORDER BY modulo, accion
+      `);
+      
+      res.json({ success: true, data: result.rows });
+    } catch (error) {
+      console.error('❌ Error al listar permisos:', error);
+      res.status(500).json({ success: false, error: 'Error al obtener permisos' });
+    }
+  }
+);
+
+/**
  * GET /api/roles/permissions/all
  * Listar todos los permisos disponibles agrupados por módulo
  */
@@ -325,6 +355,104 @@ router.delete('/:id/permissions/:permission_id',
 // ========================================
 // ASIGNACIÓN DE ROLES A USUARIOS
 // ========================================
+
+/**
+ * POST /api/roles/asignar
+ * Asignar rol a un usuario (endpoint simplificado para el frontend)
+ */
+router.post('/asignar',
+  requireAuth,
+  requirePermission('roles.editar'),
+  async (req, res) => {
+    try {
+      const { user_id, role_id, scope_type, scope_id, motivo } = req.body;
+      
+      if (!user_id || !role_id) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'user_id y role_id son requeridos' 
+        });
+      }
+      
+      // Insertar o actualizar el rol del usuario
+      await pool.query(`
+        INSERT INTO user_roles (user_id, role_id, scope_type, scope_id, asignado_por, asignado_en, activo)
+        VALUES ($1, $2, $3, $4, $5, NOW(), TRUE)
+        ON CONFLICT (user_id, role_id) DO UPDATE
+        SET scope_type = EXCLUDED.scope_type,
+            scope_id = EXCLUDED.scope_id,
+            asignado_por = EXCLUDED.asignado_por,
+            asignado_en = NOW(),
+            activo = TRUE,
+            updated_at = NOW()
+      `, [user_id, role_id, scope_type, scope_id, req.user.id]);
+      
+      // Actualizar timestamp de cambio de permisos
+      await pool.query(`
+        UPDATE admin_users
+        SET ultimo_cambio_permisos = NOW()
+        WHERE id = $1
+      `, [user_id]);
+      
+      // Auditoría
+      await pool.query(`
+        INSERT INTO permission_audit (user_id, accion, target_user_id, role_id, motivo, ip_address, created_at)
+        VALUES ($1, 'asignar_rol', $2, $3, $4, $5, NOW())
+      `, [req.user.id, user_id, role_id, motivo || 'Asignación manual desde UI', req.ip]);
+      
+      res.json({ success: true, message: 'Rol asignado correctamente' });
+    } catch (error) {
+      console.error('❌ Error al asignar rol:', error);
+      res.status(500).json({ success: false, error: 'Error al asignar rol' });
+    }
+  }
+);
+
+/**
+ * POST /api/roles/revocar
+ * Revocar rol de un usuario (endpoint simplificado para el frontend)
+ */
+router.post('/revocar',
+  requireAuth,
+  requirePermission('roles.editar'),
+  async (req, res) => {
+    try {
+      const { user_id, role_id, motivo } = req.body;
+      
+      if (!user_id || !role_id) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'user_id y role_id son requeridos' 
+        });
+      }
+      
+      // Desactivar el rol del usuario
+      await pool.query(`
+        UPDATE user_roles
+        SET activo = FALSE, updated_at = NOW()
+        WHERE user_id = $1 AND role_id = $2
+      `, [user_id, role_id]);
+      
+      // Actualizar timestamp de cambio de permisos
+      await pool.query(`
+        UPDATE admin_users
+        SET ultimo_cambio_permisos = NOW()
+        WHERE id = $1
+      `, [user_id]);
+      
+      // Auditoría
+      await pool.query(`
+        INSERT INTO permission_audit (user_id, accion, target_user_id, role_id, motivo, ip_address, created_at)
+        VALUES ($1, 'revocar_rol', $2, $3, $4, $5, NOW())
+      `, [req.user.id, user_id, role_id, motivo || 'Revocación manual desde UI', req.ip]);
+      
+      res.json({ success: true, message: 'Rol revocado correctamente' });
+    } catch (error) {
+      console.error('❌ Error al revocar rol:', error);
+      res.status(500).json({ success: false, error: 'Error al revocar rol' });
+    }
+  }
+);
 
 /**
  * GET /api/roles/users/:user_id/roles
@@ -478,6 +606,51 @@ router.get('/users/:user_id/permissions',
 // ========================================
 // AUDITORÍA
 // ========================================
+
+/**
+ * GET /api/roles/usuarios-con-roles
+ * Listar todos los usuarios con sus roles asignados
+ */
+router.get('/usuarios-con-roles',
+  requireAuth,
+  requirePermission('roles.leer'),
+  async (req, res) => {
+    try {
+      const result = await pool.query(`
+        SELECT 
+          u.id as user_id,
+          u.nombre,
+          u.email,
+          u.activo as usuario_activo,
+          json_agg(
+            json_build_object(
+              'role_id', r.id,
+              'role_codigo', r.codigo,
+              'role_nombre', r.nombre,
+              'nivel_prioridad', r.nivel_prioridad,
+              'scope_type', ur.scope_type,
+              'scope_id', ur.scope_id,
+              'plaza_nombre', p.nombre,
+              'asignado_en', ur.asignado_en,
+              'activo', ur.activo
+            ) ORDER BY r.nivel_prioridad DESC
+          ) as roles
+        FROM admin_users u
+        LEFT JOIN user_roles ur ON u.id = ur.user_id AND ur.activo = TRUE
+        LEFT JOIN roles r ON ur.role_id = r.id
+        LEFT JOIN plazas p ON ur.scope_id = p.id AND ur.scope_type = 'plaza'
+        WHERE u.activo = TRUE
+        GROUP BY u.id, u.nombre, u.email, u.activo
+        ORDER BY u.nombre
+      `);
+      
+      res.json({ success: true, data: result.rows });
+    } catch (error) {
+      console.error('❌ Error al obtener usuarios con roles:', error);
+      res.status(500).json({ success: false, error: 'Error al obtener usuarios con roles' });
+    }
+  }
+);
 
 /**
  * GET /api/roles/audit/recent
