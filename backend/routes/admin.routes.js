@@ -457,32 +457,65 @@ router.get('/admins/:id', requireAuthAdmin, async (req, res) => {
 // Crear nuevo administrador
 router.post('/admins', requireAuth, requirePermission('administradores.crear'), async (req, res) => {
   try {
+    console.log('🔵 POST /api/admin/admins - Inicio');
+    console.log('📝 Body recibido:', req.body);
+    
     const { nombre, apellido_paterno, apellido_materno, email, telefono, password } = req.body;
     
     if (!nombre || !apellido_paterno || !email || !password) {
+      console.log('❌ Validación fallida - Campos faltantes');
       return res.status(400).json({ success: false, message: 'Faltan campos requeridos' });
     }
     
+    console.log('✅ Validación básica OK');
+    
     // Verificar si el email ya existe (usando pool directamente para PostgreSQL)
+    console.log('🔍 Verificando email existente:', email);
     const existingCheck = await pool.query('SELECT id FROM admin_users WHERE email = $1', [email]);
+    console.log('📊 Resultado verificación email:', existingCheck.rows.length);
+    
     if (existingCheck.rows.length > 0) {
+      console.log('❌ Email ya existe');
       return res.status(400).json({ success: false, message: 'El email ya está registrado' });
     }
     
     // Hash de la contraseña
+    console.log('🔐 Generando hash de contraseña...');
     const hashedPassword = await bcrypt.hash(password, 10);
+    console.log('✅ Hash generado');
     
     // Insertar usando pool directamente (PostgreSQL nativo)
+    console.log('💾 Insertando en base de datos...');
+    console.log('Parámetros:', [nombre, apellido_paterno, apellido_materno || null, email, telefono || null, '[HASH]']);
+    
     const result = await pool.query(`
       INSERT INTO admin_users (nombre, apellido_paterno, apellido_materno, email, telefono, password_hash, activo) 
       VALUES ($1, $2, $3, $4, $5, $6, true) 
       RETURNING id, nombre, apellido_paterno, apellido_materno, email, telefono, activo, created_at
     `, [nombre, apellido_paterno, apellido_materno || null, email, telefono || null, hashedPassword]);
     
+    console.log('✅ Insert exitoso. Rows:', result.rows.length);
+    console.log('🎉 Admin creado:', result.rows[0]);
+    
     res.json({ success: true, admin: result.rows[0] });
   } catch (error) {
-    console.error('Error creando administrador:', error);
-    res.status(500).json({ success: false, message: 'Error interno del servidor' });
+    console.error('❌ ERROR COMPLETO creando administrador:');
+    console.error('Mensaje:', error.message);
+    console.error('Código:', error.code);
+    console.error('Detalle:', error.detail);
+    console.error('Hint:', error.hint);
+    console.error('Stack:', error.stack);
+    
+    // Retornar error más detallado en desarrollo
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error interno del servidor',
+      error: process.env.NODE_ENV === 'production' ? undefined : {
+        message: error.message,
+        code: error.code,
+        detail: error.detail
+      }
+    });
   }
 });
 
