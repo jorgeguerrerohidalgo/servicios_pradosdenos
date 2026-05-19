@@ -15,7 +15,12 @@ SET timezone = 'America/Santiago';
 -- =============================================
 -- VISTA ACTUALIZADA: v_vehiculos_completo
 -- =============================================
-CREATE OR REPLACE VIEW v_vehiculos_completo AS
+
+-- Eliminar vista anterior (cambio de columnas)
+DROP VIEW IF EXISTS v_vehiculos_completo;
+
+-- Crear vista con nueva estructura
+CREATE VIEW v_vehiculos_completo AS
 SELECT 
     v.patente,
     v.casa_id,
