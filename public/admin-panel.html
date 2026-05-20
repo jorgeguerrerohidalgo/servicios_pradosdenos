@@ -326,29 +326,87 @@
         <!-- Dashboard Section -->
         <div id="dashboardSection">
             <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+            
+            <!-- Fila 1: Módulos principales -->
             <div class="row">
-                <div class="col-md-3">
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
                     <div class="stats-card">
                         <h3 id="totalEventos">0</h3>
                         <p><i class="fas fa-calendar"></i> Eventos Totales</p>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
                     <div class="stats-card">
                         <h3 id="totalDocumentos">0</h3>
                         <p><i class="fas fa-file"></i> Documentos</p>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
                     <div class="stats-card">
                         <h3 id="totalPlazas">0</h3>
                         <p><i class="fas fa-map-marker"></i> Plazas Activas</p>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
+                    <div class="stats-card">
+                        <h3 id="totalCasas">0</h3>
+                        <p><i class="fas fa-home"></i> Casas Registradas</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Fila 2: Residentes y Mascotas -->
+            <div class="row">
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
+                    <div class="stats-card">
+                        <h3 id="totalResidentes">0</h3>
+                        <p><i class="fas fa-users"></i> Residentes</p>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
+                    <div class="stats-card">
+                        <h3 id="totalMascotas">0</h3>
+                        <p><i class="fas fa-paw"></i> Mascotas</p>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
+                    <div class="stats-card">
+                        <h3 id="totalVehiculos">0</h3>
+                        <p><i class="fas fa-car"></i> Vehículos</p>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
+                    <div class="stats-card">
+                        <h3 id="accesosHoy">0</h3>
+                        <p><i class="fas fa-road-barrier"></i> Accesos Hoy</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Fila 3: Administrativo y Financiero -->
+            <div class="row">
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
                     <div class="stats-card">
                         <h3 id="guardiasActivos">0</h3>
                         <p><i class="fas fa-shield"></i> Guardias Activos</p>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
+                    <div class="stats-card">
+                        <h3 id="totalAdmins">0</h3>
+                        <p><i class="fas fa-users-cog"></i> Administradores</p>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
+                    <div class="stats-card">
+                        <h3 id="casasMorosas">0</h3>
+                        <p><i class="fas fa-exclamation-triangle"></i> Casas en Morosidad</p>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
+                    <div class="stats-card">
+                        <h3 id="pagosDelMes">$0</h3>
+                        <p><i class="fas fa-money-bill-wave"></i> Pagos del Mes</p>
                     </div>
                 </div>
             </div>
@@ -4173,14 +4231,34 @@
             try {
                 console.log('🔄 Usando autenticación por sesiones...');
 
-                // Cargar estadísticas básicas con sesiones
-                const [eventosRes, documentosRes, plazasRes, guardiasRes] = await Promise.all([
+                // Cargar todas las estadísticas en paralelo
+                const [
+                    eventosRes, 
+                    documentosRes, 
+                    plazasRes, 
+                    guardiasRes,
+                    casasRes,
+                    residentesRes,
+                    mascotasRes,
+                    vehiculosRes,
+                    accesosRes,
+                    adminsRes,
+                    pagosRes
+                ] = await Promise.all([
                     authenticatedFetch('/api/eventos/admin/all'),
                     authenticatedFetch('/api/documentos/admin/all'),
                     authenticatedFetch('/api/admin/plazas'),
-                    authenticatedFetch('/api/admin/guardias')
+                    authenticatedFetch('/api/admin/guardias'),
+                    authenticatedFetch('/api/admin/casas'),
+                    authenticatedFetch('/api/admin/residentes'),
+                    authenticatedFetch('/api/admin/mascotas'),
+                    authenticatedFetch('/api/admin/vehiculos'),
+                    authenticatedFetch('/api/admin/control-acceso'),
+                    authenticatedFetch('/api/admin/admin-users'),
+                    authenticatedFetch('/api/admin/pagos')
                 ]);
 
+                // Eventos Totales
                 if (eventosRes && eventosRes.ok) {
                     const eventosData = await eventosRes.json();
                     const total = eventosData.data?.length || 0;
@@ -4188,6 +4266,7 @@
                     console.log('✅ Eventos cargados:', total);
                 }
 
+                // Documentos
                 if (documentosRes && documentosRes.ok) {
                     const documentosData = await documentosRes.json();
                     const total = documentosData.data?.length || 0;
@@ -4195,6 +4274,7 @@
                     console.log('✅ Documentos cargados:', total);
                 }
 
+                // Plazas Activas
                 if (plazasRes && plazasRes.ok) {
                     const plazasData = await plazasRes.json();
                     const plazasActivas = plazasData.data?.filter(p => p.activo).length || 0;
@@ -4202,11 +4282,93 @@
                     console.log('✅ Plazas activas:', plazasActivas);
                 }
 
+                // Casas Registradas
+                if (casasRes && casasRes.ok) {
+                    const casasData = await casasRes.json();
+                    const total = casasData.data?.length || 0;
+                    document.getElementById('totalCasas').textContent = total;
+                    console.log('✅ Casas registradas:', total);
+                    
+                    // Calcular casas en morosidad (monto_deuda > 0)
+                    const morosas = casasData.data?.filter(c => c.monto_deuda > 0).length || 0;
+                    document.getElementById('casasMorosas').textContent = morosas;
+                    console.log('⚠️ Casas en morosidad:', morosas);
+                }
+
+                // Residentes
+                if (residentesRes && residentesRes.ok) {
+                    const residentesData = await residentesRes.json();
+                    const total = residentesData.data?.length || 0;
+                    document.getElementById('totalResidentes').textContent = total;
+                    console.log('✅ Residentes:', total);
+                }
+
+                // Mascotas
+                if (mascotasRes && mascotasRes.ok) {
+                    const mascotasData = await mascotasRes.json();
+                    const total = mascotasData.data?.length || 0;
+                    document.getElementById('totalMascotas').textContent = total;
+                    console.log('✅ Mascotas:', total);
+                }
+
+                // Vehículos
+                if (vehiculosRes && vehiculosRes.ok) {
+                    const vehiculosData = await vehiculosRes.json();
+                    const total = vehiculosData.data?.length || 0;
+                    document.getElementById('totalVehiculos').textContent = total;
+                    console.log('✅ Vehículos:', total);
+                }
+
+                // Accesos Hoy
+                if (accesosRes && accesosRes.ok) {
+                    const accesosData = await accesosRes.json();
+                    const hoy = new Date().toISOString().split('T')[0];
+                    const accesosHoy = accesosData.data?.filter(a => {
+                        const fechaAcceso = new Date(a.fecha_hora).toISOString().split('T')[0];
+                        return fechaAcceso === hoy;
+                    }).length || 0;
+                    document.getElementById('accesosHoy').textContent = accesosHoy;
+                    console.log('✅ Accesos hoy:', accesosHoy);
+                }
+
+                // Guardias Activos
                 if (guardiasRes && guardiasRes.ok) {
                     const guardiasData = await guardiasRes.json();
                     const guardiasActivos = guardiasData.data?.filter(g => g.activo).length || 0;
                     document.getElementById('guardiasActivos').textContent = guardiasActivos;
                     console.log('✅ Guardias activos:', guardiasActivos);
+                }
+
+                // Administradores
+                if (adminsRes && adminsRes.ok) {
+                    const adminsData = await adminsRes.json();
+                    const total = adminsData.data?.length || 0;
+                    document.getElementById('totalAdmins').textContent = total;
+                    console.log('✅ Administradores:', total);
+                }
+
+                // Pagos del Mes Actual
+                if (pagosRes && pagosRes.ok) {
+                    const pagosData = await pagosRes.json();
+                    const mesActual = new Date().getMonth() + 1;
+                    const añoActual = new Date().getFullYear();
+                    
+                    const pagosDelMes = pagosData.data?.filter(p => {
+                        if (p.estado !== 'pagado') return false;
+                        const fechaPago = new Date(p.fecha_pago);
+                        return fechaPago.getMonth() + 1 === mesActual && 
+                               fechaPago.getFullYear() === añoActual;
+                    }) || [];
+                    
+                    const totalPagado = pagosDelMes.reduce((sum, p) => sum + (p.monto_pagado || 0), 0);
+                    const formattedTotal = new Intl.NumberFormat('es-CL', {
+                        style: 'currency',
+                        currency: 'CLP',
+                        minimumFractionDigits: 0
+                    }).format(totalPagado);
+                    
+                    document.getElementById('pagosDelMes').textContent = formattedTotal;
+                    console.log('💰 Pagos del mes:', formattedTotal);
                 }
 
             } catch (error) {
