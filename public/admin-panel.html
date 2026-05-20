@@ -4370,7 +4370,7 @@
                     console.log('📅 Buscando pagos del mes:', mesActual, 'año:', añoActual);
                     
                     const pagosDelMes = pagosData.data?.filter(p => {
-                        console.log(`Pago: estado=${p.estado}, fecha_pago=${p.fecha_pago}, monto_pagado=${p.monto_pagado}`);
+                        console.log(`Pago: estado=${p.estado}, fecha_pago=${p.fecha_pago}, monto=${p.monto}`);
                         if (p.estado !== 'pagado') return false;
                         const fechaPago = new Date(p.fecha_pago);
                         const mesPago = fechaPago.getMonth() + 1;
@@ -4380,7 +4380,7 @@
                     }) || [];
                     
                     console.log('💳 Pagos del mes filtrados:', pagosDelMes.length);
-                    const totalPagado = pagosDelMes.reduce((sum, p) => sum + (p.monto_pagado || 0), 0);
+                    const totalPagado = pagosDelMes.reduce((sum, p) => sum + (parseFloat(p.monto) || 0), 0);
                     const formattedTotal = new Intl.NumberFormat('es-CL', {
                         style: 'currency',
                         currency: 'CLP',
