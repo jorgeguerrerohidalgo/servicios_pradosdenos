@@ -21,13 +21,7 @@ pids
 logs
 *.log
 
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Coverage directory used by tools like istanbul
+# Coverage directory used by  tools like istanbul
 coverage/
 *.lcov
 
@@ -47,7 +41,79 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
+# ================================================
+# PROYECTO ESPECÍFICO - Servicios Prados de Nos
+# ================================================
+
+# Archivos temporales
+temp_*
+*_temp.*
+verificar_*.js
+verificar_*.html
+
+# Scripts de diagnóstico (usar archive/ si necesario)
+diagnose-*.js
+diagnostic-*.js
+diagnosis-*.js
+test-*.js
+check-*.js
+fix-*.js
+backend/diagnose-*.js
+backend/diagnostic-*.js
+backend/diagnosis-*.js
+backend/test-*.js
+backend/check-*.js
+backend/verify-*.js
+backend/fix-*.js
+backend/setup-*.js
+backend/create-*.js
+backend/init-*.js
+
+# Archivos .bat (usar .sh multiplataforma)
+*.bat
+
+# HTML de prueba
+test-*.html
+*_old.html
+*_new.html
+*_clean.html
+debug-*.html
+public/test-*.html
+public/*_old.html
+public/*_new.html
+
+# Datos de prueba
+*.csv
+admin_users_rows.*
+
+# Archivos corruptos/fragmentados
+tado del repositorio
+tatus
+
+# SQLite (no usado, solo PostgreSQL)
+*.sqlite
+*.db
+
+# IDEs y editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Sistema operativo
+Thumbs.db
+Desktop.ini
+
+# Build output (si aplica en futuro)
+dist/
+build/
+.next/
+out/
+
+# Configuración local
+config.local.js
 .env
 .env.test
 
