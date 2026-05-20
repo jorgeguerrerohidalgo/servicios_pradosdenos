@@ -165,7 +165,7 @@ router.post('/login', async (req, res) => {
             id: user.id,
             nombre: userName,
             email: user.email,
-            tipo: nivelPrioridad >= 80 ? 'admin' : 'guardia',  // Compatibilidad con código legacy
+            tipo: userType,  // 'admin' si viene de admin_users, 'guardia' si viene de guardias
             roles: roles.map(r => ({ 
                 codigo: r.codigo, 
                 nombre: r.nombre,
