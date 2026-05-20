@@ -37,8 +37,8 @@ router.get('/publico', async (req, res) => {
                 m.foto_url,
                 COALESCE(m.observaciones, '') as observaciones,
                 COALESCE(EXTRACT(YEAR FROM AGE(CURRENT_DATE, m.fecha_nacimiento))::INTEGER, 0) as edad_anos,
-                c.numero_casa as numero_casa,
                 p.nombre as plaza_nombre,
+                COALESCE(p.direccion, '') as plaza_direccion,
                 p.id as plaza_id,
                 CASE 
                     WHEN m.fecha_ultima_vacuna IS NULL THEN 'sin_info'
