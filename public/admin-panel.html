@@ -6602,18 +6602,28 @@
                 
                 // Cargar tipos de vehículos (sin autenticación - endpoint público)
                 try {
+                    console.log('🚗 Cargando tipos de vehículos...');
                     const tiposResponse = await fetch('/api/vehiculos/tipos');
+                    console.log('📡 Response status:', tiposResponse.status);
+                    
                     if (tiposResponse.ok) {
                         const tiposData = await tiposResponse.json();
-                        if (tiposData.success) {
+                        console.log('📊 Datos recibidos:', tiposData);
+                        
+                        if (tiposData.success && tiposData.data && tiposData.data.length > 0) {
                             tipoSelect.innerHTML = '<option value="">Seleccionar tipo</option>' +
                                 tiposData.data.map(t => 
                                     `<option value="${t.id}" data-icono="${t.icono || ''}">${t.nombre}</option>`
                                 ).join('');
+                            console.log('✅ Tipos cargados:', tiposData.data.length);
+                        } else {
+                            console.warn('⚠️ No hay tipos disponibles o success=false');
                         }
+                    } else {
+                        console.error('❌ Error en respuesta:', tiposResponse.status, tiposResponse.statusText);
                     }
                 } catch (error) {
-                    console.error('Error al cargar tipos de vehículos:', error);
+                    console.error('💥 Error al cargar tipos de vehículos:', error);
                 }
                 
                 // Si es edición, cargar datos del vehículo
