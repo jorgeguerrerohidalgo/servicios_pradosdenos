@@ -248,7 +248,16 @@ const publicPaths = [
 
 publicPaths.forEach(publicPath => {
   if (require('fs').existsSync(publicPath)) {
-    app.use(express.static(publicPath));
+    app.use(express.static(publicPath, {
+      setHeaders: (res, filePath) => {
+        // Deshabilitar caché para archivos HTML (siempre servir versión fresca)
+        if (filePath.endsWith('.html')) {
+          res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+          res.setHeader('Pragma', 'no-cache');
+          res.setHeader('Expires', '0');
+        }
+      }
+    }));
     console.log(`📁 Sirviendo archivos estáticos desde: ${publicPath}`);
   }
 });
