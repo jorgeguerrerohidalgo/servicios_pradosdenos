@@ -180,7 +180,7 @@ SELECT
     pl.nombre as plaza_nombre,
     c.monto_cuota_social,
     c.monto_junta_vecinos,
-    c.monto_total_mensual,
+    (c.monto_cuota_social + c.monto_junta_vecinos) as monto_total_mensual,
     
     -- Contador de residentes
     (SELECT COUNT(*) FROM residentes r WHERE r.casa_id = c.id AND r.activo = TRUE) as total_residentes,
