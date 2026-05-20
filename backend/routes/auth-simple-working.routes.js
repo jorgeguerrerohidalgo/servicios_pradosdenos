@@ -188,7 +188,7 @@ router.post('/login', async (req, res) => {
                 id: user.id,
                 nombre: userName,
                 email: user.email,
-                tipo: nivelPrioridad >= 80 ? 'admin' : 'guardia',
+                tipo: userType,  // 'admin' si viene de admin_users, 'guardia' si viene de guardias
                 roles: roles.map(r => r.nombre),
                 nivel_prioridad: nivelPrioridad,
                 permissions_count: permissions.length
