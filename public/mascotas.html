@@ -562,7 +562,7 @@
                         </span>
                         <div class="mascota-info">
                             <i class="fas fa-map-marker-alt"></i>
-                            ${escapeHtml(mascota.plaza_nombre)}${mascota.plaza_direccion ? ` - ${escapeHtml(mascota.plaza_direccion)}` : ''}
+                            ${escapeHtml(mascota.plaza_nombre)}${mascota.plaza_direccion && mascota.plaza_direccion.trim() ? ` - ${escapeHtml(mascota.plaza_direccion)}` : ''}
                         </div>
                         ${mascota.raza ? `<div class="mascota-info"><i class="fas fa-dna"></i>${escapeHtml(mascota.raza)}</div>` : ''}
                     </div>
@@ -599,7 +599,7 @@
             document.getElementById('modalGenero').textContent = mascota.genero ? capitalizar(mascota.genero) : 'No especificado';
             document.getElementById('modalColor').textContent = mascota.color || 'No especificado';
             document.getElementById('modalEdad').textContent = mascota.edad_anos ? `${mascota.edad_anos} año${mascota.edad_anos !== 1 ? 's' : ''}` : 'Desconocida';
-            document.getElementById('modalUbicacion').textContent = mascota.plaza_direccion ? `${mascota.plaza_nombre} - ${mascota.plaza_direccion}` : mascota.plaza_nombre;
+            document.getElementById('modalUbicacion').textContent = (mascota.plaza_direccion && mascota.plaza_direccion.trim()) ? `${mascota.plaza_nombre} - ${mascota.plaza_direccion}` : mascota.plaza_nombre;
 
             // Estados de vacuna
             const vacunasContainer = document.getElementById('modalVacunas');
