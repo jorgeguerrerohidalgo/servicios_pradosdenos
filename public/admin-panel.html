@@ -1017,6 +1017,11 @@
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="modulos-visibles-tab" data-bs-toggle="tab" data-bs-target="#modulos-visibles" type="button" role="tab">
+                        <i class="fas fa-th-list me-2"></i>Módulos Visibles
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
                     <button class="nav-link" id="auditoria-tab" data-bs-toggle="tab" data-bs-target="#auditoria" type="button" role="tab">
                         <i class="fas fa-history me-2"></i>Auditoría
                     </button>
@@ -1083,7 +1088,54 @@
                     </div>
                 </div>
 
-                <!-- Tab 3: Auditoría -->
+                <!-- Tab 3: Módulos Visibles -->
+                <div class="tab-pane fade" id="modulos-visibles" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-th-list me-2"></i>Configuración de Módulos Visibles por Rol</h5>
+                            <small class="text-muted">Controla qué secciones del menú lateral puede ver cada rol</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info mb-4">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>¿Qué hace esta configuración?</strong><br>
+                                Marca los módulos (secciones del menú) que cada rol puede ver. Si un módulo no está marcado, 
+                                el usuario con ese rol NO verá esa opción en el menú lateral.<br><br>
+                                <strong>Nota:</strong> Al marcar/desmarcar un módulo, se asigna/revoca automáticamente el permiso 
+                                <code>[modulo].leer</code> al rol.
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover" id="modulosVisiblesTable">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th style="width: 250px; position: sticky; left: 0; background: #343a40; z-index: 10;">
+                                                <i class="fas fa-cube me-2"></i>Módulo del Menú
+                                            </th>
+                                            <!-- Columnas de roles se generan dinámicamente -->
+                                        </tr>
+                                    </thead>
+                                    <tbody id="modulosVisiblesTableBody">
+                                        <tr>
+                                            <td colspan="100%" class="text-center">
+                                                <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                                Cargando configuración de módulos...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="mt-3">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="refreshModulosVisibles()">
+                                    <i class="fas fa-sync-alt me-1"></i> Actualizar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 4: Auditoría -->
                 <div class="tab-pane fade" id="auditoria" role="tabpanel">
                     <div class="card">
                         <div class="card-header">
@@ -1147,7 +1199,7 @@
                     </div>
                 </div>
 
-                <!-- Tab 4: Roles Personalizados -->
+                <!-- Tab 5: Roles Personalizados -->
                 <div class="tab-pane fade" id="roles-personalizados" role="tabpanel">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
@@ -7663,6 +7715,176 @@
             container.innerHTML = html;
         }
 
+        // ========================================
+        // TAB 3: Módulos Visibles
+        // ========================================
+
+        // Definición de módulos del menú (mapea a permisos .leer)
+        const MODULOS_MENU = [
+            { id: 'dashboard', nombre: 'Dashboard', icono: 'tachometer-alt', permiso: 'dashboard.leer' },
+            { id: 'eventos', nombre: 'Eventos', icono: 'calendar-alt', permiso: 'eventos.leer' },
+            { id: 'documentos', nombre: 'Documentos', icono: 'file-alt', permiso: 'documentos.leer' },
+            { id: 'guardias', nombre: 'Guardias', icono: 'shield-alt', permiso: 'guardias.leer' },
+            { id: 'plazas', nombre: 'Plazas', icono: 'map-marker-alt', permiso: 'plazas.leer' },
+            { id: 'admins', nombre: 'Administradores', icono: 'user-shield', permiso: 'administradores.leer' },
+            { id: 'casas', nombre: 'Casas', icono: 'home', permiso: 'casas.leer' },
+            { id: 'residentes', nombre: 'Residentes', icono: 'users', permiso: 'residentes.leer' },
+            { id: 'mascotas', nombre: 'Mascotas', icono: 'paw', permiso: 'mascotas.leer' },
+            { id: 'pagos', nombre: 'Pagos', icono: 'dollar-sign', permiso: 'pagos.leer' },
+            { id: 'vehiculos', nombre: 'Vehículos', icono: 'car', permiso: 'vehiculos.leer' },
+            { id: 'acceso', nombre: 'Control Acceso', icono: 'door-open', permiso: 'acceso.leer' },
+            { id: 'reportes', nombre: 'Reportes', icono: 'chart-bar', permiso: 'reportes.leer' },
+            { id: 'qr-plazas', nombre: 'QR Plazas', icono: 'qrcode', permiso: 'tokens.leer' },
+            { id: 'roles', nombre: 'Gestión Roles', icono: 'user-lock', permiso: 'roles.leer' }
+        ];
+
+        // Cargar y renderizar módulos visibles
+        async function loadModulosVisibles() {
+            try {
+                const response = await authenticatedFetch('/api/roles');
+                if (!response || !response.ok) {
+                    throw new Error('Error al cargar roles');
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    renderModulosVisibles(data.data);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('modulosVisiblesTableBody').innerHTML = 
+                    '<tr><td colspan="100%" class="text-center text-danger">Error al cargar módulos</td></tr>';
+            }
+        }
+
+        // Renderizar tabla de módulos visibles
+        function renderModulosVisibles(roles) {
+            const table = document.getElementById('modulosVisiblesTable');
+            const thead = table.querySelector('thead tr');
+            const tbody = document.getElementById('modulosVisiblesTableBody');
+
+            // Limpiar y crear encabezados de roles
+            thead.innerHTML = `
+                <th style="width: 250px; position: sticky; left: 0; background: #343a40; z-index: 10;">
+                    <i class="fas fa-cube me-2"></i>Módulo del Menú
+                </th>
+            `;
+            
+            roles.forEach(rol => {
+                const lockIcon = rol.es_sistema ? '<i class="fas fa-lock fa-xs ms-1"></i>' : '';
+                thead.innerHTML += `
+                    <th class="text-center" style="min-width: 120px;">
+                        ${rol.nombre}${lockIcon}<br>
+                        <small class="text-muted">Nivel ${rol.nivel_prioridad}</small>
+                    </th>
+                `;
+            });
+
+            // Crear filas de módulos
+            tbody.innerHTML = '';
+            MODULOS_MENU.forEach(modulo => {
+                let row = `
+                    <tr>
+                        <td style="position: sticky; left: 0; background: white; z-index: 5;">
+                            <i class="fas fa-${modulo.icono} me-2 text-primary"></i>
+                            <strong>${modulo.nombre}</strong><br>
+                            <small class="text-muted">${modulo.permiso}</small>
+                        </td>
+                `;
+
+                roles.forEach(rol => {
+                    const tienePermiso = rol.permisos && rol.permisos.includes(modulo.permiso);
+                    const disabled = rol.es_sistema ? 'disabled' : '';
+                    const checkboxId = `modulo_${modulo.id}_rol_${rol.id}`;
+                    
+                    row += `
+                        <td class="text-center">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" 
+                                       id="${checkboxId}" 
+                                       ${tienePermiso ? 'checked' : ''} 
+                                       ${disabled}
+                                       onchange="toggleModuloRol('${modulo.permiso}', ${rol.id}, this.checked, '${rol.nombre}', '${modulo.nombre}')">
+                                <label class="form-check-label" for="${checkboxId}">
+                                    ${tienePermiso ? '<i class="fas fa-check text-success"></i>' : '<i class="fas fa-times text-secondary"></i>'}
+                                </label>
+                            </div>
+                        </td>
+                    `;
+                });
+
+                row += '</tr>';
+                tbody.innerHTML += row;
+            });
+        }
+
+        // Toggle permiso de módulo para un rol
+        async function toggleModuloRol(permiso, rolId, asignar, rolNombre, moduloNombre) {
+            try {
+                const endpoint = asignar ? `/api/roles/${rolId}/permissions` : `/api/roles/${rolId}/permissions`;
+                const method = asignar ? 'POST' : 'DELETE';
+
+                // Primero obtener el permission_id
+                const permisosResp = await authenticatedFetch('/api/roles/permisos');
+                if (!permisosResp || !permisosResp.ok) {
+                    throw new Error('Error al obtener permisos');
+                }
+
+                const permisosData = await permisosResp.json();
+                const permisoObj = permisosData.data.find(p => p.codigo === permiso);
+                
+                if (!permisoObj) {
+                    throw new Error(`Permiso ${permiso} no encontrado`);
+                }
+
+                const response = await authenticatedFetch(endpoint, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ permission_id: permisoObj.id })
+                });
+
+                if (!response || !response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Error al actualizar permiso');
+                }
+
+                // Mostrar feedback
+                const accion = asignar ? 'asignado' : 'revocado';
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Actualizado',
+                    text: `Módulo "${moduloNombre}" ${accion} al rol "${rolNombre}"`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+
+                // Recargar datos
+                setTimeout(() => loadModulosVisibles(), 500);
+
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message
+                });
+                
+                // Revertir checkbox
+                event.target.checked = !asignar;
+            }
+        }
+
+        // Refrescar módulos visibles
+        async function refreshModulosVisibles() {
+            document.getElementById('modulosVisiblesTableBody').innerHTML = 
+                '<tr><td colspan="100%" class="text-center"><div class="spinner-border spinner-border-sm me-2"></div>Actualizando...</td></tr>';
+            await loadModulosVisibles();
+        }
+
+        // ========================================
+        // TAB 4: Auditoría
+        // ========================================
+
         // Cargar historial de auditoría
         async function loadAuditoria() {
             try {
@@ -7978,6 +8200,14 @@
                     if (!permisosGlobal || permisosGlobal.length === 0) {
                         loadMatrizPermisos();
                     }
+                });
+            }
+
+            // Cargar módulos visibles cuando se hace clic en el tab
+            const modulosTab = document.getElementById('modulos-visibles-tab');
+            if (modulosTab) {
+                modulosTab.addEventListener('shown.bs.tab', () => {
+                    loadModulosVisibles();
                 });
             }
         });
