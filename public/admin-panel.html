@@ -4288,9 +4288,13 @@
                     const total = casasData.data?.length || 0;
                     document.getElementById('totalCasas').textContent = total;
                     console.log('✅ Casas registradas:', total);
+                    console.log('📊 Datos de casas:', casasData.data);
                     
                     // Calcular casas en morosidad (monto_deuda > 0)
-                    const morosas = casasData.data?.filter(c => c.monto_deuda > 0).length || 0;
+                    const morosas = casasData.data?.filter(c => {
+                        console.log(`Casa ${c.numero_casa}: monto_deuda =`, c.monto_deuda);
+                        return c.monto_deuda && c.monto_deuda > 0;
+                    }).length || 0;
                     document.getElementById('casasMorosas').textContent = morosas;
                     console.log('⚠️ Casas en morosidad:', morosas);
                 }
@@ -4322,9 +4326,12 @@
                 // Accesos Hoy
                 if (accesosRes && accesosRes.ok) {
                     const accesosData = await accesosRes.json();
+                    console.log('📊 Total accesos en BD:', accesosData.data?.length);
                     const hoy = new Date().toISOString().split('T')[0];
+                    console.log('📅 Fecha hoy:', hoy);
                     const accesosHoy = accesosData.data?.filter(a => {
                         const fechaAcceso = new Date(a.fecha_hora).toISOString().split('T')[0];
+                        console.log(`Acceso: ${a.vehiculo_patente} - fecha_hora: ${a.fecha_hora} - fecha: ${fechaAcceso}`);
                         return fechaAcceso === hoy;
                     }).length || 0;
                     document.getElementById('accesosHoy').textContent = accesosHoy;
@@ -4342,7 +4349,8 @@
                 // Administradores
                 if (adminsRes && adminsRes.ok) {
                     const adminsData = await adminsRes.json();
-                    const total = adminsData.data?.length || 0;
+                    // Endpoint retorna 'admins' en lugar de 'data'
+                    const total = adminsData.admins?.length || 0;
                     document.getElementById('totalAdmins').textContent = total;
                     console.log('✅ Administradores:', total);
                 }
@@ -4350,16 +4358,22 @@
                 // Pagos del Mes Actual
                 if (pagosRes && pagosRes.ok) {
                     const pagosData = await pagosRes.json();
+                    console.log('📊 Total pagos en BD:', pagosData.data?.length);
                     const mesActual = new Date().getMonth() + 1;
                     const añoActual = new Date().getFullYear();
+                    console.log('📅 Buscando pagos del mes:', mesActual, 'año:', añoActual);
                     
                     const pagosDelMes = pagosData.data?.filter(p => {
+                        console.log(`Pago: estado=${p.estado}, fecha_pago=${p.fecha_pago}, monto_pagado=${p.monto_pagado}`);
                         if (p.estado !== 'pagado') return false;
                         const fechaPago = new Date(p.fecha_pago);
-                        return fechaPago.getMonth() + 1 === mesActual && 
-                               fechaPago.getFullYear() === añoActual;
+                        const mesPago = fechaPago.getMonth() + 1;
+                        const añoPago = fechaPago.getFullYear();
+                        console.log(`  -> mes=${mesPago}, año=${añoPago}, coincide=${mesPago === mesActual && añoPago === añoActual}`);
+                        return mesPago === mesActual && añoPago === añoActual;
                     }) || [];
                     
+                    console.log('💳 Pagos del mes filtrados:', pagosDelMes.length);
                     const totalPagado = pagosDelMes.reduce((sum, p) => sum + (p.monto_pagado || 0), 0);
                     const formattedTotal = new Intl.NumberFormat('es-CL', {
                         style: 'currency',
