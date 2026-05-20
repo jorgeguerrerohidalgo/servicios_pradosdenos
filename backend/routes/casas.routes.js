@@ -7,29 +7,30 @@ const { applyScoping, buildPlazaFilter } = require('../middleware/applyScoping')
 
 // ==================== GESTIÓN DE CASAS ====================
 
-// GET /api/casas - Obtener todas las casas (con scoping automático)
+// GET /api/casas - Obtener todas las casas (con scoping automático y estado de pagos)
 router.get('/', requirePermission('casas.leer'), applyScoping, async (req, res) => {
     try {
         const { plaza_id, activo = 'true' } = req.query;
         
+        // Usar vista v_casas_estado_pagos que incluye estado de pagos
         let sql = `
             SELECT 
-                c.id,
-                c.numero_casa,
-                c.direccion,
-                c.plaza_id,
-                p.nombre as plaza_nombre,
-                c.monto_cuota_social,
-                c.monto_junta_vecinos,
-                (c.monto_cuota_social + c.monto_junta_vecinos) as monto_total_mensual,
-                c.metros_cuadrados,
-                c.observaciones,
-                c.activo,
-                c.created_at,
-                c.updated_at,
-                (SELECT COUNT(*) FROM residentes WHERE casa_id = c.id AND activo = true) as total_residentes
-            FROM casas c
-            LEFT JOIN plazas p ON c.plaza_id = p.id
+                id,
+                numero_casa,
+                direccion,
+                plaza_id,
+                plaza_nombre,
+                monto_cuota_social,
+                monto_junta_vecinos,
+                monto_total_mensual,
+                total_residentes,
+                estado_pago,
+                meses_morosos,
+                deuda_total,
+                activo,
+                created_at,
+                updated_at
+            FROM v_casas_estado_pagos
             WHERE 1=1
         `;
         
@@ -39,23 +40,23 @@ router.get('/', requirePermission('casas.leer'), applyScoping, async (req, res) 
         // Filtro por estado activo
         if (activo !== 'all') {
             paramCount++;
-            sql += ` AND c.activo = $${paramCount}`;
+            sql += ` AND activo = $${paramCount}`;
             params.push(activo === 'true');
         }
         
         // Filtro manual por plaza (si se especifica)
         if (plaza_id) {
             paramCount++;
-            sql += ` AND c.plaza_id = $${paramCount}`;
+            sql += ` AND plaza_id = $${paramCount}`;
             params.push(plaza_id);
         }
         
         // ⚡ SCOPING AUTOMÁTICO: Filtrar por plazas permitidas del usuario
-        const plazaFilter = buildPlazaFilter(req.allowedPlazas, 'c', params);
+        const plazaFilter = buildPlazaFilter(req.allowedPlazas, '', params);
         sql += plazaFilter.sql;
         params = plazaFilter.params;
         
-        sql += ' ORDER BY c.numero_casa ASC';
+        sql += ' ORDER BY numero_casa ASC';
         
         const result = await pool.query(sql, params);
         

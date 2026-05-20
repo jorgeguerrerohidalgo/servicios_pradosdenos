@@ -245,6 +245,12 @@
             border-color: #667eea;
             font-weight: 600;
         }
+        
+        /* Custom badge colors for payment status */
+        .bg-orange {
+            background-color: #fd7e14 !important;
+            color: white !important;
+        }
     </style>
     <!-- RBAC Helper -->
     <script src="/js/rbac-helper.js"></script>
@@ -589,12 +595,13 @@
                             <th>Junta Vecinos</th>
                             <th>Total Mensual</th>
                             <th>Residentes</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
+                            <th class="text-center">Estado Pago</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="casasTableBody">
-                        <tr><td colspan="9" class="text-center">Cargando casas...</td></tr>
+                        <tr><td colspan="10" class="text-center">Cargando casas...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -4528,11 +4535,25 @@
             const tbody = document.getElementById('casasTableBody');
             
             if (!casas || casas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">No hay casas registradas</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">No hay casas registradas</td></tr>';
                 return;
             }
             
-            tbody.innerHTML = casas.map(casa => `
+            // Mapeo de estado de pago a badges
+            const estadoPagoBadges = {
+                'al_dia': '<span class="badge bg-success"><i class="fas fa-check-circle"></i> Al Día</span>',
+                'sin_pagos': '<span class="badge bg-secondary"><i class="fas fa-exclamation-triangle"></i> Sin Pagos</span>',
+                'mora_leve': '<span class="badge bg-warning"><i class="fas fa-exclamation"></i> 1 Mes Atrasado</span>',
+                'mora_moderada': '<span class="badge bg-orange"><i class="fas fa-exclamation-triangle"></i> 2 Meses Atrasados</span>',
+                'mora_grave': '<span class="badge bg-danger"><i class="fas fa-ban"></i> 3+ Meses Atrasados</span>'
+            };
+            
+            tbody.innerHTML = casas.map(casa => {
+                const estadoPagoBadge = estadoPagoBadges[casa.estado_pago] || '<span class="badge bg-secondary">N/A</span>';
+                const deudaInfo = casa.deuda_total > 0 ? `<br><small class="text-danger">Deuda: $${formatCLP(casa.deuda_total)}</small>` : '';
+                const mesesInfo = casa.meses_morosos > 0 ? `<br><small class="text-muted">${casa.meses_morosos} mes(es) vencido(s)</small>` : '';
+                
+                return `
                 <tr>
                     <td><strong>${casa.numero_casa}</strong></td>
                     <td>${casa.direccion}</td>
@@ -4543,7 +4564,10 @@
                     <td class="text-center">
                         <span class="badge bg-secondary">${casa.total_residentes || 0}</span>
                     </td>
-                    <td>
+                    <td class="text-center">
+                        ${estadoPagoBadge}${deudaInfo}${mesesInfo}
+                    </td>
+                    <td class="text-center">
                         <span class="badge ${casa.activo ? 'bg-success' : 'bg-danger'}">
                             ${casa.activo ? 'Activa' : 'Inactiva'}
                         </span>
@@ -4559,7 +4583,7 @@
                         </div>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
             
             // 🔐 Aplicar permisos a los botones
             if (typeof applyButtonPermissions === 'function') {
