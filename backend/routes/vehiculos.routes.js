@@ -9,16 +9,17 @@ const router = express.Router();
 const { pool } = require('../utils/db');
 const { requireAuth, requireAuthAdmin } = require('../middleware/sessionAuth');
 const { requirePermission } = require('../middleware/rbac');
+const { applyScoping, buildPlazaFilter } = require('../middleware/applyScoping');
 
 // Aplicar middleware de autenticación a todas las rutas
 router.use(requireAuth);
 
 /**
  * GET /api/vehiculos
- * Lista todos los vehículos con filtros opcionales
+ * Lista todos los vehículos con filtros opcionales (con scoping automático)
  * Query params: casa_id, tipo, activo
  */
-router.get('/', async (req, res) => {
+router.get('/', requirePermission('vehiculos.leer'), applyScoping, async (req, res) => {
     try {
         const { plaza_id, casa_id, tipo, activo, residente_id } = req.query;
         
@@ -28,6 +29,7 @@ router.get('/', async (req, res) => {
                 casa_id,
                 numero_casa,
                 casa_direccion,
+                plaza_id,
                 plaza_nombre,
                 residente_id,
                 residente_nombre,
@@ -49,37 +51,40 @@ router.get('/', async (req, res) => {
             WHERE 1=1
         `;
         
-        const params = [];
-        let paramCount = 1;
+        let params = [];
+        let paramCount = 0;
         
         // Filtro por casa (prioridad sobre plaza)
         if (casa_id) {
+            paramCount++;
             query += ` AND casa_id = $${paramCount}`;
             params.push(casa_id);
-            paramCount++;
         } else if (plaza_id) {
+            paramCount++;
             query += ` AND plaza_id = $${paramCount}`;
             params.push(plaza_id);
-            paramCount++;
         }
         
         if (tipo) {
+            paramCount++;
             query += ` AND tipo = $${paramCount}`;
             params.push(tipo);
-            paramCount++;
         }
         
         if (residente_id) {
-            query += ` AND residente_id = $${paramCount}`;
-            params.push(residente_id);
-            paramCount++;
         }
         
         if (activo !== undefined) {
+            paramCount++;
             query += ` AND activo = $${paramCount}`;
             params.push(activo === 'true');
-            paramCount++;
         }
+        
+        // ⚡ SCOPING AUTOMÁTICO: Filtrar por plazas permitidas del usuario
+        // Nota: v_vehiculos_completo incluye plaza_id de la casa
+        const plazaFilter = buildPlazaFilter(req.allowedPlazas, '', params);
+        query += plazaFilter.sql;
+        params = plazaFilter.params;
         
         query += ' ORDER BY patente ASC';
         
@@ -88,7 +93,8 @@ router.get('/', async (req, res) => {
         res.json({
             success: true,
             data: result.rows,
-            count: result.rows.length
+            count: result.rows.length,
+            scoping: req.allowedPlazas === null ? 'global' : `plazas: ${req.allowedPlazas?.join(', ') || 'ninguna'}`
         });
         
     } catch (error) {

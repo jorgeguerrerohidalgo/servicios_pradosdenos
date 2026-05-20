@@ -10,6 +10,7 @@ const router = express.Router();
 const { pool } = require('../utils/db');
 const { requireAuth, requireAuthAdmin } = require('../middleware/sessionAuth');
 const { requirePermission } = require('../middleware/rbac');
+const { applyScoping, buildPlazaFilter } = require('../middleware/applyScoping');
 
 // Aplicar middleware de autenticación a todas las rutas
 router.use(requireAuth);
@@ -17,51 +18,52 @@ router.use(requireAuth);
 // ==================== GET: Listar mascotas ====================
 /**
  * GET /api/mascotas
- * Lista todas las mascotas con filtros opcionales
+ * Lista todas las mascotas con filtros opcionales (con scoping automático)
  * Query params: casa_id, tipo, certificado_vacunas, activo, search
  */
-router.get('/', async (req, res) => {
+router.get('/', requirePermission('mascotas.leer'), applyScoping, async (req, res) => {
     try {
         const { plaza_id, casa_id, tipo, certificado_vacunas, activo = 'true', search } = req.query;
         
         let query = 'SELECT * FROM v_mascotas_completo WHERE 1=1';
-        const params = [];
-        let paramCount = 1;
+        let params = [];
+        let paramCount = 0;
         
         // Filtro por casa (prioridad sobre plaza)
         if (casa_id) {
+            paramCount++;
             query += ` AND casa_id = $${paramCount}`;
             params.push(parseInt(casa_id));
-            paramCount++;
         } else if (plaza_id) {
+            paramCount++;
             query += ` AND plaza_id = $${paramCount}`;
             params.push(parseInt(plaza_id));
-            paramCount++;
         }
         
         // Filtro por tipo
         if (tipo && tipo !== 'all') {
+            paramCount++;
             query += ` AND tipo = $${paramCount}`;
             params.push(tipo);
-            paramCount++;
         }
         
         // Filtro por certificado de vacunas
         if (certificado_vacunas && certificado_vacunas !== 'all') {
+            paramCount++;
             query += ` AND certificado_vacunas = $${paramCount}`;
             params.push(certificado_vacunas === 'true');
-            paramCount++;
         }
         
         // Filtro por activo
         if (activo !== 'all') {
+            paramCount++;
             query += ` AND activo = $${paramCount}`;
             params.push(activo === 'true');
-            paramCount++;
         }
         
         // Búsqueda general
         if (search) {
+            paramCount++;
             query += ` AND (
                 LOWER(mascota_nombre) LIKE LOWER($${paramCount}) OR
                 LOWER(dueno_nombre) LIKE LOWER($${paramCount}) OR
@@ -69,8 +71,13 @@ router.get('/', async (req, res) => {
                 LOWER(raza) LIKE LOWER($${paramCount})
             )`;
             params.push(`%${search}%`);
-            paramCount++;
         }
+        
+        // ⚡ SCOPING AUTOMÁTICO: Filtrar por plazas permitidas del usuario
+        // Nota: v_mascotas_completo incluye plaza_id de la casa
+        const plazaFilter = buildPlazaFilter(req.allowedPlazas, '', params);
+        query += plazaFilter.sql;
+        params = plazaFilter.params;
         
         query += ' ORDER BY numero_casa, mascota_nombre';
         
@@ -79,7 +86,8 @@ router.get('/', async (req, res) => {
         res.json({
             success: true,
             data: result.rows,
-            count: result.rows.length
+            count: result.rows.length,
+            scoping: req.allowedPlazas === null ? 'global' : `plazas: ${req.allowedPlazas?.join(', ') || 'ninguna'}`
         });
         
     } catch (error) {

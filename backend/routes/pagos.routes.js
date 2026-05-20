@@ -10,6 +10,7 @@ const router = express.Router();
 const { pool } = require('../utils/db');
 const { requireAuth, requireAuthAdmin } = require('../middleware/sessionAuth');
 const { requirePermission } = require('../middleware/rbac');
+const { applyScoping, buildPlazaFilter } = require('../middleware/applyScoping');
 
 // Aplicar middleware de autenticación a todas las rutas
 router.use(requireAuth);
@@ -17,55 +18,61 @@ router.use(requireAuth);
 // ==================== GET: Listar pagos ====================
 /**
  * GET /api/pagos
- * Lista todos los pagos con filtros opcionales
+ * Lista todos los pagos con filtros opcionales (con scoping automático)
  * Query params: casa_id, periodo, tipo_pago, estado, activo
  */
-router.get('/', async (req, res) => {
+router.get('/', requirePermission('pagos.leer'), applyScoping, async (req, res) => {
     try {
         const { plaza_id, casa_id, periodo, tipo_pago, estado, activo = 'true' } = req.query;
         
         let query = 'SELECT * FROM v_pagos_completo WHERE 1=1';
-        const params = [];
-        let paramCount = 1;
+        let params = [];
+        let paramCount = 0;
         
         // Filtro por casa (prioridad sobre plaza)
         if (casa_id) {
+            paramCount++;
             query += ` AND casa_id = $${paramCount}`;
             params.push(parseInt(casa_id));
-            paramCount++;
         } else if (plaza_id) {
+            paramCount++;
             query += ` AND plaza_id = $${paramCount}`;
             params.push(parseInt(plaza_id));
-            paramCount++;
         }
         
         // Filtro por período
         if (periodo) {
+            paramCount++;
             query += ` AND periodo = $${paramCount}`;
             params.push(periodo);
-            paramCount++;
         }
         
         // Filtro por tipo de pago
         if (tipo_pago && tipo_pago !== 'all') {
+            paramCount++;
             query += ` AND tipo_pago = $${paramCount}`;
             params.push(tipo_pago);
-            paramCount++;
         }
         
         // Filtro por estado
         if (estado && estado !== 'all') {
+            paramCount++;
             query += ` AND estado = $${paramCount}`;
             params.push(estado);
-            paramCount++;
         }
         
         // Filtro por activo
         if (activo !== 'all') {
+            paramCount++;
             query += ` AND activo = $${paramCount}`;
             params.push(activo === 'true');
-            paramCount++;
         }
+        
+        // ⚡ SCOPING AUTOMÁTICO: Filtrar por plazas permitidas del usuario
+        // Nota: v_pagos_completo incluye plaza_id de la casa
+        const plazaFilter = buildPlazaFilter(req.allowedPlazas, '', params);
+        query += plazaFilter.sql;
+        params = plazaFilter.params;
         
         query += ' ORDER BY periodo DESC, numero_casa, tipo_pago';
         
@@ -74,7 +81,8 @@ router.get('/', async (req, res) => {
         res.json({
             success: true,
             data: result.rows,
-            count: result.rows.length
+            count: result.rows.length,
+            scoping: req.allowedPlazas === null ? 'global' : `plazas: ${req.allowedPlazas?.join(', ') || 'ninguna'}`
         });
         
     } catch (error) {
