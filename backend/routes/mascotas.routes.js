@@ -22,6 +22,8 @@ const { applyScoping, buildPlazaFilter } = require('../middleware/applyScoping')
  */
 router.get('/publico', async (req, res) => {
     try {
+        console.log('🐾 GET /api/mascotas/publico - Query params:', req.query);
+        
         const { tipo, plaza, buscar } = req.query;
         
         let sql = `
@@ -29,12 +31,12 @@ router.get('/publico', async (req, res) => {
                 m.id,
                 m.nombre,
                 m.tipo,
-                m.raza,
-                m.genero,
-                m.color,
+                COALESCE(m.raza, '') as raza,
+                COALESCE(m.genero, '') as genero,
+                COALESCE(m.color, '') as color,
                 m.foto_url,
-                m.observaciones,
-                EXTRACT(YEAR FROM AGE(CURRENT_DATE, m.fecha_nacimiento))::INTEGER as edad_anos,
+                COALESCE(m.observaciones, '') as observaciones,
+                COALESCE(EXTRACT(YEAR FROM AGE(CURRENT_DATE, m.fecha_nacimiento))::INTEGER, 0) as edad_anos,
                 c.numero as numero_casa,
                 p.nombre as plaza_nombre,
                 p.id as plaza_id,
@@ -75,7 +77,11 @@ router.get('/publico', async (req, res) => {
         
         sql += ' ORDER BY p.nombre, m.tipo, m.nombre';
         
+        console.log('📊 Ejecutando query con', params.length, 'parámetros');
+        
         const result = await pool.query(sql, params);
+        
+        console.log('✅ Mascotas públicas obtenidas:', result.rows.length);
         
         res.json({
             success: true,
@@ -84,7 +90,11 @@ router.get('/publico', async (req, res) => {
         });
         
     } catch (error) {
-        console.error('❌ Error en endpoint público de mascotas:', error);
+        console.error('❌ Error en endpoint público de mascotas:');
+        console.error('   Mensaje:', error.message);
+        console.error('   Stack:', error.stack);
+        console.error('   Query params:', req.query);
+        
         res.status(500).json({
             success: false,
             message: 'Error al cargar mascotas',
