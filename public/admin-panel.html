@@ -216,6 +216,35 @@
                 padding: 0.25em 0.5em;
             }
         }
+        
+        /* Estilos para pestañas (nav-tabs) - FIX: texto blanco sobre fondo blanco */
+        .nav-tabs {
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .nav-tabs .nav-link {
+            color: #495057 !important;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-bottom: none;
+            margin-right: 5px;
+            border-radius: 8px 8px 0 0;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-tabs .nav-link:hover {
+            color: #764ba2 !important;
+            background-color: #e9ecef;
+            border-color: #dee2e6;
+        }
+        
+        .nav-tabs .nav-link.active {
+            color: white !important;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            font-weight: 600;
+        }
     </style>
     <!-- RBAC Helper -->
     <script src="/js/rbac-helper.js"></script>
