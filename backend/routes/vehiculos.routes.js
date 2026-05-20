@@ -469,6 +469,8 @@ router.get('/:patente', async (req, res) => {
  */
 router.post('/', requirePermission('vehiculos.crear'), async (req, res) => {
     try {
+        console.log('📝 POST /api/vehiculos - Datos recibidos:', JSON.stringify(req.body, null, 2));
+        
         const {
             patente,
             casa_id,
@@ -487,6 +489,17 @@ router.post('/', requirePermission('vehiculos.crear'), async (req, res) => {
             observaciones
         } = req.body;
         
+        console.log('🔍 Validando campos:', {
+            patente,
+            casa_id,
+            tipo: tipo || 'null',
+            tipo_vehiculo_id: tipo_vehiculo_id || 'null',
+            marca: marca || 'null',
+            marca_id: marca_id || 'null',
+            modelo: modelo || 'null',
+            modelo_id: modelo_id || 'null'
+        });
+        
         // Validaciones (soportar campos legacy o nuevos mantenedores)
         if (!patente || !casa_id) {
             return res.status(400).json({
@@ -500,7 +513,10 @@ router.post('/', requirePermission('vehiculos.crear'), async (req, res) => {
         const tieneMarca = marca || marca_id;
         const tieneModelo = modelo || modelo_id;
         
+        console.log('✅ Validación:', { tieneTipo, tieneMarca, tieneModelo });
+        
         if (!tieneTipo || !tieneMarca || !tieneModelo) {
+            console.error('❌ Faltan campos obligatorios de vehículo');
             return res.status(400).json({
                 success: false,
                 message: 'Faltan campos obligatorios: tipo, marca y modelo son requeridos'
@@ -591,11 +607,18 @@ router.post('/', requirePermission('vehiculos.crear'), async (req, res) => {
             observaciones || null
         ]);
         
+        console.log('✅ INSERT exitoso. Rows affected:', result.rowCount, 'ID:', result.rows[0]?.id);
+        
         // Obtener datos completos desde la vista
         const vehiculoCompleto = await pool.query(
             'SELECT * FROM v_vehiculos_completo WHERE patente = $1',
             [patenteUpper]
         );
+        
+        console.log('🔍 Vista consultada. Rows encontrados:', vehiculoCompleto.rowCount);
+        if (vehiculoCompleto.rowCount === 0) {
+            console.error('⚠️ ALERTA: Vista v_vehiculos_completo no retornó filas para patente:', patenteUpper);
+        }
         
         res.status(201).json({
             success: true,
@@ -604,7 +627,15 @@ router.post('/', requirePermission('vehiculos.crear'), async (req, res) => {
         });
         
     } catch (error) {
-        console.error('Error al crear vehículo:', error);
+        console.error('❌ ERROR al crear vehículo:', {
+            message: error.message,
+            code: error.code,
+            detail: error.detail,
+            constraint: error.constraint,
+            table: error.table,
+            column: error.column,
+            stack: error.stack
+        });
         
         // Error de duplicado
         if (error.code === '23505') {
