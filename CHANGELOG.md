@@ -7,6 +7,130 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ---
 
+## [2.0.1] - 2026-05-20
+
+### ✨ Mantenedores Vehiculares Normalizados
+
+#### Nueva Funcionalidad
+- Sistema completo de mantenedores para Tipo/Marca/Modelo de vehículos
+- Datos reales del mercado automotriz chileno precargados
+- Dropdowns en cascada inteligente (Tipo → Marca → Modelo)
+- 100% compatible con registros legacy (campos texto libre mantenidos)
+
+#### Base de Datos
+- **Migración 017**: Creación de 3 tablas nuevas
+  - `tipo_vehiculo` (12 registros): Automóvil, Camioneta, SUV, Motocicleta, etc.
+  - `marca_vehiculo` (45 registros): Marcas comercializadas en Chile
+  - `modelo_vehiculo` (180+ registros): Modelos populares por marca
+- FKs agregadas a tabla `vehiculos` (nullable para compatibilidad)
+- Índices optimizados para consultas rápidas
+
+#### API Endpoints (Públicos)
+- `GET /api/vehiculos/tipos` - Listar tipos activos
+- `GET /api/vehiculos/marcas?tipo_id={id}` - Listar marcas (filtrable)
+- `GET /api/vehiculos/marcas/:id/modelos?tipo_id={id}` - Modelos por marca
+- `GET /api/vehiculos/modelos/:id` - Detalles de modelo específico
+- `GET /api/vehiculos/search-modelo?q={query}` - Búsqueda autocompletada
+
+#### Frontend Mejorado
+- Formulario con dropdowns en cascada en admin-panel.html
+- Funciones `onVehiculoTipoChange()`, `onVehiculoMarcaChange()`
+- UX mejorada con iconos Font Awesome por tipo de vehículo
+- Validaciones de datos normalizados
+
+#### Backend Actualizado
+- Rutas POST/PUT de vehículos soportan campos legacy y nuevos mantenedores
+- Validación dual: acepta IDs de mantenedores o texto libre
+- Error handling mejorado para FKs inválidas
+
+#### Seeds y Datos
+- **seed_tipo_vehiculo.sql**: 12 tipos más comunes en Chile
+- **seed_marca_vehiculo.sql**: 45 marcas organizadas por país de origen
+- **seed_modelo_vehiculo.sql**: 180+ modelos (Toyota: 12, Chevrolet: 10, etc.)
+- Datos basados en mercado real chileno (fuente: chileautos.cl)
+
+#### Instalación
+- Script automatizado: `install-vehicle-maintainers.js`
+- Conecta a Supabase usando credenciales de `.env`
+- Verificación automática de tablas existentes
+- Resumen visual de datos cargados
+
+#### Documentación
+- **README_MANTENEDORES_VEHICULOS.md**: Guía técnica completa
+  - Arquitectura y estructura de datos
+  - 3 opciones de instalación (Node.js script, Panel Supabase, CLI)
+  - Ejemplos de uso de API
+  - Troubleshooting y FAQ
+  - Guía de mantenimiento y expansión
+
+### 🔧 Refactoring
+- Archivo redundante `vehicleMaintainers.js` reemplazado por integración en `vehiculos.routes.js`
+- Rutas públicas de mantenedores posicionadas ANTES de middleware de autenticación
+- Scripts obsoletos de PostgreSQL local eliminados (.bat/.sh)
+
+### 🎯 Beneficios
+- ✅ Datos normalizados: Elimina errores de ortografía ("toyota" vs "Toyota")
+- ✅ UX mejorada: Dropdowns más rápidos que escribir manualmente
+- ✅ Calidad de datos: 100% consistencia en nombres de marcas/modelos
+- ✅ Reportes precisos: Agrupaciones confiables por marca/tipo
+- ✅ Escalabilidad: Fácil agregar nuevas marcas/modelos sin tocar código
+
+---
+
+## [2.0.0] - 2026-05-20
+
+### 🗂️ Reorganización Completa del Repositorio
+
+#### Estructura Profesional
+- Creado directorio `archive/` con 7 subdirectorios organizados
+- 166 archivos movidos a archive (scripts diagnóstico, testing, deployment)
+- 20 archivos eliminados (corruptos, duplicados, históricos consolidados)
+- Estructura limpia y profesional lista para producción
+
+#### Documentación Mejorada
+- **README.md**: Reescrito completo (350+ líneas)
+  - Badges de versión y stack tecnológico
+  - TOC navegable con 11 secciones
+  - Tablas comparativas de tecnologías
+  - Guías de deployment (Render/Docker/Manual)
+  - Sección de seguridad y testing
+- **CHANGELOG.md**: Consolidado de 12 archivos históricos
+  - Formato Keep a Changelog
+  - Historial completo v1.0.0 → v1.2.1
+- **docs/api/README.md**: Documentación de API creada
+  - Convenciones de endpoints
+  - Formatos de respuesta
+  - Rate limiting y CORS
+
+#### Base de Datos Organizada
+- SQL schemas movidos a `database/migrations/`
+- Scripts de seed documentados en `database/seeds/`
+- 4 variantes de schema base mantenidas
+- 29 migraciones organizadas en `scripts/database/`
+
+#### Archivado Inteligente
+- `archive/diagnostics/backend/` - 35+ scripts de diagnóstico
+- `archive/diagnostics/backend/setup/` - 23 scripts de setup
+- `archive/diagnostics/frontend/` - 13 HTML de debug
+- `archive/testing/` - 22 scripts de testing
+- `archive/testing/qr/` - 18 archivos de debug QR
+- `archive/testing/data/` - CSV y SQL de prueba
+- `archive/deployment-scripts/` - 16 archivos .bat (Windows)
+- `archive/nuevos-modulos/` - Carpeta duplicada completa
+
+#### Configuración
+- `.gitignore` actualizado con patrones proyecto-específicos
+- Previene commit de archivos temporales y diagnósticos
+- Protección contra re-agregar archivos archivados
+
+#### Validación
+- 0 errores de sintaxis tras reorganización
+- 25 rutas backend verificadas intactas
+- 17 páginas frontend HTML funcionando
+- 29 migraciones SQL validadas
+
+---
+
 ## [1.2.1] - 2026-05-20
 
 ### 🔖 Checkpoint

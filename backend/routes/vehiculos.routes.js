@@ -11,7 +11,272 @@ const { requireAuth, requireAuthAdmin } = require('../middleware/sessionAuth');
 const { requirePermission } = require('../middleware/rbac');
 const { applyScoping, buildPlazaFilter } = require('../middleware/applyScoping');
 
-// Aplicar middleware de autenticación a todas las rutas
+/**
+ * ==============================================================
+ * RUTAS PÚBLICAS - MANTENEDORES DE VEHÍCULOS (Sin autenticación)
+ * Estas rutas están ANTES del requireAuth para ser accesibles públicamente
+ * Usadas en formularios de registro y dropdowns en cascada
+ * ==============================================================
+ */
+
+/**
+ * GET /api/vehiculos/tipos
+ * Obtener todos los tipos de vehículos activos ordenados
+ */
+router.get('/tipos', async (req, res) => {
+    try {
+        const result = await pool.query(
+            `SELECT id, nombre, descripcion, icono, orden 
+             FROM tipo_vehiculo 
+             WHERE activo = TRUE 
+             ORDER BY orden ASC`
+        );
+
+        res.json({
+            success: true,
+            data: result.rows,
+            count: result.rows.length
+        });
+    } catch (error) {
+        console.error('Error al obtener tipos de vehículos:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener tipos de vehículos',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/vehiculos/marcas
+ * Obtener todas las marcas activas
+ * Query params: tipo_id (opcional) - filtrar marcas que tengan modelos de ese tipo
+ */
+router.get('/marcas', async (req, res) => {
+    try {
+        const { tipo_id } = req.query;
+
+        let query = `
+            SELECT DISTINCT m.id, m.nombre, m.pais_origen
+            FROM marca_vehiculo m
+            WHERE m.activo = TRUE
+        `;
+        const params = [];
+
+        // Si se proporciona tipo_id, filtrar marcas que tengan modelos de ese tipo
+        if (tipo_id) {
+            query += ` AND EXISTS (
+                SELECT 1 FROM modelo_vehiculo mv 
+                WHERE mv.marca_id = m.id 
+                AND mv.tipo_vehiculo_id = $1 
+                AND mv.activo = TRUE
+            )`;
+            params.push(tipo_id);
+        }
+
+        query += ` ORDER BY m.nombre ASC`;
+
+        const result = await pool.query(query, params);
+
+        res.json({
+            success: true,
+            data: result.rows,
+            count: result.rows.length,
+            filteredByTipo: !!tipo_id
+        });
+    } catch (error) {
+        console.error('Error al obtener marcas de vehículos:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener marcas de vehículos',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/vehiculos/marcas/:id/modelos
+ * Obtener modelos activos de una marca específica
+ * Query params: tipo_id (opcional) - filtrar modelos por tipo de vehículo
+ */
+router.get('/marcas/:id/modelos', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { tipo_id } = req.query;
+
+        let query = `
+            SELECT 
+                mv.id, 
+                mv.nombre, 
+                mv.anio_inicio, 
+                mv.anio_fin,
+                tv.nombre AS tipo_vehiculo,
+                tv.id AS tipo_vehiculo_id
+            FROM modelo_vehiculo mv
+            LEFT JOIN tipo_vehiculo tv ON mv.tipo_vehiculo_id = tv.id
+            WHERE mv.marca_id = $1 
+            AND mv.activo = TRUE
+        `;
+        const params = [id];
+
+        // Filtrar por tipo de vehículo si se proporciona
+        if (tipo_id) {
+            query += ` AND mv.tipo_vehiculo_id = $2`;
+            params.push(tipo_id);
+        }
+
+        query += ` ORDER BY mv.nombre ASC`;
+
+        const result = await pool.query(query, params);
+
+        // Obtener información de la marca
+        const marcaResult = await pool.query(
+            'SELECT nombre, pais_origen FROM marca_vehiculo WHERE id = $1',
+            [id]
+        );
+
+        if (marcaResult.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Marca no encontrada'
+            });
+        }
+
+        res.json({
+            success: true,
+            marca: marcaResult.rows[0],
+            data: result.rows,
+            count: result.rows.length,
+            filteredByTipo: !!tipo_id
+        });
+    } catch (error) {
+        console.error('Error al obtener modelos de la marca:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener modelos de la marca',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/vehiculos/modelos/:id
+ * Obtener detalles completos de un modelo específico
+ */
+router.get('/modelos/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await pool.query(
+            `SELECT 
+                mv.id,
+                mv.nombre,
+                mv.anio_inicio,
+                mv.anio_fin,
+                m.nombre AS marca,
+                m.id AS marca_id,
+                m.pais_origen,
+                tv.nombre AS tipo_vehiculo,
+                tv.id AS tipo_vehiculo_id,
+                tv.icono AS tipo_icono
+             FROM modelo_vehiculo mv
+             JOIN marca_vehiculo m ON mv.marca_id = m.id
+             LEFT JOIN tipo_vehiculo tv ON mv.tipo_vehiculo_id = tv.id
+             WHERE mv.id = $1`,
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Modelo no encontrado'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: result.rows[0]
+        });
+    } catch (error) {
+        console.error('Error al obtener detalles del modelo:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener detalles del modelo',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/vehiculos/search-modelo
+ * Búsqueda de modelos por nombre (autocomplete)
+ * Query params: q (min 2 chars), marca_id (opcional), tipo_id (opcional)
+ */
+router.get('/search-modelo', async (req, res) => {
+    try {
+        const { q, marca_id, tipo_id } = req.query;
+
+        if (!q || q.length < 2) {
+            return res.status(400).json({
+                success: false,
+                message: 'El término de búsqueda debe tener al menos 2 caracteres'
+            });
+        }
+
+        let query = `
+            SELECT 
+                mv.id,
+                mv.nombre,
+                m.nombre AS marca,
+                m.id AS marca_id,
+                tv.nombre AS tipo_vehiculo
+            FROM modelo_vehiculo mv
+            JOIN marca_vehiculo m ON mv.marca_id = m.id
+            LEFT JOIN tipo_vehiculo tv ON mv.tipo_vehiculo_id = tv.id
+            WHERE mv.activo = TRUE
+            AND mv.nombre ILIKE $1
+        `;
+        const params = [`%${q}%`];
+        let paramIndex = 2;
+
+        if (marca_id) {
+            query += ` AND mv.marca_id = $${paramIndex}`;
+            params.push(marca_id);
+            paramIndex++;
+        }
+
+        if (tipo_id) {
+            query += ` AND mv.tipo_vehiculo_id = $${paramIndex}`;
+            params.push(tipo_id);
+            paramIndex++;
+        }
+
+        query += ` ORDER BY m.nombre, mv.nombre LIMIT 20`;
+
+        const result = await pool.query(query, params);
+
+        res.json({
+            success: true,
+            data: result.rows,
+            count: result.rows.length
+        });
+    } catch (error) {
+        console.error('Error en búsqueda de modelos:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error en búsqueda de modelos',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * ==============================================================
+ * FIN RUTAS PÚBLICAS - INICIO RUTAS PROTEGIDAS
+ * ==============================================================
+ */
+
+// Aplicar middleware de autenticación a todas las rutas siguientes
 router.use(requireAuth);
 
 /**
@@ -208,19 +473,37 @@ router.post('/', requirePermission('vehiculos.crear'), async (req, res) => {
             patente,
             casa_id,
             residente_id,
+            // Campos legacy (texto libre)
             marca,
             modelo,
+            tipo,
+            // Nuevos campos de mantenedores (IDs)
+            tipo_vehiculo_id,
+            marca_id,
+            modelo_id,
+            // Otros campos
             color,
             anio,
-            tipo,
             observaciones
         } = req.body;
         
-        // Validaciones
-        if (!patente || !casa_id || !marca || !modelo || !tipo) {
+        // Validaciones (soportar campos legacy o nuevos mantenedores)
+        if (!patente || !casa_id) {
             return res.status(400).json({
                 success: false,
-                message: 'Faltan campos obligatorios: patente, casa_id, marca, modelo, tipo'
+                message: 'Faltan campos obligatorios: patente, casa_id'
+            });
+        }
+        
+        // Validar que se haya proporcionado marca/modelo/tipo (legacy o IDs)
+        const tieneTipo = tipo || tipo_vehiculo_id;
+        const tieneMarca = marca || marca_id;
+        const tieneModelo = modelo || modelo_id;
+        
+        if (!tieneTipo || !tieneMarca || !tieneModelo) {
+            return res.status(400).json({
+                success: false,
+                message: 'Faltan campos obligatorios: tipo, marca y modelo son requeridos'
             });
         }
         
@@ -233,13 +516,15 @@ router.post('/', requirePermission('vehiculos.crear'), async (req, res) => {
             });
         }
         
-        // Validar tipo
-        const tiposValidos = ['automovil', 'camioneta', 'motocicleta', 'bicicleta', 'otro'];
-        if (!tiposValidos.includes(tipo)) {
-            return res.status(400).json({
-                success: false,
-                message: `Tipo inválido. Debe ser: ${tiposValidos.join(', ')}`
-            });
+        // Validar tipo legacy si se proporciona
+        if (tipo) {
+            const tiposValidos = ['automovil', 'camioneta', 'motocicleta', 'bicicleta', 'otro', 
+                                  'Automóvil', 'Camioneta', 'SUV', 'Station Wagon', 
+                                  'Motocicleta', 'Furgón', 'Van de Pasajeros', 'Camión', 
+                                  'Bus', 'Deportivo', 'Todo Terreno', 'Cuatrimoto'];
+            if (!tiposValidos.includes(tipo)) {
+                console.warn(`Tipo '${tipo}' no está en la lista predefinida, pero se aceptará`);
+            }
         }
         
         // Validar año si se proporciona
@@ -281,23 +566,28 @@ router.post('/', requirePermission('vehiculos.crear'), async (req, res) => {
             }
         }
         
-        // Insertar vehículo
+        // Insertar vehículo (con campos legacy y nuevos mantenedores)
         const result = await pool.query(`
             INSERT INTO vehiculos (
-                patente, casa_id, residente_id, marca, modelo,
-                color, anio, tipo, observaciones
+                patente, casa_id, residente_id,
+                tipo, marca, modelo,
+                tipo_vehiculo_id, marca_id, modelo_id,
+                color, anio, observaciones
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
             RETURNING *
         `, [
             patenteUpper,
             casa_id,
             residente_id || null,
-            marca.trim(),
-            modelo.trim(),
+            tipo ? tipo.trim() : null,
+            marca ? marca.trim() : null,
+            modelo ? modelo.trim() : null,
+            tipo_vehiculo_id || null,
+            marca_id || null,
+            modelo_id || null,
             color ? color.trim() : null,
             anio || null,
-            tipo,
             observaciones || null
         ]);
         
@@ -324,6 +614,14 @@ router.post('/', requirePermission('vehiculos.crear'), async (req, res) => {
             });
         }
         
+        // Error de FK (ID de mantenedor inválido)
+        if (error.code === '23503') {
+            return res.status(400).json({
+                success: false,
+                message: 'ID de tipo, marca o modelo inválido'
+            });
+        }
+        
         res.status(500).json({
             success: false,
             message: 'Error al crear vehículo',
@@ -343,11 +641,17 @@ router.put('/:patente', requirePermission('vehiculos.editar'), async (req, res) 
         const {
             casa_id,
             residente_id,
+            // Campos legacy
             marca,
             modelo,
+            tipo,
+            // Nuevos campos de mantenedores
+            tipo_vehiculo_id,
+            marca_id,
+            modelo_id,
+            // Otros campos
             color,
             anio,
-            tipo,
             observaciones
         } = req.body;
         
@@ -364,14 +668,14 @@ router.put('/:patente', requirePermission('vehiculos.editar'), async (req, res) 
             });
         }
         
-        // Validar tipo si se proporciona
+        // Validar tipo legacy si se proporciona
         if (tipo) {
-            const tiposValidos = ['automovil', 'camioneta', 'motocicleta', 'bicicleta', 'otro'];
+            const tiposValidos = ['automovil', 'camioneta', 'motocicleta', 'bicicleta', 'otro',
+                                  'Automóvil', 'Camioneta', 'SUV', 'Station Wagon', 
+                                  'Motocicleta', 'Furgón', 'Van de Pasajeros', 'Camión', 
+                                  'Bus', 'Deportivo', 'Todo Terreno', 'Cuatrimoto'];
             if (!tiposValidos.includes(tipo)) {
-                return res.status(400).json({
-                    success: false,
-                    message: `Tipo inválido. Debe ser: ${tiposValidos.join(', ')}`
-                });
+                console.warn(`Tipo '${tipo}' no está en la lista predefinida, pero se aceptará`);
             }
         }
         
@@ -433,18 +737,45 @@ router.put('/:patente', requirePermission('vehiculos.editar'), async (req, res) 
             paramCount++;
         }
         
+        // Campos legacy
         if (marca !== undefined) {
             updates.push(`marca = $${paramCount}`);
-            values.push(marca.trim());
+            values.push(marca ? marca.trim() : null);
             paramCount++;
         }
         
         if (modelo !== undefined) {
             updates.push(`modelo = $${paramCount}`);
-            values.push(modelo.trim());
+            values.push(modelo ? modelo.trim() : null);
             paramCount++;
         }
         
+        if (tipo !== undefined) {
+            updates.push(`tipo = $${paramCount}`);
+            values.push(tipo ? tipo.trim() : null);
+            paramCount++;
+        }
+        
+        // Nuevos campos de mantenedores
+        if (tipo_vehiculo_id !== undefined) {
+            updates.push(`tipo_vehiculo_id = $${paramCount}`);
+            values.push(tipo_vehiculo_id);
+            paramCount++;
+        }
+        
+        if (marca_id !== undefined) {
+            updates.push(`marca_id = $${paramCount}`);
+            values.push(marca_id);
+            paramCount++;
+        }
+        
+        if (modelo_id !== undefined) {
+            updates.push(`modelo_id = $${paramCount}`);
+            values.push(modelo_id);
+            paramCount++;
+        }
+        
+        // Otros campos
         if (color !== undefined) {
             updates.push(`color = $${paramCount}`);
             values.push(color ? color.trim() : null);
@@ -454,12 +785,6 @@ router.put('/:patente', requirePermission('vehiculos.editar'), async (req, res) 
         if (anio !== undefined) {
             updates.push(`anio = $${paramCount}`);
             values.push(anio);
-            paramCount++;
-        }
-        
-        if (tipo !== undefined) {
-            updates.push(`tipo = $${paramCount}`);
-            values.push(tipo);
             paramCount++;
         }
         
@@ -502,6 +827,15 @@ router.put('/:patente', requirePermission('vehiculos.editar'), async (req, res) 
         
     } catch (error) {
         console.error('Error al actualizar vehículo:', error);
+        
+        // Error de FK (ID de mantenedor inválido)
+        if (error.code === '23503') {
+            return res.status(400).json({
+                success: false,
+                message: 'ID de tipo, marca o modelo inválido'
+            });
+        }
+        
         res.status(500).json({
             success: false,
             message: 'Error al actualizar vehículo',

@@ -1,6 +1,6 @@
 # 🏘️ Portal de Servicios Los Prados de Nos
 
-[![Versión](https://img.shields.io/badge/versión-1.2.1-blue.svg)](CHANGELOG.md)
+[![Versión](https://img.shields.io/badge/versión-2.0.1-blue.svg)](CHANGELOG.md)
 [![Estado](https://img.shields.io/badge/estado-producción-success.svg)](#)
 [![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org)
 [![PostgreSQL](https://img.shields.io/badge/postgresql-%3E%3D12.0-blue.svg)](https://www.postgresql.org)
@@ -134,6 +134,27 @@ NODE_ENV=production
 
 ⚠️ **IMPORTANTE**: Rotar credenciales de `.env.example` antes de producción. Actualmente contienen passwords de ejemplo.
 
+### 🚗 Instalación Opcional: Mantenedores de Vehículos (Nuevo)
+
+Si deseas usar **dropdowns normalizados** para Tipo/Marca/Modelo de vehículos (recomendado para evitar errores de ortografía):
+
+```bash
+# Ejecutar script de instalación (conecta a Supabase automáticamente)
+node install-vehicle-maintainers.js
+```
+
+Esto carga:
+- 12 tipos de vehículos (Automóvil, Camioneta, SUV, etc.)
+- 45 marcas del mercado chileno (Toyota, Chevrolet, Nissan, etc.)
+- 180+ modelos populares por marca
+
+**Beneficios:**
+- ✅ Datos normalizados (adiós a "toyota" vs "Toyota")
+- ✅ Dropdowns en cascada Tipo → Marca → Modelo
+- ✅ 100% compatible con registros legacy (campos texto libre)
+
+📖 **Documentación completa**: `database/seeds/README_MANTENEDORES_VEHICULOS.md`
+
 ---
 
 ## 🧩 Módulos y Funcionalidades
@@ -165,10 +186,12 @@ NODE_ENV=production
 
 ### 5. 🚗 Vehículos y Control de Acceso
 - CRUD vehículos (patente, marca, modelo)
+- **NUEVO**: Mantenedores normalizados Tipo/Marca/Modelo (45 marcas, 180+ modelos chilenos)
+- **NUEVO**: Dropdowns en cascada con datos del mercado automotriz
 - Registro automático entrada/salida
 - Validación morosidad en tiempo real
 - Bloqueo acceso (meses_moroso ≥ 3)
-- Historial completo
+- Historial completo con 100% compatibilidad legacy
 
 ### 6. 📅 Eventos Comunitarios
 - 8 tipos: Reunión Ord/Extr, Capacitación, Actividad, Mantenimiento, Emergencia, Elecciones
