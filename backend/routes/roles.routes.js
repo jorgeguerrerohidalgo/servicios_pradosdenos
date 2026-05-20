@@ -212,6 +212,7 @@ router.get('/',
   requirePermission('roles.leer'), 
   async (req, res) => {
     try {
+      // Obtener roles con estadísticas
       const result = await pool.query(`
         SELECT 
           r.*,
@@ -225,7 +226,24 @@ router.get('/',
         ORDER BY r.nivel_prioridad DESC
       `);
       
-      res.json({ success: true, data: result.rows });
+      // Obtener permisos de cada rol
+      const rolesConPermisos = await Promise.all(
+        result.rows.map(async (rol) => {
+          const permisosResult = await pool.query(`
+            SELECT p.codigo 
+            FROM role_permissions rp
+            INNER JOIN permissions p ON rp.permission_id = p.id
+            WHERE rp.role_id = $1 AND p.activo = TRUE
+          `, [rol.id]);
+          
+          return {
+            ...rol,
+            permisos: permisosResult.rows.map(p => p.codigo)
+          };
+        })
+      );
+      
+      res.json({ success: true, data: rolesConPermisos });
     } catch (error) {
       console.error('❌ Error al listar roles:', error);
       res.status(500).json({ success: false, error: 'Error al obtener roles' });
