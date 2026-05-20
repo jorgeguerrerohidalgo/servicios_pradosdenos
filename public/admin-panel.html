@@ -7821,9 +7821,6 @@
         // Toggle permiso de módulo para un rol
         async function toggleModuloRol(permiso, rolId, asignar, rolNombre, moduloNombre) {
             try {
-                const endpoint = asignar ? `/api/roles/${rolId}/permissions` : `/api/roles/${rolId}/permissions`;
-                const method = asignar ? 'POST' : 'DELETE';
-
                 // Primero obtener el permission_id
                 const permisosResp = await authenticatedFetch('/api/roles/permisos');
                 if (!permisosResp || !permisosResp.ok) {
@@ -7837,11 +7834,20 @@
                     throw new Error(`Permiso ${permiso} no encontrado`);
                 }
 
-                const response = await authenticatedFetch(endpoint, {
-                    method: method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ permission_id: permisoObj.id })
-                });
+                let response;
+                if (asignar) {
+                    // POST /api/roles/:id/permissions
+                    response = await authenticatedFetch(`/api/roles/${rolId}/permissions`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ permission_id: permisoObj.id })
+                    });
+                } else {
+                    // DELETE /api/roles/:id/permissions/:permission_id
+                    response = await authenticatedFetch(`/api/roles/${rolId}/permissions/${permisoObj.id}`, {
+                        method: 'DELETE'
+                    });
+                }
 
                 if (!response || !response.ok) {
                     const errorData = await response.json();
