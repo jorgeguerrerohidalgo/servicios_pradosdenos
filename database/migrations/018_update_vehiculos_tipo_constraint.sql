@@ -19,6 +19,7 @@ DROP CONSTRAINT IF EXISTS vehiculos_tipo_check;
 -- 2. Crear nuevo constraint que permita:
 --    - Valores legacy (minúsculas): automovil, camioneta, motocicleta, bicicleta, otro
 --    - Valores nuevos (tipo_vehiculo): Automóvil, Camioneta, SUV, etc.
+--    - Valores normalizados (MAYÚSCULAS): AUTOMÓVIL, CAMIONETA, SUV, etc.
 --    - NULL cuando se usa tipo_vehiculo_id
 ALTER TABLE vehiculos
 ADD CONSTRAINT vehiculos_tipo_check CHECK (
@@ -26,10 +27,14 @@ ADD CONSTRAINT vehiculos_tipo_check CHECK (
     tipo IN (
         -- Valores legacy (compatibilidad con registros antiguos)
         'automovil', 'camioneta', 'motocicleta', 'bicicleta', 'otro',
-        -- Valores nuevos desde tipo_vehiculo
+        -- Valores nuevos desde tipo_vehiculo (capitalizado)
         'Automóvil', 'Camioneta', 'SUV', 'Station Wagon',
         'Motocicleta', 'Furgón', 'Van de Pasajeros', 'Camión',
-        'Bus', 'Deportivo', 'Todo Terreno', 'Cuatrimoto'
+        'Bus', 'Deportivo', 'Todo Terreno', 'Cuatrimoto',
+        -- Valores normalizados (MAYÚSCULAS - desde backend)
+        'AUTOMÓVIL', 'CAMIONETA', 'SUV', 'STATION WAGON',
+        'MOTOCICLETA', 'FURGÓN', 'VAN DE PASAJEROS', 'CAMIÓN',
+        'BUS', 'DEPORTIVO', 'TODO TERRENO', 'CUATRIMOTO'
     )
 );
 
