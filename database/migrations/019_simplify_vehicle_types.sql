@@ -79,10 +79,15 @@ ORDER BY orden;
 
 COMMIT;
 
--- Registro en tabla de migraciones (si existe)
-INSERT INTO schema_migrations (version, name, executed_at)
-VALUES (19, 'simplify_vehicle_types', CURRENT_TIMESTAMP)
-ON CONFLICT (version) DO NOTHING;
+-- Registro en tabla de migraciones (solo si la tabla existe)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'schema_migrations') THEN
+        INSERT INTO schema_migrations (version, name, executed_at)
+        VALUES (19, 'simplify_vehicle_types', CURRENT_TIMESTAMP)
+        ON CONFLICT (version) DO NOTHING;
+    END IF;
+END $$;
 
 -- Mostrar resumen
 DO $$
