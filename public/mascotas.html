@@ -470,7 +470,7 @@
         // Cargar plazas para el filtro
         async function cargarPlazas() {
             try {
-                const response = await fetch('/api/plazas/activas');
+                const response = await fetch('/api/admin/plazas/activas');
                 const data = await response.json();
                 
                 if (data.success) {
