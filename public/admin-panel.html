@@ -1948,26 +1948,34 @@
                                     <small class="text-muted">4-10 caracteres alfanuméricos</small>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="vehiculoTipo" class="form-label">Tipo *</label>
-                                    <select class="form-select" id="vehiculoTipo" required>
-                                        <option value="automovil">Automóvil</option>
-                                        <option value="camioneta">Camioneta</option>
-                                        <option value="motocicleta">Motocicleta</option>
-                                        <option value="bicicleta">Bicicleta</option>
-                                        <option value="otro">Otro</option>
+                                    <label for="vehiculoTipoId" class="form-label">Tipo de Vehículo *</label>
+                                    <select class="form-select" id="vehiculoTipoId" onchange="onVehiculoTipoChange()" required>
+                                        <option value="">Seleccionar tipo</option>
                                     </select>
+                                    <small class="text-muted"><i class="fas fa-info-circle"></i> Seleccione el tipo para filtrar marcas y modelos</small>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="vehiculoMarca" class="form-label">Marca *</label>
-                                    <input type="text" class="form-control" id="vehiculoMarca" required>
+                                    <label for="vehiculoMarcaId" class="form-label">Marca *</label>
+                                    <select class="form-select" id="vehiculoMarcaId" onchange="onVehiculoMarcaChange()" disabled required>
+                                        <option value="">Primero seleccione un tipo</option>
+                                    </select>
+                                    <small class="text-muted"><i class="fas fa-info-circle"></i> Marcas disponibles en Chile</small>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="vehiculoModelo" class="form-label">Modelo *</label>
-                                    <input type="text" class="form-control" id="vehiculoModelo" required>
+                                    <label for="vehiculoModeloId" class="form-label">Modelo *</label>
+                                    <select class="form-select" id="vehiculoModeloId" disabled required>
+                                        <option value="">Primero seleccione una marca</option>
+                                    </select>
+                                    <small class="text-muted"><i class="fas fa-info-circle"></i> Modelos registrados en Chile</small>
                                 </div>
                             </div>
+                            
+                            <!-- Campos legacy ocultos (mantener para compatibilidad) -->
+                            <input type="hidden" id="vehiculoTipo">
+                            <input type="hidden" id="vehiculoMarca">
+                            <input type="hidden" id="vehiculoModelo">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="vehiculoColor" class="form-label">Color</label>
@@ -6568,10 +6576,19 @@
                 const casaSelect = document.getElementById('vehiculoCasa');
                 const residenteSelect = document.getElementById('vehiculoResidente');
                 
+                // Resetear dropdowns de vehículo (nuevos)
+                const tipoSelect = document.getElementById('vehiculoTipoId');
+                const marcaSelect = document.getElementById('vehiculoMarcaId');
+                const modeloSelect = document.getElementById('vehiculoModeloId');
+                
                 casaSelect.disabled = true;
                 casaSelect.innerHTML = '<option value="">Primero seleccione una plaza</option>';
                 residenteSelect.disabled = true;
                 residenteSelect.innerHTML = '<option value="">Primero seleccione una casa</option>';
+                marcaSelect.disabled = true;
+                marcaSelect.innerHTML = '<option value="">Primero seleccione un tipo</option>';
+                modeloSelect.disabled = true;
+                modeloSelect.innerHTML = '<option value="">Primero seleccione una marca</option>';
                 
                 // Cargar dropdown de plazas
                 const plazasResponse = await authenticatedFetch('/api/plazas?activo=true');
@@ -6581,6 +6598,22 @@
                 if (plazasResponse.ok && plazasData.success) {
                     plazaSelect.innerHTML = '<option value="">Seleccionar plaza</option>' +
                         plazasData.data.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+                }
+                
+                // Cargar tipos de vehículos (sin autenticación - endpoint público)
+                try {
+                    const tiposResponse = await fetch('/api/vehiculos/tipos');
+                    if (tiposResponse.ok) {
+                        const tiposData = await tiposResponse.json();
+                        if (tiposData.success) {
+                            tipoSelect.innerHTML = '<option value="">Seleccionar tipo</option>' +
+                                tiposData.data.map(t => 
+                                    `<option value="${t.id}" data-icono="${t.icono || ''}">${t.nombre}</option>`
+                                ).join('');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error al cargar tipos de vehículos:', error);
                 }
                 
                 // Si es edición, cargar datos del vehículo
@@ -6616,16 +6649,33 @@
                             }
                         }
                         
-                        // Cargar datos del vehículo
+                        // Cargar datos del vehículo (usar IDs de mantenedores si existen, sino valores legacy)
                         document.getElementById('vehiculoPatenteOriginal').value = v.patente;
                         document.getElementById('vehiculoPatente').value = v.patente;
                         document.getElementById('vehiculoPatente').disabled = true; // No permitir cambiar patente
-                        document.getElementById('vehiculoMarca').value = v.marca;
-                        document.getElementById('vehiculoModelo').value = v.modelo;
                         document.getElementById('vehiculoColor').value = v.color || '';
                         document.getElementById('vehiculoAnio').value = v.anio || '';
-                        document.getElementById('vehiculoTipo').value = v.tipo;
                         document.getElementById('vehiculoObservaciones').value = v.observaciones || '';
+                        
+                        // Si tiene tipo_vehiculo_id, usarlo
+                        if (v.tipo_vehiculo_id) {
+                            tipoSelect.value = v.tipo_vehiculo_id;
+                            await onVehiculoTipoChange();
+                            
+                            if (v.marca_id) {
+                                marcaSelect.value = v.marca_id;
+                                await onVehiculoMarcaChange();
+                                
+                                if (v.modelo_id) {
+                                    modeloSelect.value = v.modelo_id;
+                                }
+                            }
+                        } else {
+                            // Valores legacy (texto libre)
+                            document.getElementById('vehiculoTipo').value = v.tipo || '';
+                            document.getElementById('vehiculoMarca').value = v.marca || '';
+                            document.getElementById('vehiculoModelo').value = v.modelo || '';
+                        }
                     }
                 } else {
                     document.getElementById('vehiculoPatente').disabled = false;
@@ -6717,6 +6767,84 @@
             await loadResidentesPorCasaVehiculo(casaId, selectedResidenteId);
         }
 
+        /**
+         * Funciones de cascada para Tipo → Marca → Modelo
+         */
+        async function onVehiculoTipoChange() {
+            const tipoId = document.getElementById('vehiculoTipoId').value;
+            const marcaSelect = document.getElementById('vehiculoMarcaId');
+            const modeloSelect = document.getElementById('vehiculoModeloId');
+            
+            // Resetear marca y modelo
+            marcaSelect.innerHTML = '<option value="">Seleccionar marca</option>';
+            marcaSelect.disabled = true;
+            modeloSelect.innerHTML = '<option value="">Primero seleccione una marca</option>';
+            modeloSelect.disabled = true;
+            
+            if (!tipoId) return;
+            
+            try {
+                // Cargar marcas filtradas por tipo (endpoint público)
+                const response = await fetch(`/api/vehiculos/marcas?tipo_id=${tipoId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.data.length > 0) {
+                        marcaSelect.innerHTML = '<option value="">Seleccionar marca</option>' +
+                            data.data.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
+                        marcaSelect.disabled = false;
+                    } else {
+                        marcaSelect.innerHTML = '<option value="">No hay marcas para este tipo</option>';
+                    }
+                }
+            } catch (error) {
+                console.error('Error al cargar marcas:', error);
+                marcaSelect.innerHTML = '<option value="">Error al cargar marcas</option>';
+            }
+        }
+
+        async function onVehiculoMarcaChange() {
+            const marcaId = document.getElementById('vehiculoMarcaId').value;
+            const tipoId = document.getElementById('vehiculoTipoId').value;
+            const modeloSelect = document.getElementById('vehiculoModeloId');
+            
+            // Resetear modelo
+            modeloSelect.innerHTML = '<option value="">Seleccionar modelo</option>';
+            modeloSelect.disabled = true;
+            
+            if (!marcaId) return;
+            
+            try {
+                // Cargar modelos de la marca (opcionalmente filtrados por tipo)
+                let url = `/api/vehiculos/marcas/${marcaId}/modelos`;
+                if (tipoId) {
+                    url += `?tipo_id=${tipoId}`;
+                }
+                
+                const response = await fetch(url);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.data.length > 0) {
+                        modeloSelect.innerHTML = '<option value="">Seleccionar modelo</option>' +
+                            data.data.map(m => {
+                                let label = m.nombre;
+                                if (m.anio_inicio) {
+                                    label += ` (desde ${m.anio_inicio}`;
+                                    if (m.anio_fin) label += ` hasta ${m.anio_fin}`;
+                                    label += ')';
+                                }
+                                return `<option value="${m.id}">${label}</option>`;
+                            }).join('');
+                        modeloSelect.disabled = false;
+                    } else {
+                        modeloSelect.innerHTML = '<option value="">No hay modelos para esta marca</option>';
+                    }
+                }
+            } catch (error) {
+                console.error('Error al cargar modelos:', error);
+                modeloSelect.innerHTML = '<option value="">Error al cargar modelos</option>';
+            }
+        }
+
         async function saveVehiculo() {
             try {
                 const patenteOriginal = document.getElementById('vehiculoPatenteOriginal').value;
@@ -6733,24 +6861,59 @@
                     return;
                 }
                 
+                // Obtener valores de los mantenedores (nuevos campos)
+                const tipoId = document.getElementById('vehiculoTipoId').value;
+                const marcaId = document.getElementById('vehiculoMarcaId').value;
+                const modeloId = document.getElementById('vehiculoModeloId').value;
+                
+                // Obtener nombres seleccionados para campos legacy (compatibilidad retroactiva)
+                let tipoNombre = '';
+                let marcaNombre = '';
+                let modeloNombre = '';
+                
+                if (tipoId) {
+                    const tipoSelect = document.getElementById('vehiculoTipoId');
+                    tipoNombre = tipoSelect.options[tipoSelect.selectedIndex].text;
+                }
+                if (marcaId) {
+                    const marcaSelect = document.getElementById('vehiculoMarcaId');
+                    marcaNombre = marcaSelect.options[marcaSelect.selectedIndex].text;
+                }
+                if (modeloId) {
+                    const modeloSelect = document.getElementById('vehiculoModeloId');
+                    modeloNombre = modeloSelect.options[modeloSelect.selectedIndex].text;
+                }
+                
                 const vehiculoData = {
                     patente: document.getElementById('vehiculoPatente').value.toUpperCase(),
                     casa_id: parseInt(document.getElementById('vehiculoCasa').value),
                     residente_id: document.getElementById('vehiculoResidente').value || null,
-                    marca: document.getElementById('vehiculoMarca').value,
-                    modelo: document.getElementById('vehiculoModelo').value,
+                    
+                    // Nuevos campos de mantenedores (IDs)
+                    tipo_vehiculo_id: tipoId ? parseInt(tipoId) : null,
+                    marca_id: marcaId ? parseInt(marcaId) : null,
+                    modelo_id: modeloId ? parseInt(modeloId) : null,
+                    
+                    // Campos legacy (para compatibilidad y respaldo)
+                    tipo: tipoNombre,
+                    marca: marcaNombre,
+                    modelo: modeloNombre,
+                    
+                    // Otros campos
                     color: document.getElementById('vehiculoColor').value || null,
                     anio: parseInt(document.getElementById('vehiculoAnio').value) || null,
-                    tipo: document.getElementById('vehiculoTipo').value,
                     observaciones: document.getElementById('vehiculoObservaciones').value || null
                 };
                 
                 // Validaciones
-                if (!vehiculoData.patente || !vehiculoData.casa_id || !vehiculoData.marca || !vehiculoData.modelo || !vehiculoData.tipo) {
+                if (!vehiculoData.patente || !vehiculoData.casa_id || 
+                    (!vehiculoData.marca_id && !vehiculoData.marca) || 
+                    (!vehiculoData.modelo_id && !vehiculoData.modelo) || 
+                    (!vehiculoData.tipo_vehiculo_id && !vehiculoData.tipo)) {
                     Swal.fire({
                         icon: 'warning',
                         title: 'Campos requeridos',
-                        text: 'Por favor complete todos los campos obligatorios (Plaza, Casa, Patente, Marca, Modelo, Tipo)'
+                        text: 'Por favor complete todos los campos obligatorios (Plaza, Casa, Patente, Tipo, Marca, Modelo)'
                     });
                     return;
                 }
