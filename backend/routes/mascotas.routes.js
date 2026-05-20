@@ -12,7 +12,90 @@ const { requireAuth, requireAuthAdmin } = require('../middleware/sessionAuth');
 const { requirePermission } = require('../middleware/rbac');
 const { applyScoping, buildPlazaFilter } = require('../middleware/applyScoping');
 
-// Aplicar middleware de autenticación a todas las rutas
+// ==================== ENDPOINT PÚBLICO ====================
+/**
+ * GET /api/mascotas/publico
+ * ⚠️ SIN AUTENTICACIÓN - Vista pública para emergencias
+ * Lista todas las mascotas activas con información NO SENSIBLE
+ * Query params: tipo, plaza, buscar
+ * Uso: Galería pública para identificación en emergencias (mascotas perdidas/encontradas)
+ */
+router.get('/publico', async (req, res) => {
+    try {
+        const { tipo, plaza, buscar } = req.query;
+        
+        let query = `
+            SELECT 
+                m.id,
+                m.nombre,
+                m.tipo,
+                m.raza,
+                m.genero,
+                m.color,
+                m.foto_url,
+                m.observaciones,
+                EXTRACT(YEAR FROM AGE(CURRENT_DATE, m.fecha_nacimiento))::INTEGER as edad_anos,
+                c.numero as numero_casa,
+                p.nombre as plaza_nombre,
+                p.id as plaza_id,
+                CASE 
+                    WHEN m.fecha_ultima_vacuna IS NULL THEN 'sin_info'
+                    WHEN (CURRENT_DATE - m.fecha_ultima_vacuna) > 365 THEN 'vencida'
+                    ELSE 'al_dia'
+                END as estado_vacunas
+            FROM mascotas m
+            INNER JOIN casas c ON m.casa_id = c.id
+            INNER JOIN plazas p ON c.plaza_id = p.id
+            WHERE m.activo = TRUE AND c.activo = TRUE AND p.activo = TRUE
+        `;
+        
+        let params = [];
+        let paramCount = 0;
+        
+        // Filtro por tipo de mascota
+        if (tipo && tipo !== 'all') {
+            paramCount++;
+            query += ` AND m.tipo = $${paramCount}`;
+            params.push(tipo);
+        }
+        
+        // Filtro por plaza
+        if (plaza && plaza !== 'all') {
+            paramCount++;
+            query += ` AND p.id = $${paramCount}`;
+            params.push(parseInt(plaza));
+        }
+        
+        // Búsqueda por nombre
+        if (buscar) {
+            paramCount++;
+            query += ` AND LOWER(m.nombre) LIKE LOWER($${paramCount})`;
+            params.push(`%${buscar}%`);
+        }
+        
+        query += ' ORDER BY p.nombre, m.tipo, m.nombre';
+        
+        const result = await pool.query(query, params);
+        
+        res.json({
+            success: true,
+            data: result.rows,
+            count: result.rows.length
+        });
+        
+    } catch (error) {
+        console.error('❌ Error en endpoint público de mascotas:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al cargar mascotas',
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Error interno'
+        });
+    }
+});
+
+// ==================== FIN ENDPOINT PÚBLICO ====================
+
+// Aplicar middleware de autenticación a todas las rutas SIGUIENTES
 router.use(requireAuth);
 
 // ==================== GET: Listar mascotas ====================

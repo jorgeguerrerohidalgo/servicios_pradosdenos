@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mascotas del Condominio - Los Prados de Nos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .container-main {
+            padding: 30px 0;
+        }
+        
+        .header-section {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header-section h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header-section p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .main-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        
+        .filter-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .results-section {
+            min-height: 300px;
+        }
+        
+        /* Cards de mascotas */
+        .mascota-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 20px;
+            height: 100%;
+        }
+        
+        .mascota-card:hover {
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            transform: translateY(-5px);
+            border-color: #667eea;
+        }
+        
+        .mascota-card.tipo-perro {
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .mascota-card.tipo-gato {
+            border-left: 4px solid #ff9500;
+        }
+        
+        .mascota-card.tipo-otro {
+            border-left: 4px solid #6c757d;
+        }
+        
+        .mascota-foto {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #f8f9fa;
+        }
+        
+        .mascota-placeholder {
+            width: 100%;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            font-size: 4rem;
+            color: #adb5bd;
+        }
+        
+        .mascota-body {
+            padding: 15px;
+        }
+        
+        .mascota-nombre {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .mascota-tipo {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .tipo-perro-badge {
+            background: #4a90e2;
+            color: white;
+        }
+        
+        .tipo-gato-badge {
+            background: #ff9500;
+            color: white;
+        }
+        
+        .tipo-otro-badge {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .mascota-info {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .mascota-info i {
+            width: 20px;
+            text-align: center;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: white;
+        }
+        
+        .loading .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+            background: white;
+            border-radius: 10px;
+        }
+        
+        .no-results i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            border-color: #667eea;
+        }
+        
+        .btn-primary:hover {
+            background: #5a6fd8;
+            border-color: #5a6fd8;
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .modal-foto {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .detalle-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .detalle-item:last-child {
+            border-bottom: none;
+        }
+        
+        .detalle-label {
+            font-weight: 600;
+            color: #495057;
+            margin-right: 10px;
+        }
+        
+        .detalle-value {
+            color: #6c757d;
+        }
+        
+        .badge-vacuna {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+        
+        .vacuna-al-dia {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .vacuna-vencida {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .vacuna-sin-info {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        
+        @media (max-width: 768px) {
+            .header-section h1 {
+                font-size: 1.8rem;
+            }
+            
+            .container-main {
+                padding: 20px 10px;
+            }
+            
+            .main-card {
+                padding: 20px;
+            }
+            
+            .mascota-foto, .mascota-placeholder {
+                height: 180px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top" style="background: rgba(0,0,0,0.2); backdrop-filter: blur(10px);">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-home me-2"></i>
+                Los Prados de Nos
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="checkin.html">
+                            <i class="fas fa-calendar-check me-1"></i>Check-in
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="eventos.html">
+                            <i class="fas fa-calendar me-1"></i>Eventos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="documentos.html">
+                            <i class="fas fa-file-text me-1"></i>Documentos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="mascotas.html">
+                            <i class="fas fa-paw me-1"></i>Mascotas
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="login.html">
+                            <i class="fas fa-sign-in-alt me-1"></i>Acceso Adminitrador
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <div class="container container-main">
+        <!-- Header -->
+        <div class="header-section">
+            <h1>
+                <i class="fas fa-paw me-3"></i>
+                Mascotas del Condominio
+            </h1>
+            <p>Galería para identificación en emergencias - Mascotas perdidas o encontradas</p>
+        </div>
+
+        <!-- Card Principal -->
+        <div class="main-card">
+            <!-- Filtros -->
+            <div class="filter-section">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="filtroTipo" class="form-label">
+                            <i class="fas fa-filter me-1"></i>Tipo de Mascota
+                        </label>
+                        <select id="filtroTipo" class="form-select" onchange="aplicarFiltros()">
+                            <option value="all">Todos</option>
+                            <option value="perro">🐕 Perros</option>
+                            <option value="gato">🐈 Gatos</option>
+                            <option value="otro">Otros</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="filtroPlaza" class="form-label">
+                            <i class="fas fa-map-marker-alt me-1"></i>Plaza
+                        </label>
+                        <select id="filtroPlaza" class="form-select" onchange="aplicarFiltros()">
+                            <option value="all">Todas las plazas</option>
+                            <!-- Se cargan dinámicamente -->
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="buscarNombre" class="form-label">
+                            <i class="fas fa-search me-1"></i>Buscar por nombre
+                        </label>
+                        <input type="text" id="buscarNombre" class="form-control" 
+                               placeholder="Ej: Firulais" onkeyup="aplicarFiltros()">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-outline-secondary w-100" onclick="limpiarFiltros()">
+                            <i class="fas fa-times me-1"></i>Limpiar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resultados -->
+            <div class="results-section">
+                <div id="loadingState" class="loading">
+                    <div class="spinner-border text-light" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-3">Cargando mascotas...</p>
+                </div>
+
+                <div id="noResultsState" class="no-results" style="display: none;">
+                    <i class="fas fa-paw"></i>
+                    <h5>No se encontraron mascotas</h5>
+                    <p class="text-muted">Intenta cambiar los filtros de búsqueda</p>
+                </div>
+
+                <div id="mascotasGallery" class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4" style="display: none;">
+                    <!-- Se cargan dinámicamente las cards -->
+                </div>
+
+                <div id="mascotasCount" class="mt-3 text-center text-muted" style="display: none;">
+                    <!-- Contador -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detalle de Mascota -->
+    <div class="modal fade" id="detalleMascotaModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-paw me-2"></i>
+                        <span id="modalNombre">Nombre de la Mascota</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-5 text-center mb-3">
+                            <img id="modalFoto" class="modal-foto" alt="Foto de la mascota">
+                            <div id="modalPlaceholder" class="modal-placeholder" style="display: none; min-height: 300px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px;">
+                                <i class="fas fa-paw" style="font-size: 4rem; color: #adb5bd;"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="detalle-item">
+                                <span class="detalle-label">
+                                    <i class="fas fa-tag me-1"></i>Tipo:
+                                </span>
+                                <span id="modalTipo" class="detalle-value"></span>
+                            </div>
+                            <div class="detalle-item">
+                                <span class="detalle-label">
+                                    <i class="fas fa-dna me-1"></i>Raza:
+                                </span>
+                                <span id="modalRaza" class="detalle-value"></span>
+                            </div>
+                            <div class="detalle-item">
+                                <span class="detalle-label">
+                                    <i class="fas fa-venus-mars me-1"></i>Género:
+                                </span>
+                                <span id="modalGenero" class="detalle-value"></span>
+                            </div>
+                            <div class="detalle-item">
+                                <span class="detalle-label">
+                                    <i class="fas fa-palette me-1"></i>Color:
+                                </span>
+                                <span id="modalColor" class="detalle-value"></span>
+                            </div>
+                            <div class="detalle-item">
+                                <span class="detalle-label">
+                                    <i class="fas fa-birthday-cake me-1"></i>Edad:
+                                </span>
+                                <span id="modalEdad" class="detalle-value"></span>
+                            </div>
+                            <div class="detalle-item">
+                                <span class="detalle-label">
+                                    <i class="fas fa-home me-1"></i>Ubicación:
+                                </span>
+                                <span id="modalUbicacion" class="detalle-value"></span>
+                            </div>
+                            <div class="detalle-item">
+                                <span class="detalle-label">
+                                    <i class="fas fa-syringe me-1"></i>Vacunas:
+                                </span>
+                                <span id="modalVacunas"></span>
+                            </div>
+                            <div class="detalle-item" id="modalObservacionesContainer" style="display: none;">
+                                <span class="detalle-label">
+                                    <i class="fas fa-info-circle me-1"></i>Observaciones:
+                                </span>
+                                <p id="modalObservaciones" class="detalle-value mt-2"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Estado global
+        let todasLasMascotas = [];
+        let plazasDisponibles = [];
+
+        // Iconos por tipo
+        const ICONOS_TIPO = {
+            perro: 'fa-dog',
+            gato: 'fa-cat',
+            otro: 'fa-paw'
+        };
+
+        // Cargar plazas para el filtro
+        async function cargarPlazas() {
+            try {
+                const response = await fetch('/api/plazas/activas');
+                const data = await response.json();
+                
+                if (data.success) {
+                    plazasDisponibles = data.data;
+                    const select = document.getElementById('filtroPlaza');
+                    
+                    data.data.forEach(plaza => {
+                        const option = document.createElement('option');
+                        option.value = plaza.id;
+                        option.textContent = plaza.nombre;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error al cargar plazas:', error);
+            }
+        }
+
+        // Cargar mascotas públicas
+        async function loadMascotas(filtros = {}) {
+            const loadingState = document.getElementById('loadingState');
+            const noResultsState = document.getElementById('noResultsState');
+            const galleryContainer = document.getElementById('mascotasGallery');
+            const countContainer = document.getElementById('mascotasCount');
+
+            try {
+                // Mostrar loading
+                loadingState.style.display = 'block';
+                noResultsState.style.display = 'none';
+                galleryContainer.style.display = 'none';
+                countContainer.style.display = 'none';
+
+                // Construir URL con filtros
+                const params = new URLSearchParams();
+                if (filtros.tipo && filtros.tipo !== 'all') params.append('tipo', filtros.tipo);
+                if (filtros.plaza && filtros.plaza !== 'all') params.append('plaza', filtros.plaza);
+                if (filtros.buscar) params.append('buscar', filtros.buscar);
+
+                const url = `/api/mascotas/publico${params.toString() ? '?' + params.toString() : ''}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                loadingState.style.display = 'none';
+
+                if (data.success && data.data.length > 0) {
+                    todasLasMascotas = data.data;
+                    renderMascotasGallery(data.data);
+                    countContainer.textContent = `${data.count} mascota${data.count !== 1 ? 's' : ''} encontrada${data.count !== 1 ? 's' : ''}`;
+                    countContainer.style.display = 'block';
+                } else {
+                    noResultsState.style.display = 'block';
+                }
+
+            } catch (error) {
+                console.error('Error al cargar mascotas:', error);
+                loadingState.style.display = 'none';
+                noResultsState.style.display = 'block';
+            }
+        }
+
+        // Renderizar galería de mascotas
+        function renderMascotasGallery(mascotas) {
+            const gallery = document.getElementById('mascotasGallery');
+            gallery.innerHTML = '';
+
+            mascotas.forEach(mascota => {
+                const col = document.createElement('div');
+                col.className = 'col';
+
+                const card = document.createElement('div');
+                card.className = `mascota-card tipo-${mascota.tipo}`;
+                card.onclick = () => mostrarDetalleMascota(mascota);
+
+                // Foto o placeholder
+                let fotoHTML;
+                if (mascota.foto_url) {
+                    fotoHTML = `<img src="${mascota.foto_url}" class="mascota-foto" alt="${mascota.nombre}" onerror="this.parentElement.innerHTML='<div class=\\'mascota-placeholder\\'><i class=\\'fas ${ICONOS_TIPO[mascota.tipo] || 'fa-paw'}\\'></i></div>'">`;
+                } else {
+                    fotoHTML = `<div class="mascota-placeholder"><i class="fas ${ICONOS_TIPO[mascota.tipo] || 'fa-paw'}"></i></div>`;
+                }
+
+                card.innerHTML = `
+                    ${fotoHTML}
+                    <div class="mascota-body">
+                        <div class="mascota-nombre">${escapeHtml(mascota.nombre)}</div>
+                        <span class="mascota-tipo tipo-${mascota.tipo}-badge">
+                            <i class="fas ${ICONOS_TIPO[mascota.tipo] || 'fa-paw'} me-1"></i>
+                            ${capitalizar(mascota.tipo)}
+                        </span>
+                        <div class="mascota-info">
+                            <i class="fas fa-map-marker-alt"></i>
+                            ${escapeHtml(mascota.plaza_nombre)} - Casa ${escapeHtml(mascota.numero_casa)}
+                        </div>
+                        ${mascota.raza ? `<div class="mascota-info"><i class="fas fa-dna"></i>${escapeHtml(mascota.raza)}</div>` : ''}
+                    </div>
+                `;
+
+                col.appendChild(card);
+                gallery.appendChild(col);
+            });
+
+            gallery.style.display = 'flex';
+        }
+
+        // Mostrar detalle de mascota en modal
+        function mostrarDetalleMascota(mascota) {
+            document.getElementById('modalNombre').textContent = mascota.nombre;
+            
+            // Foto
+            const modalFoto = document.getElementById('modalFoto');
+            const modalPlaceholder = document.getElementById('modalPlaceholder');
+            
+            if (mascota.foto_url) {
+                modalFoto.src = mascota.foto_url;
+                modalFoto.style.display = 'block';
+                modalPlaceholder.style.display = 'none';
+            } else {
+                modalFoto.style.display = 'none';
+                modalPlaceholder.style.display = 'flex';
+                modalPlaceholder.innerHTML = `<i class="fas ${ICONOS_TIPO[mascota.tipo] || 'fa-paw'}" style="font-size: 4rem; color: #adb5bd;"></i>`;
+            }
+
+            // Información
+            document.getElementById('modalTipo').textContent = capitalizar(mascota.tipo);
+            document.getElementById('modalRaza').textContent = mascota.raza || 'No especificada';
+            document.getElementById('modalGenero').textContent = mascota.genero ? capitalizar(mascota.genero) : 'No especificado';
+            document.getElementById('modalColor').textContent = mascota.color || 'No especificado';
+            document.getElementById('modalEdad').textContent = mascota.edad_anos ? `${mascota.edad_anos} año${mascota.edad_anos !== 1 ? 's' : ''}` : 'Desconocida';
+            document.getElementById('modalUbicacion').textContent = `Casa ${mascota.numero_casa} - ${mascota.plaza_nombre}`;
+
+            // Estados de vacuna
+            const vacunasContainer = document.getElementById('modalVacunas');
+            let vacunaBadge = '';
+            switch (mascota.estado_vacunas) {
+                case 'al_dia':
+                    vacunaBadge = '<span class="badge-vacuna vacuna-al-dia"><i class="fas fa-check me-1"></i>Al día</span>';
+                    break;
+                case 'vencida':
+                    vacunaBadge = '<span class="badge-vacuna vacuna-vencida"><i class="fas fa-exclamation-triangle me-1"></i>Vencidas</span>';
+                    break;
+                default:
+                    vacunaBadge = '<span class="badge-vacuna vacuna-sin-info"><i class="fas fa-question me-1"></i>Sin información</span>';
+            }
+            vacunasContainer.innerHTML = vacunaBadge;
+
+            // Observaciones
+            const obsContainer = document.getElementById('modalObservacionesContainer');
+            const obsText = document.getElementById('modalObservaciones');
+            if (mascota.observaciones) {
+                obsText.textContent = mascota.observaciones;
+                obsContainer.style.display = 'block';
+            } else {
+                obsContainer.style.display = 'none';
+            }
+
+            // Mostrar modal
+            const modal = new bootstrap.Modal(document.getElementById('detalleMascotaModal'));
+            modal.show();
+        }
+
+        // Aplicar filtros
+        function aplicarFiltros() {
+            const filtros = {
+                tipo: document.getElementById('filtroTipo').value,
+                plaza: document.getElementById('filtroPlaza').value,
+                buscar: document.getElementById('buscarNombre').value.trim()
+            };
+
+            loadMascotas(filtros);
+        }
+
+        // Limpiar filtros
+        function limpiarFiltros() {
+            document.getElementById('filtroTipo').value = 'all';
+            document.getElementById('filtroPlaza').value = 'all';
+            document.getElementById('buscarNombre').value = '';
+            loadMascotas();
+        }
+
+        // Utilidades
+        function escapeHtml(text) {
+            if (!text) return '';
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.toString().replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function capitalizar(str) {
+            if (!str) return '';
+            return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+        }
+
+        // Inicializar al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarPlazas();
+            loadMascotas();
+        });
+    </script>
+</body>
+</html>
