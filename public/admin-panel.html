@@ -6836,13 +6836,8 @@
                     if (data.success && data.data.length > 0) {
                         modeloSelect.innerHTML = '<option value="">Seleccionar modelo</option>' +
                             data.data.map(m => {
-                                let label = m.nombre;
-                                if (m.anio_inicio) {
-                                    label += ` (desde ${m.anio_inicio}`;
-                                    if (m.anio_fin) label += ` hasta ${m.anio_fin}`;
-                                    label += ')';
-                                }
-                                return `<option value="${m.id}">${label}</option>`;
+                                // Mostrar solo el nombre, sin año (optimización UX)
+                                return `<option value="${m.id}">${m.nombre}</option>`;
                             }).join('');
                         modeloSelect.disabled = false;
                     } else {
