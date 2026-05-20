@@ -4243,7 +4243,8 @@
                     vehiculosRes,
                     accesosRes,
                     adminsRes,
-                    pagosRes
+                    pagosRes,
+                    morosidadRes
                 ] = await Promise.all([
                     authenticatedFetch('/api/eventos/admin/all'),
                     authenticatedFetch('/api/documentos/admin/all'),
@@ -4255,7 +4256,8 @@
                     authenticatedFetch('/api/vehiculos'),
                     authenticatedFetch('/api/acceso'),
                     authenticatedFetch('/api/admin/admins'),
-                    authenticatedFetch('/api/pagos')
+                    authenticatedFetch('/api/pagos'),
+                    authenticatedFetch('/api/admin/morosidad')
                 ]);
 
                 // Eventos Totales
@@ -4288,12 +4290,16 @@
                     const total = casasData.data?.length || 0;
                     document.getElementById('totalCasas').textContent = total;
                     console.log('✅ Casas registradas:', total);
-                    console.log('📊 Datos de casas:', casasData.data);
+                }
+
+                // Casas en Morosidad (desde vista v_estado_morosidad_casas)
+                if (morosidadRes && morosidadRes.ok) {
+                    const morosidadData = await morosidadRes.json();
+                    console.log('📊 Datos de morosidad:', morosidadData.data);
                     
-                    // Calcular casas en morosidad (monto_deuda > 0)
-                    const morosas = casasData.data?.filter(c => {
-                        console.log(`Casa ${c.numero_casa}: monto_deuda =`, c.monto_deuda);
-                        return c.monto_deuda && c.monto_deuda > 0;
+                    // Contar casas con deuda > 0 o estado != 'al_dia'
+                    const morosas = morosidadData.data?.filter(c => {
+                        return c.estado_morosidad !== 'al_dia' && c.deuda_total > 0;
                     }).length || 0;
                     document.getElementById('casasMorosas').textContent = morosas;
                     console.log('⚠️ Casas en morosidad:', morosas);

@@ -673,6 +673,42 @@ router.get('/stats', requireAuth, requirePermission('dashboard.leer'), async (re
   }
 });
 
+// GET /api/admin/morosidad - Vista de morosidad de casas
+router.get('/morosidad', requireAuthAdmin, async (req, res) => {
+  try {
+    const morosidad = await query(`
+      SELECT 
+        casa_id,
+        numero_casa,
+        direccion,
+        plaza_id,
+        plaza_nombre,
+        total_pagos,
+        pendientes_vigentes,
+        total_vencidos,
+        total_pagados,
+        deuda_total,
+        estado_morosidad,
+        acceso_permitido
+      FROM v_estado_morosidad_casas
+      ORDER BY deuda_total DESC, numero_casa
+    `);
+    
+    res.json({ 
+      success: true, 
+      data: morosidad,
+      count: morosidad.length
+    });
+  } catch (error) {
+    console.error('Error obteniendo estado de morosidad:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error interno del servidor',
+      error: error.message 
+    });
+  }
+});
+
 // Reporte de actividad por fechas
 router.get('/reports/activity', requireAuth, requirePermission('reportes.leer'), async (req, res) => {
   try {
