@@ -258,7 +258,25 @@ router.post('/guardias/:id/regenerar-codigo', requireAuth, requirePermission('gu
 
 // ==================== GESTIÓN DE PLAZAS ====================
 
-// Obtener todas las plazas
+// ENDPOINT PÚBLICO: Listar plazas activas (sin autenticación)
+// Usado por páginas públicas (mascotas.html, etc.)
+router.get('/plazas/activas', async (req, res) => {
+  try {
+    const result = await query(`
+      SELECT id, nombre, direccion
+      FROM plazas 
+      WHERE activo = TRUE
+      ORDER BY nombre ASC
+    `);
+    
+    res.json({ success: true, data: result });
+  } catch (error) {
+    console.error('Error obteniendo plazas activas:', error);
+    res.status(500).json({ success: false, message: 'Error al obtener plazas' });
+  }
+});
+
+// Obtener todas las plazas (requiere autenticación)
 router.get('/plazas', requireAuthAdmin, async (req, res) => {
   try {
     const plazas = await query(`

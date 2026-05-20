@@ -24,7 +24,7 @@ router.get('/publico', async (req, res) => {
     try {
         const { tipo, plaza, buscar } = req.query;
         
-        let query = `
+        let sql = `
             SELECT 
                 m.id,
                 m.nombre,
@@ -55,27 +55,27 @@ router.get('/publico', async (req, res) => {
         // Filtro por tipo de mascota
         if (tipo && tipo !== 'all') {
             paramCount++;
-            query += ` AND m.tipo = $${paramCount}`;
+            sql += ` AND m.tipo = $${paramCount}`;
             params.push(tipo);
         }
         
         // Filtro por plaza
         if (plaza && plaza !== 'all') {
             paramCount++;
-            query += ` AND p.id = $${paramCount}`;
+            sql += ` AND p.id = $${paramCount}`;
             params.push(parseInt(plaza));
         }
         
         // Búsqueda por nombre
         if (buscar) {
             paramCount++;
-            query += ` AND LOWER(m.nombre) LIKE LOWER($${paramCount})`;
+            sql += ` AND LOWER(m.nombre) LIKE LOWER($${paramCount})`;
             params.push(`%${buscar}%`);
         }
         
-        query += ' ORDER BY p.nombre, m.tipo, m.nombre';
+        sql += ' ORDER BY p.nombre, m.tipo, m.nombre';
         
-        const result = await pool.query(query, params);
+        const result = await pool.query(sql, params);
         
         res.json({
             success: true,
