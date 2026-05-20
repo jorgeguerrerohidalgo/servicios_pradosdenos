@@ -3,11 +3,12 @@ const router = express.Router();
 const { pool } = require('../utils/db');
 const { requireAuth, requireAdmin, requireAuthAdmin } = require('../middleware/sessionAuth');
 const { requirePermission } = require('../middleware/rbac');
+const { applyScoping, buildPlazaFilter } = require('../middleware/applyScoping');
 
 // ==================== GESTIÓN DE RESIDENTES ====================
 
-// GET /api/residentes - Obtener todos los residentes (requiere autenticación admin)
-router.get('/', requireAuthAdmin, async (req, res) => {
+// GET /api/residentes - Obtener todos los residentes (con scoping automático)
+router.get('/', requirePermission('residentes.leer'), applyScoping, async (req, res) => {
     try {
         const { plaza_id, casa_id, activo = 'true', search } = req.query;
         
@@ -18,6 +19,7 @@ router.get('/', requireAuthAdmin, async (req, res) => {
                 c.numero_casa,
                 c.direccion as casa_direccion,
                 p.nombre as plaza_nombre,
+                c.plaza_id,
                 r.nombre,
                 r.apellido_paterno,
                 r.apellido_materno,
@@ -36,25 +38,29 @@ router.get('/', requireAuthAdmin, async (req, res) => {
             WHERE 1=1
         `;
         
-        const params = [];
+        let params = [];
         let paramCount = 0;
         
+        // Filtro por estado activo
         if (activo !== 'all') {
             paramCount++;
             sql += ` AND r.activo = $${paramCount}`;
             params.push(activo === 'true');
         }
         
+        // Filtro específico por casa
         if (casa_id) {
             paramCount++;
             sql += ` AND r.casa_id = $${paramCount}`;
             params.push(casa_id);
         } else if (plaza_id) {
+            // Filtro manual por plaza
             paramCount++;
             sql += ` AND c.plaza_id = $${paramCount}`;
             params.push(plaza_id);
         }
         
+        // Búsqueda por texto
         if (search) {
             paramCount++;
             sql += ` AND (
@@ -67,6 +73,11 @@ router.get('/', requireAuthAdmin, async (req, res) => {
             params.push(`%${search}%`);
         }
         
+        // ⚡ SCOPING AUTOMÁTICO: Filtrar por plazas permitidas del usuario
+        const plazaFilter = buildPlazaFilter(req.allowedPlazas, 'c', params);
+        sql += plazaFilter.sql;
+        params = plazaFilter.params;
+        
         sql += ' ORDER BY c.numero_casa ASC, r.apellido_paterno ASC, r.apellido_materno ASC, r.nombre ASC';
         
         const result = await pool.query(sql, params);
@@ -74,7 +85,8 @@ router.get('/', requireAuthAdmin, async (req, res) => {
         res.json({
             success: true,
             data: result.rows,
-            total: result.rows.length
+            total: result.rows.length,
+            scoping: req.allowedPlazas === null ? 'global' : `plazas: ${req.allowedPlazas?.join(', ') || 'ninguna'}`
         });
     } catch (error) {
         console.error('Error al obtener residentes:', error);

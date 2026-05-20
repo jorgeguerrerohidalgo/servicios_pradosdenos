@@ -3,11 +3,12 @@ const router = express.Router();
 const { pool } = require('../utils/db');
 const { requireAuth, requireAdmin, requireAuthAdmin } = require('../middleware/sessionAuth');
 const { requirePermission } = require('../middleware/rbac');
+const { applyScoping, buildPlazaFilter } = require('../middleware/applyScoping');
 
 // ==================== GESTIÓN DE CASAS ====================
 
-// GET /api/casas - Obtener todas las casas (requiere autenticación admin)
-router.get('/', requireAuthAdmin, async (req, res) => {
+// GET /api/casas - Obtener todas las casas (con scoping automático)
+router.get('/', requirePermission('casas.leer'), applyScoping, async (req, res) => {
     try {
         const { plaza_id, activo = 'true' } = req.query;
         
@@ -32,20 +33,27 @@ router.get('/', requireAuthAdmin, async (req, res) => {
             WHERE 1=1
         `;
         
-        const params = [];
+        let params = [];
         let paramCount = 0;
         
+        // Filtro por estado activo
         if (activo !== 'all') {
             paramCount++;
             sql += ` AND c.activo = $${paramCount}`;
             params.push(activo === 'true');
         }
         
+        // Filtro manual por plaza (si se especifica)
         if (plaza_id) {
             paramCount++;
             sql += ` AND c.plaza_id = $${paramCount}`;
             params.push(plaza_id);
         }
+        
+        // ⚡ SCOPING AUTOMÁTICO: Filtrar por plazas permitidas del usuario
+        const plazaFilter = buildPlazaFilter(req.allowedPlazas, 'c', params);
+        sql += plazaFilter.sql;
+        params = plazaFilter.params;
         
         sql += ' ORDER BY c.numero_casa ASC';
         
@@ -54,7 +62,8 @@ router.get('/', requireAuthAdmin, async (req, res) => {
         res.json({
             success: true,
             data: result.rows,
-            total: result.rows.length
+            total: result.rows.length,
+            scoping: req.allowedPlazas === null ? 'global' : `plazas: ${req.allowedPlazas?.join(', ') || 'ninguna'}`
         });
     } catch (error) {
         console.error('Error al obtener casas:', error);
