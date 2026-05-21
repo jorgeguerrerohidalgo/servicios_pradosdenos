@@ -954,7 +954,7 @@
                             
                             <div class="border-top pt-2 mt-2">
                                 <strong>Contacto:</strong><br>
-                                <i class="fas fa-home me-1"></i> Casa ${escapeHtml(alerta.numero_casa)} - ${escapeHtml(alerta.plaza_nombre)}<br>
+                                <i class="fas fa-home me-1"></i> ${escapeHtml(alerta.direccion)} - ${escapeHtml(alerta.plaza_nombre)}<br>
                                 ${alerta.dueno_nombre !== 'Mascota Comunitaria' ? `
                                     <i class="fas fa-user me-1"></i> ${escapeHtml(alerta.dueno_nombre)}
                                 ` : '<i class="fas fa-users me-1"></i> Mascota Comunitaria'}
