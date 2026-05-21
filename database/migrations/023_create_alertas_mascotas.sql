@@ -167,8 +167,11 @@ BEGIN
         COUNT(*) FILTER (WHERE activa = TRUE AND tipo_alerta = 'agresiva') as mascotas_con_alerta_agresiva,
         COUNT(*) FILTER (WHERE activa = TRUE AND prioridad = 'alta') as alertas_alta_prioridad,
         COUNT(*) FILTER (WHERE activa = FALSE AND DATE(fecha_fin) = CURRENT_DATE) as alertas_resueltas_hoy,
-        ROUND(AVG(EXTRACT(EPOCH FROM (fecha_fin - fecha_inicio)) / 86400), 1) 
-            FILTER (WHERE fecha_fin IS NOT NULL) as promedio_dias_resolucion
+        ROUND(
+            AVG(EXTRACT(EPOCH FROM (fecha_fin - fecha_inicio)) / 86400) 
+                FILTER (WHERE fecha_fin IS NOT NULL),
+            1
+        ) as promedio_dias_resolucion
     FROM alertas_mascotas;
 END;
 $$ LANGUAGE plpgsql;
