@@ -1660,6 +1660,79 @@
         </div>
     </div>
 
+    <!-- Modal para Gestionar Alertas de Mascota -->
+    <div class="modal fade" id="alertasModal" tabindex="-1" aria-labelledby="alertasModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title" id="alertasModalLabel">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Gestionar Alertas
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="alertaMascotaId">
+                    
+                    <!-- Alertas Activas -->
+                    <div id="alertasActivas" class="mb-4">
+                        <h6 class="border-bottom pb-2 mb-3">
+                            <i class="fas fa-bell text-danger me-2"></i>Alertas Activas
+                        </h6>
+                        <div id="alertasActivasList">
+                            <p class="text-muted text-center">Cargando alertas...</p>
+                        </div>
+                    </div>
+
+                    <!-- Nueva Alerta -->
+                    <div class="border rounded p-3 bg-light">
+                        <h6 class="mb-3">
+                            <i class="fas fa-plus-circle text-success me-2"></i>Crear Nueva Alerta
+                        </h6>
+                        <form id="nuevaAlertaForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Tipo de Alerta <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="tipoAlerta" required>
+                                        <option value="">Seleccionar...</option>
+                                        <option value="extraviada">🔴 Mascota Extraviada</option>
+                                        <option value="encontrada">🟢 Mascota Encontrada</option>
+                                        <option value="agresiva">🟠 Comportamiento Agresivo</option>
+                                        <option value="otra">⚪ Otra</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Prioridad <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="prioridadAlerta" required>
+                                        <option value="media">Media</option>
+                                        <option value="baja">Baja</option>
+                                        <option value="alta">Alta</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Descripción <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="descripcionAlerta" rows="3" placeholder="Describe la situación..." required></textarea>
+                                <small class="text-muted">ej: Visto por última vez en el parque, collar azul</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Ubicación de Referencia</label>
+                                <input type="text" class="form-control" id="ubicacionAlerta" placeholder="Última ubicación conocida">
+                            </div>
+                            <button type="button" class="btn btn-success" onclick="crearAlerta()">
+                                <i class="fas fa-save me-1"></i>Crear Alerta
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal para Crear Pago Manual -->
     <div class="modal fade" id="pagoModal" tabindex="-1" aria-labelledby="pagoModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -5294,6 +5367,9 @@
                             </span>
                         </td>
                         <td>
+                            <button class="btn btn-sm btn-warning me-1" onclick="showAlertasModal(${mascota.id}, '${escapeHtml(mascota.mascota_nombre)}')" title="Gestionar Alertas">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </button>
                             <button class="btn btn-sm btn-info me-1" onclick="showMascotaForm(${mascota.id})" title="Editar">
                                 <i class="fas fa-edit"></i>
                             </button>
@@ -5828,6 +5904,273 @@
                     icon: 'error',
                     title: 'Error',
                     text: error.message || 'No se pudo eliminar la mascota'
+                });
+            }
+        }
+
+        // ==================== FUNCIONES DE ALERTAS ====================
+        
+        let currentMascotaAlertaId = null;
+        let currentMascotaAlertaNombre = '';
+
+        async function showAlertasModal(mascotaId, mascotaNombre) {
+            try {
+                currentMascotaAlertaId = mascotaId;
+                currentMascotaAlertaNombre = mascotaNombre;
+                
+                // Actualizar título del modal
+                document.querySelector('#alertasModal .modal-title').innerHTML = `
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Gestionar Alertas - ${mascotaNombre}
+                `;
+                
+                // Limpiar formulario
+                document.getElementById('tipoAlerta').value = 'extraviada';
+                document.getElementById('prioridadAlerta').value = 'alta';
+                document.getElementById('descripcionAlerta').value = '';
+                document.getElementById('ubicacionAlerta').value = '';
+                
+                // Cargar alertas activas
+                await cargarAlertasActivas(mascotaId);
+                
+                // Abrir modal
+                const modal = new bootstrap.Modal(document.getElementById('alertasModal'));
+                modal.show();
+                
+            } catch (error) {
+                console.error('Error al abrir modal de alertas:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo abrir el modal de alertas'
+                });
+            }
+        }
+
+        async function cargarAlertasActivas(mascotaId) {
+            try {
+                const response = await authenticatedFetch(`/api/mascotas/${mascotaId}/alertas/historial`);
+                
+                if (!response) return;
+                
+                const data = await response.json();
+                const alertasActivasList = document.getElementById('alertasActivasList');
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'Error al cargar alertas');
+                }
+                
+                // Filtrar solo alertas activas
+                const alertasActivas = (data.alertas || []).filter(a => a.activa);
+                
+                if (alertasActivas.length === 0) {
+                    alertasActivasList.innerHTML = `
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-check-circle fa-2x mb-2"></i>
+                            <p class="mb-0">No hay alertas activas</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Renderizar alertas activas
+                alertasActivasList.innerHTML = alertasActivas.map(alerta => {
+                    const fechaInicio = new Date(alerta.fecha_inicio).toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    
+                    const colorMap = {
+                        'extraviada': 'danger',
+                        'agresiva': 'warning',
+                        'encontrada': 'success',
+                        'otra': 'info'
+                    };
+                    
+                    const prioridadMap = {
+                        'alta': 'danger',
+                        'media': 'warning',
+                        'baja': 'info'
+                    };
+                    
+                    const tipoColor = colorMap[alerta.tipo_alerta] || 'secondary';
+                    const prioridadColor = prioridadMap[alerta.prioridad] || 'secondary';
+                    
+                    return `
+                        <div class="card border-${tipoColor} mb-2">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <span class="badge bg-${tipoColor} me-2">${alerta.tipo_alerta.toUpperCase()}</span>
+                                        <span class="badge bg-${prioridadColor}">Prioridad: ${alerta.prioridad}</span>
+                                    </div>
+                                    <button class="btn btn-sm btn-success" onclick="resolverAlerta(${alerta.id})" title="Resolver alerta">
+                                        <i class="fas fa-check me-1"></i> Resolver
+                                    </button>
+                                </div>
+                                <p class="mb-1"><strong>Descripción:</strong> ${alerta.descripcion || 'Sin descripción'}</p>
+                                ${alerta.ubicacion_referencia ? `<p class="mb-1"><small><i class="fas fa-map-marker-alt me-1"></i>${alerta.ubicacion_referencia}</small></p>` : ''}
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>Desde: ${fechaInicio}
+                                    ${alerta.reportado_por_nombre ? `<br><i class="fas fa-user me-1"></i>Reportó: ${alerta.reportado_por_nombre}` : ''}
+                                </small>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+            } catch (error) {
+                console.error('Error al cargar alertas activas:', error);
+                document.getElementById('alertasActivasList').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Error al cargar alertas: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function crearAlerta() {
+            try {
+                const tipo = document.getElementById('tipoAlerta').value;
+                const prioridad = document.getElementById('prioridadAlerta').value;
+                const descripcion = document.getElementById('descripcionAlerta').value.trim();
+                const ubicacion = document.getElementById('ubicacionAlerta').value.trim();
+                
+                // Validar campos requeridos
+                if (!descripcion) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Campo requerido',
+                        text: 'La descripción es obligatoria'
+                    });
+                    return;
+                }
+                
+                const alertaData = {
+                    tipo_alerta: tipo,
+                    prioridad: prioridad,
+                    descripcion: descripcion
+                };
+                
+                if (ubicacion) {
+                    alertaData.ubicacion_referencia = ubicacion;
+                }
+                
+                const response = await authenticatedFetch(`/api/mascotas/${currentMascotaAlertaId}/alertas`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(alertaData)
+                });
+                
+                if (!response) return;
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Alerta creada',
+                        text: `Alerta de ${tipo} creada correctamente`,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    
+                    // Limpiar formulario
+                    document.getElementById('tipoAlerta').value = 'extraviada';
+                    document.getElementById('prioridadAlerta').value = 'alta';
+                    document.getElementById('descripcionAlerta').value = '';
+                    document.getElementById('ubicacionAlerta').value = '';
+                    
+                    // Recargar alertas activas
+                    await cargarAlertasActivas(currentMascotaAlertaId);
+                    
+                    // Recargar tabla de mascotas (por si muestra indicadores)
+                    loadMascotas();
+                    
+                } else {
+                    throw new Error(data.message || 'Error al crear alerta');
+                }
+                
+            } catch (error) {
+                console.error('Error al crear alerta:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo crear la alerta'
+                });
+            }
+        }
+
+        async function resolverAlerta(alertaId) {
+            try {
+                const result = await Swal.fire({
+                    title: 'Resolver alerta',
+                    html: `
+                        <p>¿Desea marcar esta alerta como resuelta?</p>
+                        <div class="form-group text-start mt-3">
+                            <label for="notasResolucion" class="form-label">Notas de resolución:</label>
+                            <textarea id="notasResolucion" class="form-control" rows="3" 
+                                      placeholder="Ej: Mascota encontrada y entregada al dueño"></textarea>
+                        </div>
+                    `,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sí, resolver',
+                    cancelButtonText: 'Cancelar',
+                    preConfirm: () => {
+                        return document.getElementById('notasResolucion').value.trim();
+                    }
+                });
+                
+                if (!result.isConfirmed) return;
+                
+                const notas = result.value || '';
+                
+                const response = await authenticatedFetch(`/api/mascotas/alertas/${alertaId}/resolver`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ notas_resolucion: notas })
+                });
+                
+                if (!response) return;
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Alerta resuelta',
+                        text: 'La alerta se ha marcado como resuelta',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    
+                    // Recargar alertas activas
+                    await cargarAlertasActivas(currentMascotaAlertaId);
+                    
+                    // Recargar tabla de mascotas
+                    loadMascotas();
+                    
+                } else {
+                    throw new Error(data.message || 'Error al resolver alerta');
+                }
+                
+            } catch (error) {
+                console.error('Error al resolver alerta:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'No se pudo resolver la alerta'
                 });
             }
         }
