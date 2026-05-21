@@ -236,6 +236,78 @@
             color: #383d41;
         }
         
+        /* Estilos para Alertas */
+        .alertas-banner {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .alertas-banner.warning {
+            border-left: 5px solid #dc3545;
+        }
+        
+        .alerta-card {
+            border: 2px solid;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .alerta-card.extraviada {
+            border-color: #dc3545;
+            background: linear-gradient(to right, #fff5f5 0%, #ffffff 100%);
+        }
+        
+        .alerta-card.agresiva {
+            border-color: #fd7e14;
+            background: linear-gradient(to right, #fff8f3 0%, #ffffff 100%);
+        }
+        
+        .alerta-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .alerta-badge.extraviada {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .alerta-badge.agresiva {
+            background: #fd7e14;
+            color: white;
+        }
+        
+        .mascota-card.alerta-activa {
+            animation: pulse 2s infinite;
+        }
+        
+        .mascota-card.con-alerta-extraviada {
+            border: 3px solid #dc3545 !important;
+        }
+        
+        .mascota-card.con-alerta-agresiva {
+            border: 3px solid #fd7e14 !important;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+            }
+        }
+        
         @media (max-width: 768px) {
             .header-section h1 {
                 font-size: 1.8rem;
@@ -251,6 +323,10 @@
             
             .mascota-foto, .mascota-placeholder {
                 height: 180px;
+            }
+            
+            .alertas-banner {
+                padding: 15px;
             }
         }
     </style>
@@ -309,12 +385,17 @@
             <p>Galería para identificación en emergencias - Mascotas perdidas o encontradas</p>
         </div>
 
+        <!-- Sección de Alertas Activas -->
+        <div id="alertasSection" style="display: none;">
+            <!-- Contenido dinámico de alertas -->
+        </div>
+
         <!-- Card Principal -->
         <div class="main-card">
             <!-- Filtros -->
             <div class="filter-section">
                 <div class="row g-3">
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label for="filtroTipo" class="form-label">
                             <i class="fas fa-filter me-1"></i>Tipo de Mascota
                         </label>
@@ -325,7 +406,18 @@
                             <option value="otro">Otros</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
+                        <label for="filtroAlerta" class="form-label">
+                            <i class="fas fa-exclamation-triangle me-1"></i>Alertas
+                        </label>
+                        <select id="filtroAlerta" class="form-select" onchange="aplicarFiltros()">
+                            <option value="all">Todas</option>
+                            <option value="extraviada">🔴 Extraviadas</option>
+                            <option value="agresiva">⚠️ Agresivas</option>
+                            <option value="normal">✅ Sin alertas</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
                         <label for="filtroPlaza" class="form-label">
                             <i class="fas fa-map-marker-alt me-1"></i>Plaza
                         </label>
@@ -437,6 +529,13 @@
                                 </span>
                                 <span id="modalVacunas"></span>
                             </div>
+                            <div class="detalle-item" id="modalAlertaContainer" style="display: none;">
+                                <div class="alert mb-0" id="modalAlertaBox">
+                                    <h6 class="alert-heading mb-2" id="modalAlertaTitulo"></h6>
+                                    <p class="mb-2" id="modalAlertaDescripcion"></p>
+                                    <p class="mb-0" id="modalAlertaInfo"></p>
+                                </div>
+                            </div>
                             <div class="detalle-item" id="modalObservacionesContainer" style="display: none;">
                                 <span class="detalle-label">
                                     <i class="fas fa-info-circle me-1"></i>Observaciones:
@@ -503,22 +602,36 @@
                 galleryContainer.style.display = 'none';
                 countContainer.style.display = 'none';
 
-                // Construir URL con filtros
+                // Construir URL con filtros - usar endpoint de alertas para incluir info de alertas
                 const params = new URLSearchParams();
                 if (filtros.tipo && filtros.tipo !== 'all') params.append('tipo', filtros.tipo);
                 if (filtros.plaza && filtros.plaza !== 'all') params.append('plaza', filtros.plaza);
                 if (filtros.buscar) params.append('buscar', filtros.buscar);
+                if (filtros.alerta && filtros.alerta !== 'all') params.append('tipo_alerta', filtros.alerta);
 
-                const url = `/api/mascotas/publico${params.toString() ? '?' + params.toString() : ''}`;
+                const url = `/api/mascotas/publico/alertas${params.toString() ? '?' + params.toString() : ''}`;
                 const response = await fetch(url);
                 const data = await response.json();
 
                 loadingState.style.display = 'none';
 
-                if (data.success && data.data.length > 0) {
-                    todasLasMascotas = data.data;
-                    renderMascotasGallery(data.data);
-                    countContainer.textContent = `${data.count} mascota${data.count !== 1 ? 's' : ''} encontrada${data.count !== 1 ? 's' : ''}`;
+                if (data.success && data.mascotas && data.mascotas.length > 0) {
+                    // Filtrar por tipo de alerta si es necesario
+                    let mascotasFiltradas = data.mascotas;
+                    
+                    if (filtros.alerta && filtros.alerta !== 'all') {
+                        if (filtros.alerta === 'normal') {
+                            // Mostrar solo mascotas sin alertas
+                            mascotasFiltradas = data.mascotas.filter(m => !m.alerta_id);
+                        } else {
+                            // Mostrar solo mascotas con el tipo de alerta específica
+                            mascotasFiltradas = data.mascotas.filter(m => m.tipo_alerta === filtros.alerta);
+                        }
+                    }
+                    
+                    todasLasMascotas = mascotasFiltradas;
+                    renderMascotasGallery(mascotasFiltradas);
+                    countContainer.textContent = `${mascotasFiltradas.length} mascota${mascotasFiltradas.length !== 1 ? 's' : ''} encontrada${mascotasFiltradas.length !== 1 ? 's' : ''}`;
                     countContainer.style.display = 'block';
                 } else {
                     noResultsState.style.display = 'block';
@@ -541,7 +654,18 @@
                 col.className = 'col';
 
                 const card = document.createElement('div');
-                card.className = `mascota-card tipo-${mascota.tipo}`;
+                
+                // Agregar clases de alerta si la mascota tiene alertas activas
+                let cardClasses = `mascota-card tipo-${mascota.tipo}`;
+                if (mascota.alerta_id) {
+                    cardClasses += ' alerta-activa';
+                    if (mascota.tipo_alerta === 'extraviada') {
+                        cardClasses += ' con-alerta-extraviada';
+                    } else if (mascota.tipo_alerta === 'agresiva') {
+                        cardClasses += ' con-alerta-agresiva';
+                    }
+                }
+                card.className = cardClasses;
                 card.onclick = () => mostrarDetalleMascota(mascota);
 
                 // Foto o placeholder
@@ -552,8 +676,24 @@
                     fotoHTML = `<div class="mascota-placeholder"><i class="fas ${ICONOS_TIPO[mascota.tipo] || 'fa-paw'}"></i></div>`;
                 }
 
+                // Badge de alerta si existe
+                let alertaBadgeHTML = '';
+                if (mascota.alerta_id) {
+                    const badgeClass = mascota.tipo_alerta === 'extraviada' ? 'extraviada' : 'agresiva';
+                    const badgeText = mascota.tipo_alerta === 'extraviada' ? 'EXTRAVIADA' : 'PRECAUCIÓN';
+                    const badgeIcon = mascota.tipo_alerta === 'extraviada' ? 'fa-exclamation-circle' : 'fa-shield-alt';
+                    alertaBadgeHTML = `
+                        <div class="position-absolute top-0 end-0 m-2">
+                            <span class="alerta-badge ${badgeClass}">
+                                <i class="fas ${badgeIcon} me-1"></i>${badgeText}
+                            </span>
+                        </div>
+                    `;
+                }
+
                 card.innerHTML = `
                     ${fotoHTML}
+                    ${alertaBadgeHTML}
                     <div class="mascota-body">
                         <div class="mascota-nombre">${escapeHtml(mascota.nombre)}</div>
                         <span class="mascota-tipo tipo-${mascota.tipo}-badge">
@@ -616,6 +756,49 @@
             }
             vacunasContainer.innerHTML = vacunaBadge;
 
+            // Alerta activa (si existe)
+            const alertaContainer = document.getElementById('modalAlertaContainer');
+            if (mascota.alerta_id) {
+                const alertaBox = document.getElementById('modalAlertaBox');
+                const alertaTitulo = document.getElementById('modalAlertaTitulo');
+                const alertaDescripcion = document.getElementById('modalAlertaDescripcion');
+                const alertaInfo = document.getElementById('modalAlertaInfo');
+                
+                // Configurar estilo del alert según tipo
+                alertaBox.className = 'alert mb-0';
+                if (mascota.tipo_alerta === 'extraviada') {
+                    alertaBox.classList.add('alert-danger');
+                    alertaTitulo.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>MASCOTA EXTRAVIADA';
+                } else if (mascota.tipo_alerta === 'agresiva') {
+                    alertaBox.classList.add('alert-warning');
+                    alertaTitulo.innerHTML = '<i class="fas fa-shield-alt me-2"></i>ALERTA DE COMPORTAMIENTO';
+                } else {
+                    alertaBox.classList.add('alert-info');
+                    alertaTitulo.innerHTML = '<i class="fas fa-info-circle me-2"></i>ALERTA ACTIVA';
+                }
+                
+                alertaDescripcion.textContent = mascota.alerta_descripcion;
+                
+                let infoHTML = '';
+                const diasTexto = mascota.dias_alerta === 0 ? 'Reportado hoy' : 
+                                 mascota.dias_alerta === 1 ? 'Reportado hace 1 día' : 
+                                 `Reportado hace ${mascota.dias_alerta} días`;
+                infoHTML += `<small><strong>${diasTexto}</strong></small>`;
+                
+                if (mascota.ubicacion_referencia) {
+                    infoHTML += `<br><small><i class="fas fa-map-marker-alt me-1"></i>${escapeHtml(mascota.ubicacion_referencia)}</small>`;
+                }
+                
+                if (mascota.telefono_contacto) {
+                    infoHTML += `<br><small><i class="fas fa-phone me-1"></i>Contacto: ${escapeHtml(mascota.telefono_contacto)}</small>`;
+                }
+                
+                alertaInfo.innerHTML = infoHTML;
+                alertaContainer.style.display = 'block';
+            } else {
+                alertaContainer.style.display = 'none';
+            }
+
             // Observaciones
             const obsContainer = document.getElementById('modalObservacionesContainer');
             const obsText = document.getElementById('modalObservaciones');
@@ -635,6 +818,7 @@
         function aplicarFiltros() {
             const filtros = {
                 tipo: document.getElementById('filtroTipo').value,
+                alerta: document.getElementById('filtroAlerta').value,
                 plaza: document.getElementById('filtroPlaza').value,
                 buscar: document.getElementById('buscarNombre').value.trim()
             };
@@ -645,6 +829,7 @@
         // Limpiar filtros
         function limpiarFiltros() {
             document.getElementById('filtroTipo').value = 'all';
+            document.getElementById('filtroAlerta').value = 'all';
             document.getElementById('filtroPlaza').value = 'all';
             document.getElementById('buscarNombre').value = '';
             loadMascotas();
@@ -668,8 +853,130 @@
             return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
         }
 
+        // ==================== FUNCIONES DE ALERTAS ====================
+        
+        // Cargar alertas activas
+        async function loadAlertas() {
+            try {
+                const response = await fetch('/api/mascotas/publico/alertas');
+                const data = await response.json();
+
+                if (data.success && data.alertas && data.alertas.length > 0) {
+                    renderAlertasBanner(data.alertas);
+                } else {
+                    // Ocultar sección de alertas si no hay ninguna activa
+                    document.getElementById('alertasSection').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error al cargar alertas:', error);
+                document.getElementById('alertasSection').style.display = 'none';
+            }
+        }
+
+        // Renderizar banner de alertas
+        function renderAlertasBanner(alertas) {
+            const alertasSection = document.getElementById('alertasSection');
+            
+            const extraviadas = alertas.filter(a => a.tipo_alerta === 'extraviada');
+            const agresivas = alertas.filter(a => a.tipo_alerta === 'agresiva');
+            
+            let html = `
+                <div class="alertas-banner warning">
+                    <h3 class="mb-3">
+                        <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                        Alertas Comunitarias Activas
+                    </h3>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="alert alert-danger mb-0">
+                                <i class="fas fa-search me-2"></i>
+                                <strong>${extraviadas.length}</strong> mascota${extraviadas.length !== 1 ? 's' : ''} extraviada${extraviadas.length !== 1 ? 's' : ''}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="alert alert-warning mb-0">
+                                <i class="fas fa-shield-alt me-2"></i>
+                                <strong>${agresivas.length}</strong> alerta${agresivas.length !== 1 ? 's' : ''} de comportamiento
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+            `;
+            
+            alertas.forEach(alerta => {
+                const iconoTipo = {
+                    'perro': 'fa-dog',
+                    'gato': 'fa-cat',
+                    'otro': 'fa-paw'
+                };
+                
+                const badgeColor = alerta.tipo_alerta === 'extraviada' ? 'danger' : 'warning';
+                const badgeText = alerta.tipo_alerta === 'extraviada' ? 'EXTRAVIADA' : 'PRECAUCIÓN';
+                const diasTexto = alerta.dias_alerta === 0 ? 'Hoy' : 
+                                 alerta.dias_alerta === 1 ? 'Hace 1 día' : 
+                                 `Hace ${alerta.dias_alerta} días`;
+                
+                html += `
+                    <div class="col-md-6 mb-3">
+                        <div class="alerta-card ${alerta.tipo_alerta}">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="alerta-badge ${alerta.tipo_alerta}">
+                                    <i class="fas fa-exclamation-triangle me-1"></i> ${badgeText}
+                                </span>
+                                <small class="text-muted">${diasTexto}</small>
+                            </div>
+                            
+                            <h5 class="mb-2">
+                                <i class="fas ${iconoTipo[alerta.tipo] || 'fa-paw'} me-2"></i>
+                                ${escapeHtml(alerta.mascota_nombre)}
+                            </h5>
+                            
+                            <p class="mb-2 text-muted">
+                                <strong>${capitalizar(alerta.tipo)}</strong>
+                                ${alerta.raza ? ' • ' + escapeHtml(alerta.raza) : ''}
+                                ${alerta.color ? ' • ' + escapeHtml(alerta.color) : ''}
+                                ${alerta.edad_anos ? ` • ${alerta.edad_anos} años` : ''}
+                            </p>
+                            
+                            <p class="mb-2">
+                                <i class="fas fa-info-circle me-1"></i>
+                                ${escapeHtml(alerta.alerta_descripcion)}
+                            </p>
+                            
+                            ${alerta.ubicacion_referencia ? `
+                                <p class="mb-2">
+                                    <i class="fas fa-map-marker-alt me-1"></i>
+                                    <strong>Ubicación:</strong> ${escapeHtml(alerta.ubicacion_referencia)}
+                                </p>
+                            ` : ''}
+                            
+                            <div class="border-top pt-2 mt-2">
+                                <strong>Contacto:</strong><br>
+                                <i class="fas fa-home me-1"></i> Casa ${escapeHtml(alerta.numero_casa)} - ${escapeHtml(alerta.plaza_nombre)}<br>
+                                ${alerta.dueno_nombre !== 'Mascota Comunitaria' ? `
+                                    <i class="fas fa-user me-1"></i> ${escapeHtml(alerta.dueno_nombre)}
+                                ` : '<i class="fas fa-users me-1"></i> Mascota Comunitaria'}
+                                ${alerta.telefono_contacto ? `<br><i class="fas fa-phone me-1"></i> ${escapeHtml(alerta.telefono_contacto)}` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                </div>
+            `;
+            
+            alertasSection.innerHTML = html;
+            alertasSection.style.display = 'block';
+        }
+
         // Inicializar al cargar la página
         document.addEventListener('DOMContentLoaded', () => {
+            loadAlertas();  // Cargar alertas primero
             cargarPlazas();
             loadMascotas();
         });

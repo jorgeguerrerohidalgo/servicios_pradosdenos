@@ -636,4 +636,263 @@ router.delete('/:id', requirePermission('mascotas.eliminar'), async (req, res) =
     }
 });
 
+// ==================== ALERTAS DE MASCOTAS ====================
+
+/**
+ * GET /api/mascotas/publico/alertas
+ * ⚠️ SIN AUTENTICACIÓN - Vista pública de mascotas con información de alertas
+ * Obtiene todas las mascotas activas, incluyendo información de alertas si las tienen
+ */
+router.get('/publico/alertas', async (req, res) => {
+    try {
+        console.log('🚨 GET /api/mascotas/publico/alertas');
+        
+        const { tipo_alerta, tipo, plaza, buscar } = req.query;
+        
+        let sql = `
+            SELECT * FROM v_mascotas_publico_alertas
+            WHERE 1=1
+        `;
+        const params = [];
+        
+        // Filtrar por tipo de alerta si se especifica (solo alertas activas)
+        if (tipo_alerta && ['extraviada', 'agresiva'].includes(tipo_alerta)) {
+            sql += ` AND tipo_alerta = $${params.length + 1}`;
+            params.push(tipo_alerta);
+        }
+        
+        // Filtro por tipo de mascota
+        if (tipo && tipo !== 'all') {
+            sql += ` AND tipo = $${params.length + 1}`;
+            params.push(tipo);
+        }
+        
+        // Filtro por plaza
+        if (plaza && plaza !== 'all') {
+            const plazaNum = parseInt(plaza);
+            if (!isNaN(plazaNum)) {
+                sql += ` AND plaza_id = $${params.length + 1}`;
+                params.push(plazaNum);
+            }
+        }
+        
+        // Búsqueda por nombre
+        if (buscar && buscar.trim()) {
+            sql += ` AND mascota_nombre ILIKE $${params.length + 1}`;
+            params.push(`%${buscar.trim()}%`);
+        }
+        
+        // Ordenar: primero alertas activas por prioridad, luego el resto por nombre
+        sql += ` 
+            ORDER BY 
+                CASE WHEN alerta_id IS NOT NULL THEN 0 ELSE 1 END,
+                CASE 
+                    WHEN alerta_prioridad = 'alta' THEN 1
+                    WHEN alerta_prioridad = 'media' THEN 2
+                    WHEN alerta_prioridad = 'baja' THEN 3
+                    ELSE 4
+                END,
+                alerta_desde DESC NULLS LAST,
+                mascota_nombre
+        `;
+        
+        const result = await pool.query(sql, params);
+        
+        // Separar alertas activas para stats
+        const alertasActivas = result.rows.filter(m => m.alerta_id !== null);
+        
+        res.json({
+            success: true,
+            total: result.rows.length,
+            mascotas: result.rows,
+            alertas: alertasActivas,  // Para el banner
+            count: result.rows.length
+        });
+        
+    } catch (error) {
+        console.error('Error al obtener mascotas con alertas:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener información',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * POST /api/mascotas/:id/alertas
+ * Crear nueva alerta para una mascota
+ * Body: { tipo_alerta, descripcion, ubicacion_referencia, prioridad, reportado_por }
+ */
+router.post('/:id/alertas', requirePermission('mascotas.editar'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { 
+            tipo_alerta, 
+            descripcion, 
+            ubicacion_referencia, 
+            prioridad, 
+            reportado_por 
+        } = req.body;
+        
+        console.log(`🚨 POST /api/mascotas/${id}/alertas - Tipo: ${tipo_alerta}`);
+        
+        // Validaciones
+        if (!tipo_alerta || !descripcion) {
+            return res.status(400).json({
+                success: false,
+                message: 'Tipo de alerta y descripción son obligatorios'
+            });
+        }
+        
+        const tiposValidos = ['extraviada', 'encontrada', 'agresiva', 'otra'];
+        if (!tiposValidos.includes(tipo_alerta)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Tipo de alerta debe ser: extraviada, encontrada, agresiva u otra'
+            });
+        }
+        
+        // Verificar que la mascota existe
+        const mascotaCheck = await pool.query(
+            'SELECT id, nombre FROM mascotas WHERE id = $1 AND activo = TRUE',
+            [id]
+        );
+        
+        if (mascotaCheck.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Mascota no encontrada'
+            });
+        }
+        
+        // Insertar alerta
+        const result = await pool.query(
+            `INSERT INTO alertas_mascotas (
+                mascota_id, tipo_alerta, descripcion, ubicacion_referencia, 
+                prioridad, reportado_por
+            ) VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING *`,
+            [
+                id,
+                tipo_alerta,
+                descripcion,
+                ubicacion_referencia || null,
+                prioridad || 'media',
+                reportado_por || null
+            ]
+        );
+        
+        res.json({
+            success: true,
+            message: `Alerta de mascota ${tipo_alerta} creada correctamente`,
+            data: result.rows[0]
+        });
+        
+    } catch (error) {
+        console.error('Error al crear alerta:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al crear alerta',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * PUT /api/mascotas/alertas/:alertaId/resolver
+ * Resolver una alerta activa
+ * Body: { resuelto_por, notas_resolucion }
+ */
+router.put('/alertas/:alertaId/resolver', requirePermission('mascotas.editar'), async (req, res) => {
+    try {
+        const { alertaId } = req.params;
+        const { resuelto_por, notas_resolucion } = req.body;
+        
+        console.log(`✅ PUT /api/mascotas/alertas/${alertaId}/resolver`);
+        
+        // Usar función de la base de datos
+        const result = await pool.query(
+            'SELECT * FROM resolver_alerta($1, $2, $3)',
+            [alertaId, resuelto_por || null, notas_resolucion || 'Resuelta desde panel admin']
+        );
+        
+        if (result.rows[0].success) {
+            res.json({
+                success: true,
+                message: result.rows[0].message
+            });
+        } else {
+            res.status(404).json({
+                success: false,
+                message: result.rows[0].message
+            });
+        }
+        
+    } catch (error) {
+        console.error('Error al resolver alerta:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al resolver alerta',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/mascotas/:id/alertas/historial
+ * Obtener historial completo de alertas de una mascota
+ */
+router.get('/:id/alertas/historial', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        console.log(`📋 GET /api/mascotas/${id}/alertas/historial`);
+        
+        const result = await pool.query(
+            'SELECT * FROM get_historial_alertas_mascota($1)',
+            [id]
+        );
+        
+        res.json({
+            success: true,
+            total: result.rows.length,
+            historial: result.rows
+        });
+        
+    } catch (error) {
+        console.error('Error al obtener historial de alertas:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener historial',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/mascotas/estadisticas/alertas
+ * Obtener estadísticas de alertas del sistema
+ */
+router.get('/estadisticas/alertas', requireAuth, async (req, res) => {
+    try {
+        console.log('📊 GET /api/mascotas/estadisticas/alertas');
+        
+        const result = await pool.query('SELECT * FROM get_estadisticas_alertas()');
+        
+        res.json({
+            success: true,
+            data: result.rows[0]
+        });
+        
+    } catch (error) {
+        console.error('Error al obtener estadísticas de alertas:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener estadísticas',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;
