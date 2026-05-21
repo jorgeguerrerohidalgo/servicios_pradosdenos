@@ -19,23 +19,23 @@ DROP FUNCTION IF EXISTS get_historial_alertas_mascota(INTEGER);
 CREATE OR REPLACE FUNCTION get_historial_alertas_mascota(p_mascota_id INTEGER)
 RETURNS TABLE (
     id INTEGER,
-    tipo_alerta VARCHAR,
+    tipo_alerta TEXT,
     descripcion TEXT,
     ubicacion_referencia TEXT,
     fecha_inicio TIMESTAMP,
     fecha_fin TIMESTAMP,
     activa BOOLEAN,
     dias_duracion INTEGER,
-    reportado_por_nombre VARCHAR,
-    resuelto_por VARCHAR,
+    reportado_por_nombre TEXT,
+    resuelto_por TEXT,
     notas_resolucion TEXT,
-    prioridad VARCHAR
+    prioridad TEXT
 ) AS $$
 BEGIN
     RETURN QUERY
     SELECT 
         a.id,
-        a.tipo_alerta,
+        a.tipo_alerta::TEXT,
         a.descripcion,
         a.ubicacion_referencia,
         a.fecha_inicio,
@@ -51,14 +51,14 @@ BEGIN
             WHEN a.reportado_por IS NOT NULL THEN 
                 CONCAT(r1.nombre, ' ', r1.apellido_paterno)
             ELSE 'Administrador'
-        END::VARCHAR as reportado_por_nombre,
+        END::TEXT as reportado_por_nombre,
         CASE 
             WHEN a.resuelto_por IS NOT NULL THEN 
                 CONCAT(r2.nombre, ' ', r2.apellido_paterno)
             ELSE NULL
-        END as resuelto_por,
+        END::TEXT as resuelto_por,
         a.notas_resolucion,
-        a.prioridad
+        a.prioridad::TEXT
     FROM alertas_mascotas a
     LEFT JOIN residentes r1 ON a.reportado_por = r1.id
     LEFT JOIN residentes r2 ON a.resuelto_por = r2.id
