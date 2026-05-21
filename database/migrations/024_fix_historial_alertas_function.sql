@@ -12,6 +12,9 @@
 
 SET timezone = 'America/Santiago';
 
+-- Eliminar función existente (necesario cuando cambia la firma de retorno)
+DROP FUNCTION IF EXISTS get_historial_alertas_mascota(INTEGER);
+
 -- Recrear función con campos adicionales
 CREATE OR REPLACE FUNCTION get_historial_alertas_mascota(p_mascota_id INTEGER)
 RETURNS TABLE (
