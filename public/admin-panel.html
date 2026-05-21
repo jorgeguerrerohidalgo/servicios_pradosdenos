@@ -5961,7 +5961,7 @@
                 }
                 
                 // Filtrar solo alertas activas
-                const alertasActivas = (data.alertas || []).filter(a => a.activa);
+                const alertasActivas = (data.historial || []).filter(a => a.activa);
                 
                 if (alertasActivas.length === 0) {
                     alertasActivasList.innerHTML = `
