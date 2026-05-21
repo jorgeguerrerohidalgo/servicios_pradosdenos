@@ -175,6 +175,45 @@ router.get('/simple', requireAuth, async (req, res) => {
     }
 });
 
+// GET /api/residentes/casa/:id - Obtener residentes de una casa específica
+router.get('/casa/:id', requireAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        console.log(`🏠 GET /api/residentes/casa/${id} - Cargando residentes de la casa`);
+        
+        const result = await pool.query(`
+            SELECT 
+                r.id,
+                r.nombre,
+                r.apellido_paterno,
+                r.apellido_materno,
+                r.run,
+                r.telefono,
+                r.email,
+                r.activo
+            FROM residentes r
+            WHERE r.casa_id = $1 AND r.activo = TRUE
+            ORDER BY r.nombre, r.apellido_paterno
+        `, [id]);
+        
+        console.log(`✅ ${result.rows.length} residentes encontrados en la casa ${id}`);
+        
+        res.json({
+            success: true,
+            data: result.rows,
+            total: result.rows.length
+        });
+    } catch (error) {
+        console.error('Error al obtener residentes por casa:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor',
+            error: error.message
+        });
+    }
+});
+
 // GET /api/residentes/:id - Obtener residente específico por ID
 router.get('/:id', requireAuthAdmin, async (req, res) => {
     try {
