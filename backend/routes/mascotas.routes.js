@@ -103,6 +103,87 @@ router.get('/publico', async (req, res) => {
     }
 });
 
+/**
+ * GET /api/mascotas/publico/alertas
+ * ⚠️ SIN AUTENTICACIÓN - Vista pública de mascotas con información de alertas
+ * Obtiene todas las mascotas activas, incluyendo información de alertas si las tienen
+ */
+router.get('/publico/alertas', async (req, res) => {
+    try {
+        console.log('🚨 GET /api/mascotas/publico/alertas');
+        
+        const { tipo_alerta, tipo, plaza, buscar } = req.query;
+        
+        let sql = `
+            SELECT * FROM v_mascotas_publico_alertas
+            WHERE 1=1
+        `;
+        const params = [];
+        
+        // Filtrar por tipo de alerta si se especifica (solo alertas activas)
+        if (tipo_alerta && ['extraviada', 'agresiva'].includes(tipo_alerta)) {
+            sql += ` AND tipo_alerta = $${params.length + 1}`;
+            params.push(tipo_alerta);
+        }
+        
+        // Filtro por tipo de mascota
+        if (tipo && tipo !== 'all') {
+            sql += ` AND tipo = $${params.length + 1}`;
+            params.push(tipo);
+        }
+        
+        // Filtro por plaza
+        if (plaza && plaza !== 'all') {
+            const plazaNum = parseInt(plaza);
+            if (!isNaN(plazaNum)) {
+                sql += ` AND plaza_id = $${params.length + 1}`;
+                params.push(plazaNum);
+            }
+        }
+        
+        // Búsqueda por nombre
+        if (buscar && buscar.trim()) {
+            sql += ` AND mascota_nombre ILIKE $${params.length + 1}`;
+            params.push(`%${buscar.trim()}%`);
+        }
+        
+        // Ordenar: primero alertas activas por prioridad, luego el resto por nombre
+        sql += ` 
+            ORDER BY 
+                CASE WHEN alerta_id IS NOT NULL THEN 0 ELSE 1 END,
+                CASE 
+                    WHEN alerta_prioridad = 'alta' THEN 1
+                    WHEN alerta_prioridad = 'media' THEN 2
+                    WHEN alerta_prioridad = 'baja' THEN 3
+                    ELSE 4
+                END,
+                alerta_desde DESC NULLS LAST,
+                mascota_nombre
+        `;
+        
+        const result = await pool.query(sql, params);
+        
+        // Separar alertas activas para stats
+        const alertasActivas = result.rows.filter(m => m.alerta_id !== null);
+        
+        res.json({
+            success: true,
+            total: result.rows.length,
+            mascotas: result.rows,
+            alertas: alertasActivas,  // Para el banner
+            count: result.rows.length
+        });
+        
+    } catch (error) {
+        console.error('Error al obtener mascotas con alertas:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener información',
+            error: error.message
+        });
+    }
+});
+
 // ==================== FIN ENDPOINT PÚBLICO ====================
 
 // Aplicar middleware de autenticación a todas las rutas SIGUIENTES
@@ -637,87 +718,6 @@ router.delete('/:id', requirePermission('mascotas.eliminar'), async (req, res) =
 });
 
 // ==================== ALERTAS DE MASCOTAS ====================
-
-/**
- * GET /api/mascotas/publico/alertas
- * ⚠️ SIN AUTENTICACIÓN - Vista pública de mascotas con información de alertas
- * Obtiene todas las mascotas activas, incluyendo información de alertas si las tienen
- */
-router.get('/publico/alertas', async (req, res) => {
-    try {
-        console.log('🚨 GET /api/mascotas/publico/alertas');
-        
-        const { tipo_alerta, tipo, plaza, buscar } = req.query;
-        
-        let sql = `
-            SELECT * FROM v_mascotas_publico_alertas
-            WHERE 1=1
-        `;
-        const params = [];
-        
-        // Filtrar por tipo de alerta si se especifica (solo alertas activas)
-        if (tipo_alerta && ['extraviada', 'agresiva'].includes(tipo_alerta)) {
-            sql += ` AND tipo_alerta = $${params.length + 1}`;
-            params.push(tipo_alerta);
-        }
-        
-        // Filtro por tipo de mascota
-        if (tipo && tipo !== 'all') {
-            sql += ` AND tipo = $${params.length + 1}`;
-            params.push(tipo);
-        }
-        
-        // Filtro por plaza
-        if (plaza && plaza !== 'all') {
-            const plazaNum = parseInt(plaza);
-            if (!isNaN(plazaNum)) {
-                sql += ` AND plaza_id = $${params.length + 1}`;
-                params.push(plazaNum);
-            }
-        }
-        
-        // Búsqueda por nombre
-        if (buscar && buscar.trim()) {
-            sql += ` AND mascota_nombre ILIKE $${params.length + 1}`;
-            params.push(`%${buscar.trim()}%`);
-        }
-        
-        // Ordenar: primero alertas activas por prioridad, luego el resto por nombre
-        sql += ` 
-            ORDER BY 
-                CASE WHEN alerta_id IS NOT NULL THEN 0 ELSE 1 END,
-                CASE 
-                    WHEN alerta_prioridad = 'alta' THEN 1
-                    WHEN alerta_prioridad = 'media' THEN 2
-                    WHEN alerta_prioridad = 'baja' THEN 3
-                    ELSE 4
-                END,
-                alerta_desde DESC NULLS LAST,
-                mascota_nombre
-        `;
-        
-        const result = await pool.query(sql, params);
-        
-        // Separar alertas activas para stats
-        const alertasActivas = result.rows.filter(m => m.alerta_id !== null);
-        
-        res.json({
-            success: true,
-            total: result.rows.length,
-            mascotas: result.rows,
-            alertas: alertasActivas,  // Para el banner
-            count: result.rows.length
-        });
-        
-    } catch (error) {
-        console.error('Error al obtener mascotas con alertas:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al obtener información',
-            error: error.message
-        });
-    }
-});
 
 /**
  * POST /api/mascotas/:id/alertas
