@@ -588,7 +588,6 @@
                 <table class="table table-striped">
                     <thead class="table-dark">
                         <tr>
-                            <th>N° Casa</th>
                             <th>Dirección</th>
                             <th>Plaza</th>
                             <th>Cuota Social</th>
@@ -601,7 +600,7 @@
                         </tr>
                     </thead>
                     <tbody id="casasTableBody">
-                        <tr><td colspan="10" class="text-center">Cargando casas...</td></tr>
+                        <tr><td colspan="9" class="text-center">Cargando casas...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -4510,6 +4509,9 @@
                 const data = await response.json();
                 casasGlobal = data.data || [];
                 
+                // Ordenar por dirección alfabéticamente
+                casasGlobal.sort((a, b) => a.direccion.localeCompare(b.direccion));
+                
                 console.log('✅ Casas cargadas:', casasGlobal.length);
                 renderCasasTable(casasGlobal);
                 
@@ -4613,7 +4615,7 @@
             const tbody = document.getElementById('casasTableBody');
             
             if (!casas || casas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">No hay casas registradas</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">No hay casas registradas</td></tr>';
                 return;
             }
             
@@ -4633,8 +4635,7 @@
                 
                 return `
                 <tr>
-                    <td><strong>${casa.numero_casa}</strong></td>
-                    <td>${casa.direccion}</td>
+                    <td><strong>${casa.direccion}</strong></td>
                     <td><span class="badge bg-info">${casa.plaza_nombre || 'N/A'}</span></td>
                     <td class="text-end">$${formatCLP(casa.monto_cuota_social || 0)}</td>
                     <td class="text-end">$${formatCLP(casa.monto_junta_vecinos || 0)}</td>
