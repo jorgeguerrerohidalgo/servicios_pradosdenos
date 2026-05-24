@@ -2753,7 +2753,8 @@
                 const response = await authenticatedFetch('/api/eventos/tipos');
                 if (response && response.ok) {
                     const data = await response.json();
-                    return data.data || [];
+                    // Ordenar alfabéticamente por nombre
+                    return (data.data || []).sort((a, b) => a.nombre.localeCompare(b.nombre));
                 }
             } catch (error) {
                 console.error('Error cargando tipos de evento:', error);
@@ -3149,11 +3150,14 @@
                 const response = await authenticatedFetch('/api/documentos/tipos');
                 if (response && response.ok) {
                     const data = await response.json();
-                    return data.data || [];
+                    // Ordenar alfabéticamente por nombre
+                    return (data.data || []).sort((a, b) => a.nombre.localeCompare(b.nombre));
                 }
             } catch (error) {
                 console.error('Error cargando tipos de documento:', error);
             }
+            return [];
+        }
             return [];
         }
 
@@ -4531,13 +4535,16 @@
                 await loadPlazas();
             }
             
+            // Ordenar plazas alfabéticamente por nombre
+            const plazasOrdenadas = [...plazasGlobal].sort((a, b) => a.nombre.localeCompare(b.nombre));
+            
             // Actualizar filtro de Casas
             const filterSelectCasas = document.getElementById('filterPlazaCasas');
             const modalSelect = document.getElementById('casaPlaza');
             
             if (filterSelectCasas) {
                 filterSelectCasas.innerHTML = '<option value="">Todas las plazas</option>';
-                plazasGlobal.forEach(plaza => {
+                plazasOrdenadas.forEach(plaza => {
                     const option = document.createElement('option');
                     option.value = plaza.id;
                     option.textContent = plaza.nombre;
@@ -4547,7 +4554,7 @@
             
             if (modalSelect) {
                 modalSelect.innerHTML = '<option value="">Seleccione una plaza...</option>';
-                plazasGlobal.forEach(plaza => {
+                plazasOrdenadas.forEach(plaza => {
                     const option = document.createElement('option');
                     option.value = plaza.id;
                     option.textContent = plaza.nombre;
@@ -4559,7 +4566,7 @@
             const filterSelectResidentes = document.getElementById('filterPlazaResidentes');
             if (filterSelectResidentes) {
                 filterSelectResidentes.innerHTML = '<option value="">Todas las plazas</option>';
-                plazasGlobal.forEach(plaza => {
+                plazasOrdenadas.forEach(plaza => {
                     const option = document.createElement('option');
                     option.value = plaza.id;
                     option.textContent = plaza.nombre;
@@ -4571,7 +4578,7 @@
             const filterSelectMascotas = document.getElementById('filterPlazaMascotas');
             if (filterSelectMascotas) {
                 filterSelectMascotas.innerHTML = '<option value="">Todas las plazas</option>';
-                plazasGlobal.forEach(plaza => {
+                plazasOrdenadas.forEach(plaza => {
                     const option = document.createElement('option');
                     option.value = plaza.id;
                     option.textContent = plaza.nombre;
@@ -4583,7 +4590,7 @@
             const filterSelectPagos = document.getElementById('filterPlazaPagos');
             if (filterSelectPagos) {
                 filterSelectPagos.innerHTML = '<option value="">Todas las plazas</option>';
-                plazasGlobal.forEach(plaza => {
+                plazasOrdenadas.forEach(plaza => {
                     const option = document.createElement('option');
                     option.value = plaza.id;
                     option.textContent = plaza.nombre;
@@ -4595,7 +4602,7 @@
             const filterSelectVehiculos = document.getElementById('filterPlazaVehiculos');
             if (filterSelectVehiculos) {
                 filterSelectVehiculos.innerHTML = '<option value="">Todas las plazas</option>';
-                plazasGlobal.forEach(plaza => {
+                plazasOrdenadas.forEach(plaza => {
                     const option = document.createElement('option');
                     option.value = plaza.id;
                     option.textContent = plaza.nombre;
@@ -4865,8 +4872,9 @@
                     const data = await response.json();
                     
                     if (response.ok && data.success) {
+                        const casasOrdenadas = data.data.sort((a, b) => a.direccion.localeCompare(b.direccion));
                         casaSelect.innerHTML = '<option value="">Todas las casas</option>' +
-                            data.data.map(c => `<option value="${c.id}">${c.direccion}</option>`).join('');
+                            casasOrdenadas.map(c => `<option value="${c.id}">${c.direccion}</option>`).join('');
                     }
                 } catch (error) {
                     console.error('Error al cargar casas:', error);
@@ -5029,9 +5037,10 @@
                 if (response && response.ok) {
                     const data = await response.json();
                     if (data.success && data.data.length > 0) {
+                        const casasOrdenadas = data.data.sort((a, b) => a.direccion.localeCompare(b.direccion));
                         selectCasa.disabled = false;
                         selectCasa.innerHTML = '<option value="">Seleccione una casa...</option>' +
-                            data.data.map(casa => 
+                            casasOrdenadas.map(casa => 
                                 `<option value="${casa.id}">${casa.direccion}</option>`
                             ).join('');
                     } else {
@@ -5258,8 +5267,9 @@
                     const data = await response.json();
                     
                     if (response.ok && data.success) {
+                        const casasOrdenadas = data.data.sort((a, b) => a.direccion.localeCompare(b.direccion));
                         casaSelect.innerHTML = '<option value="">Todas las casas</option>' +
-                            data.data.map(c => `<option value="${c.id}">${c.direccion}</option>`).join('');
+                            casasOrdenadas.map(c => `<option value="${c.id}">${c.direccion}</option>`).join('');
                     }
                 } catch (error) {
                     console.error('Error al cargar casas:', error);
@@ -5402,8 +5412,9 @@
             try {
                 await loadPlazasForFilter();
                 const selectPlaza = document.getElementById('mascotaPlaza');
+                const plazasActivas = plazasGlobal.filter(p => p.activo).sort((a, b) => a.nombre.localeCompare(b.nombre));
                 selectPlaza.innerHTML = '<option value="">Seleccione primero una plaza...</option>' +
-                    plazasGlobal.filter(p => p.activo).map(plaza => 
+                    plazasActivas.map(plaza => 
                         `<option value="${plaza.id}">${plaza.nombre}</option>`
                     ).join('');
             } catch (error) {
@@ -5449,9 +5460,14 @@
                                         
                                         if (data.success && data.data.length > 0) {
                                             console.log(`✅ ${data.data.length} residentes encontrados para casa ${mascota.casa_id}`);
+                                            const residentesOrdenados = data.data.sort((a, b) => {
+                                                const nombreA = `${a.nombre} ${a.apellido_paterno}`;
+                                                const nombreB = `${b.nombre} ${b.apellido_paterno}`;
+                                                return nombreA.localeCompare(nombreB);
+                                            });
                                             selectResidente.disabled = false;
                                             selectResidente.innerHTML = '<option value="">Seleccione un residente...</option>' +
-                                                data.data.map(r => `<option value="${r.id}">${r.nombre} ${r.apellido_paterno}</option>`).join('');
+                                                residentesOrdenados.map(r => `<option value="${r.id}">${r.nombre} ${r.apellido_paterno}</option>`).join('');
                                             
                                             console.log('📋 Select de residentes poblado con', selectResidente.options.length, 'opciones');
                                         } else {
@@ -5548,9 +5564,10 @@
                         
                         if (data.success && data.data.length > 0) {
                             console.log(`✅ ${data.data.length} casas encontradas en la plaza`);
+                            const casasOrdenadas = data.data.sort((a, b) => a.direccion.localeCompare(b.direccion));
                             selectCasa.disabled = false;
                             selectCasa.innerHTML = '<option value="">Seleccione una casa...</option>' +
-                                data.data.map(casa => 
+                                casasOrdenadas.map(casa => 
                                     `<option value="${casa.id}">${casa.direccion}</option>`
                                 ).join('');
                             
@@ -6193,8 +6210,9 @@
                     const data = await response.json();
                     
                     if (response.ok && data.success) {
+                        const casasOrdenadas = data.data.sort((a, b) => a.direccion.localeCompare(b.direccion));
                         casaSelect.innerHTML = '<option value="">Todas las casas</option>' +
-                            data.data.map(c => `<option value="${c.id}">${c.direccion}</option>`).join('');
+                            casasOrdenadas.map(c => `<option value="${c.id}">${c.direccion}</option>`).join('');
                     }
                 } catch (error) {
                     console.error('Error al cargar casas:', error);
@@ -6329,8 +6347,9 @@
                 if (plazasResponse && plazasResponse.ok) {
                     const plazasData = await plazasResponse.json();
                     if (plazasData.success) {
+                        const plazasOrdenadas = plazasData.data.sort((a, b) => a.nombre.localeCompare(b.nombre));
                         plazaSelect.innerHTML = '<option value="">Seleccionar plaza</option>' +
-                            plazasData.data.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+                            plazasOrdenadas.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
                     }
                 }
                 
@@ -6341,8 +6360,14 @@
                     if (data.success) {
                         const filterCasa = document.getElementById('filterCasaPagos');
                         if (filterCasa) {
+                            // Ordenar casas numéricamente por numero_casa
+                            const casasOrdenadas = data.data.sort((a, b) => {
+                                const numA = parseInt(a.numero_casa) || 0;
+                                const numB = parseInt(b.numero_casa) || 0;
+                                return numA - numB;
+                            });
                             filterCasa.innerHTML = '<option value="">Todas las casas</option>' +
-                                data.data.map(casa => `<option value="${casa.id}">${casa.numero_casa}</option>`).join('');
+                                casasOrdenadas.map(casa => `<option value="${casa.id}">${casa.numero_casa}</option>`).join('');
                         }
                     }
                 }
@@ -6386,8 +6411,9 @@
                     const casasFiltradas = data.data.filter(c => c.plaza_id == plazaId);
                     
                     if (casasFiltradas.length > 0) {
+                        const casasOrdenadas = casasFiltradas.sort((a, b) => a.direccion.localeCompare(b.direccion));
                         casaSelect.innerHTML = '<option value="">Seleccionar casa</option>' +
-                            casasFiltradas.map(c => `<option value="${c.id}">${c.direccion}</option>`).join('');
+                            casasOrdenadas.map(c => `<option value="${c.id}">${c.direccion}</option>`).join('');
                         casaSelect.disabled = false;
                     } else {
                         casaSelect.innerHTML = '<option value="">No hay casas en esta plaza</option>';
@@ -6823,8 +6849,9 @@
                     const data = await response.json();
                     
                     if (response.ok && data.success) {
+                        const casasOrdenadas = data.data.sort((a, b) => a.direccion.localeCompare(b.direccion));
                         casaSelect.innerHTML = '<option value="">Todas las casas</option>' +
-                            data.data.map(c => `<option value="${c.id}">${c.direccion}</option>`).join('');
+                            casasOrdenadas.map(c => `<option value="${c.id}">${c.direccion}</option>`).join('');
                     }
                 } catch (error) {
                     console.error('Error al cargar casas:', error);
@@ -6963,8 +6990,9 @@
                 const plazasData = await plazasResponse.json();
                 
                 if (plazasResponse.ok && plazasData.success) {
+                    const plazasOrdenadas = plazasData.data.sort((a, b) => a.nombre.localeCompare(b.nombre));
                     plazaSelect.innerHTML = '<option value="">Seleccionar plaza</option>' +
-                        plazasData.data.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+                        plazasOrdenadas.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
                 }
                 
                 // Cargar tipos de vehículos (sin autenticación - endpoint público)
@@ -7094,8 +7122,9 @@
                     const casasFiltradas = data.data.filter(c => c.plaza_id == plazaId);
                     
                     if (casasFiltradas.length > 0) {
+                        const casasOrdenadas = casasFiltradas.sort((a, b) => a.direccion.localeCompare(b.direccion));
                         casaSelect.innerHTML = '<option value="">Seleccionar casa</option>' +
-                            casasFiltradas.map(c => `<option value="${c.id}">${c.direccion}</option>`).join('');
+                            casasOrdenadas.map(c => `<option value="${c.id}">${c.direccion}</option>`).join('');
                         casaSelect.disabled = false;
                     } else {
                         casaSelect.innerHTML = '<option value="">No hay casas en esta plaza</option>';
@@ -7127,8 +7156,13 @@
                 const data = await response.json();
                 
                 if (response.ok && data.success && data.data.length > 0) {
+                    const residentesOrdenados = data.data.sort((a, b) => {
+                        const nombreA = `${a.nombre} ${a.apellido_paterno}`;
+                        const nombreB = `${b.nombre} ${b.apellido_paterno}`;
+                        return nombreA.localeCompare(nombreB);
+                    });
                     residenteSelect.innerHTML = '<option value="">Sin residente asignado</option>' +
-                        data.data.map(r => `<option value="${r.id}" ${r.id === selectedResidenteId ? 'selected' : ''}>${r.nombre} ${r.apellido_paterno}</option>`).join('');
+                        residentesOrdenados.map(r => `<option value="${r.id}" ${r.id === selectedResidenteId ? 'selected' : ''}>${r.nombre} ${r.apellido_paterno}</option>`).join('');
                     residenteSelect.disabled = false;
                 } else {
                     residenteSelect.innerHTML = '<option value="">No hay residentes en esta casa</option>';
@@ -7161,8 +7195,9 @@
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success && data.data.length > 0) {
+                        const marcasOrdenadas = data.data.sort((a, b) => a.nombre.localeCompare(b.nombre));
                         marcaSelect.innerHTML = '<option value="">Seleccionar marca</option>' +
-                            data.data.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
+                            marcasOrdenadas.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
                         marcaSelect.disabled = false;
                     } else {
                         marcaSelect.innerHTML = '<option value="">No hay marcas para este tipo</option>';
@@ -7196,8 +7231,9 @@
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success && data.data.length > 0) {
+                        const modelosOrdenados = data.data.sort((a, b) => a.nombre.localeCompare(b.nombre));
                         modeloSelect.innerHTML = '<option value="">Seleccionar modelo</option>' +
-                            data.data.map(m => {
+                            modelosOrdenados.map(m => {
                                 // Mostrar solo el nombre, sin año (optimización UX)
                                 return `<option value="${m.id}">${m.nombre}</option>`;
                             }).join('');
@@ -8188,9 +8224,17 @@
                     const data = await response.json();
                     if (data.success) {
                         rolesGlobal = data.data;
+                        const rolesOrdenados = rolesGlobal.sort((a, b) => {
+                            // Primero por nivel de prioridad (descendente - mayor nivel primero)
+                            if (a.nivel_prioridad !== b.nivel_prioridad) {
+                                return b.nivel_prioridad - a.nivel_prioridad;
+                            }
+                            // Luego alfabéticamente por nombre
+                            return a.nombre.localeCompare(b.nombre);
+                        });
                         const select = document.getElementById('asignarRolRolId');
                         select.innerHTML = '<option value="">Seleccione un rol...</option>' +
-                            rolesGlobal.map(r => `<option value="${r.id}">${r.nombre} (Nivel ${r.nivel_prioridad})</option>`).join('');
+                            rolesOrdenados.map(r => `<option value="${r.id}">${r.nombre} (Nivel ${r.nivel_prioridad})</option>`).join('');
                     }
                 }
 
@@ -8199,9 +8243,10 @@
                 if (plazasResponse && plazasResponse.ok) {
                     const plazasData = await plazasResponse.json();
                     if (plazasData.success) {
+                        const plazasOrdenadas = plazasData.data.sort((a, b) => a.nombre.localeCompare(b.nombre));
                         const plazaSelect = document.getElementById('asignarRolPlazaId');
                         plazaSelect.innerHTML = '<option value="">Seleccione una plaza...</option>' +
-                            plazasData.data.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+                            plazasOrdenadas.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
                     }
                 }
             } catch (error) {
