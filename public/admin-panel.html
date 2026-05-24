@@ -4512,7 +4512,7 @@
                 renderCasasTable(casasGlobal);
                 
                 // Cargar plazas para dropdown de filtros si no está cargado
-                if (!document.getElementById('filterPlazaCasas').options.length > 1) {
+                if (document.getElementById('filterPlazaCasas').options.length <= 1) {
                     await loadPlazasForFilter();
                 }
                 
