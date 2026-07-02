@@ -8285,6 +8285,7 @@
 
             // Actualizar lista de plazas asignadas si scope ya es plaza
             if (document.getElementById('asignarRolScopeType').value === 'plaza') {
+                document.getElementById('plazaSelectorDiv').style.display = 'block';
                 actualizarPlazasAsignadas();
             }
         }
@@ -8321,6 +8322,7 @@
             const asignadas = (user?.roles || []).filter(r => r.role_id === roleId && r.scope_type === 'plaza' && r.scope_id);
 
             plazasSection.style.display = 'block';
+            plazaSelect.closest('#plazaSelectorDiv').style.display = 'block';
 
             if (asignadas.length === 0) {
                 plazasListDiv.innerHTML = '<span class="text-muted small">Sin plazas asignadas para este rol</span>';
