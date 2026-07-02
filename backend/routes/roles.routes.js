@@ -119,14 +119,14 @@ router.post('/asignar',
         });
       }
       
-      // Insertar o actualizar el rol del usuario
+      // Insertar o reactivar la asignación rol+scope exacta
+      // El constraint user_roles_user_role_scope_unique(user_id, role_id, scope_type, scope_id)
+      // permite múltiples plazas para el mismo rol+usuario
       await pool.query(`
         INSERT INTO user_roles (user_id, role_id, scope_type, scope_id, asignado_por, asignado_en, activo)
         VALUES ($1, $2, $3, $4, $5, NOW(), TRUE)
-        ON CONFLICT (user_id, role_id) DO UPDATE
-        SET scope_type = EXCLUDED.scope_type,
-            scope_id = EXCLUDED.scope_id,
-            asignado_por = EXCLUDED.asignado_por,
+        ON CONFLICT ON CONSTRAINT user_roles_user_role_scope_unique DO UPDATE
+        SET asignado_por = EXCLUDED.asignado_por,
             asignado_en = NOW(),
             activo = TRUE,
             updated_at = NOW()
@@ -162,7 +162,7 @@ router.post('/revocar',
   requirePermission('roles.editar'),
   async (req, res) => {
     try {
-      const { user_id, role_id, motivo } = req.body;
+      const { user_id, role_id, scope_type, scope_id, motivo } = req.body;
       
       if (!user_id || !role_id) {
         return res.status(400).json({ 
@@ -171,12 +171,24 @@ router.post('/revocar',
         });
       }
       
-      // Marcar el rol como inactivo
-      await pool.query(`
-        UPDATE user_roles
-        SET activo = FALSE, updated_at = NOW()
-        WHERE user_id = $1 AND role_id = $2
-      `, [user_id, role_id]);
+      // Si se envía scope_type/scope_id, revocar solo esa asignación de plaza específica.
+      // Si no se envía scope, revocar TODAS las asignaciones de ese rol para el usuario.
+      if (scope_type !== undefined) {
+        await pool.query(`
+          UPDATE user_roles
+          SET activo = FALSE, updated_at = NOW()
+          WHERE user_id = $1 AND role_id = $2
+            AND (scope_type IS NOT DISTINCT FROM $3)
+            AND (scope_id IS NOT DISTINCT FROM $4)
+        `, [user_id, role_id, scope_type, scope_id ?? null]);
+      } else {
+        // Revocar todas las asignaciones del rol (comportamiento anterior)
+        await pool.query(`
+          UPDATE user_roles
+          SET activo = FALSE, updated_at = NOW()
+          WHERE user_id = $1 AND role_id = $2
+        `, [user_id, role_id]);
+      }
       
       // Actualizar timestamp de cambio de permisos
       await pool.query(`

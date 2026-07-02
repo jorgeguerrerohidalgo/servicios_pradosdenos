@@ -2338,8 +2338,16 @@
                             </select>
                         </div>
 
+                        <!-- Plazas ya asignadas para este rol (visible cuando scope=plaza) -->
+                        <div id="plazasAsignadasSection" style="display: none;" class="mb-3">
+                            <label class="form-label fw-semibold">Plazas asignadas actualmente</label>
+                            <div id="plazasAsignadasList" class="border rounded p-2 bg-light">
+                                <span class="text-muted small">Sin plazas asignadas para este rol</span>
+                            </div>
+                        </div>
+
                         <div class="mb-3" id="plazaSelectorDiv" style="display: none;">
-                            <label class="form-label">Seleccionar Plaza *</label>
+                            <label class="form-label">Agregar plaza *</label>
                             <select class="form-select" id="asignarRolPlazaId">
                                 <option value="">Seleccione una plaza...</option>
                             </select>
@@ -2352,9 +2360,9 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                     <button type="button" class="btn btn-primary" onclick="ejecutarAsignacionRol()">
-                        <i class="fas fa-check"></i> Asignar Rol
+                        <i class="fas fa-plus"></i> Agregar Asignación
                     </button>
                 </div>
             </div>
@@ -8211,10 +8219,13 @@
 
         // Mostrar modal para asignar rol
         async function showAsignarRolModal(userId, userName) {
-            document.getElementById('asignarRolModalTitle').textContent = 'Asignar Rol';
+            document.getElementById('asignarRolModalTitle').textContent = 'Asignar Rol / Plaza';
             document.getElementById('usuarioSeleccionadoNombre').textContent = `Usuario: ${userName}`;
             document.getElementById('asignarRolUsuarioId').value = userId;
             document.getElementById('asignarRolMotivo').value = '';
+            document.getElementById('scopeFields').style.display = 'none';
+            document.getElementById('plazaSelectorDiv').style.display = 'none';
+            document.getElementById('plazasAsignadasSection').style.display = 'none';
             
             // Cargar roles disponibles
             try {
@@ -8224,11 +8235,9 @@
                     if (data.success) {
                         rolesGlobal = data.data;
                         const rolesOrdenados = rolesGlobal.sort((a, b) => {
-                            // Primero por nivel de prioridad (descendente - mayor nivel primero)
                             if (a.nivel_prioridad !== b.nivel_prioridad) {
                                 return b.nivel_prioridad - a.nivel_prioridad;
                             }
-                            // Luego alfabéticamente por nombre
                             return a.nombre.localeCompare(b.nombre);
                         });
                         const select = document.getElementById('asignarRolRolId');
@@ -8237,7 +8246,7 @@
                     }
                 }
 
-                // Cargar plazas para el selector de scope
+                // Cargar todas las plazas (se filtrará en actualizarPlazasAsignadas)
                 const plazasResponse = await authenticatedFetch('/api/plazas?activo=true');
                 if (plazasResponse && plazasResponse.ok) {
                     const plazasData = await plazasResponse.json();
@@ -8246,6 +8255,8 @@
                         const plazaSelect = document.getElementById('asignarRolPlazaId');
                         plazaSelect.innerHTML = '<option value="">Seleccione una plaza...</option>' +
                             plazasOrdenadas.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+                        // Guardar lista completa en dataset para filtrado posterior
+                        plazaSelect.dataset.allOptions = JSON.stringify(plazasOrdenadas);
                     }
                 }
             } catch (error) {
@@ -8260,11 +8271,21 @@
         function toggleScopeFields() {
             const rolId = document.getElementById('asignarRolRolId').value;
             const scopeFields = document.getElementById('scopeFields');
-            
+            const plazaDiv = document.getElementById('plazaSelectorDiv');
+            const plazasSection = document.getElementById('plazasAsignadasSection');
+
             if (rolId) {
                 scopeFields.style.display = 'block';
             } else {
                 scopeFields.style.display = 'none';
+                plazaDiv.style.display = 'none';
+                plazasSection.style.display = 'none';
+                return;
+            }
+
+            // Actualizar lista de plazas asignadas si scope ya es plaza
+            if (document.getElementById('asignarRolScopeType').value === 'plaza') {
+                actualizarPlazasAsignadas();
             }
         }
 
@@ -8272,8 +8293,99 @@
         function togglePlazaSelector() {
             const scopeType = document.getElementById('asignarRolScopeType').value;
             const plazaDiv = document.getElementById('plazaSelectorDiv');
-            
-            plazaDiv.style.display = scopeType === 'plaza' ? 'block' : 'none';
+            const plazasSection = document.getElementById('plazasAsignadasSection');
+
+            if (scopeType === 'plaza') {
+                plazaDiv.style.display = 'block';
+                actualizarPlazasAsignadas();
+            } else {
+                plazaDiv.style.display = 'none';
+                plazasSection.style.display = 'none';
+            }
+        }
+
+        // Actualizar la sección "Plazas asignadas actualmente" en el modal
+        function actualizarPlazasAsignadas() {
+            const userId = parseInt(document.getElementById('asignarRolUsuarioId').value);
+            const roleId = parseInt(document.getElementById('asignarRolRolId').value);
+            const plazasSection = document.getElementById('plazasAsignadasSection');
+            const plazasListDiv = document.getElementById('plazasAsignadasList');
+            const plazaSelect = document.getElementById('asignarRolPlazaId');
+
+            if (!userId || !roleId) {
+                plazasSection.style.display = 'none';
+                return;
+            }
+
+            const user = usuariosConRolesGlobal.find(u => u.user_id === userId);
+            const asignadas = (user?.roles || []).filter(r => r.role_id === roleId && r.scope_type === 'plaza' && r.scope_id);
+
+            plazasSection.style.display = 'block';
+
+            if (asignadas.length === 0) {
+                plazasListDiv.innerHTML = '<span class="text-muted small">Sin plazas asignadas para este rol</span>';
+            } else {
+                plazasListDiv.innerHTML = asignadas.map(r => `
+                    <span class="badge bg-primary me-1 mb-1 p-2">
+                        ${escapeHtml(r.plaza_nombre || 'Plaza ' + r.scope_id)}
+                        <button type="button" class="btn-close btn-close-white ms-1" style="font-size:0.6rem;"
+                            onclick="quitarPlazaDeRol(${userId}, ${roleId}, 'plaza', ${r.scope_id})"
+                            title="Quitar esta plaza"></button>
+                    </span>
+                `).join('');
+            }
+
+            // Filtrar del selector las plazas ya asignadas
+            try {
+                const todasLasPlazas = JSON.parse(plazaSelect.dataset.allOptions || '[]');
+                const asignadasIds = new Set(asignadas.map(r => r.scope_id));
+                const disponibles = todasLasPlazas.filter(p => !asignadasIds.has(p.id));
+                plazaSelect.innerHTML = '<option value="">Seleccione una plaza...</option>' +
+                    disponibles.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('');
+            } catch (e) {
+                // Si falla el filtrado, dejar el selector como estaba
+            }
+        }
+
+        // Quitar una plaza específica del rol de un usuario (desde el modal de asignar)
+        async function quitarPlazaDeRol(userId, roleId, scopeType, scopeId) {
+            const confirmed = await Swal.fire({
+                title: '¿Quitar esta plaza?',
+                text: 'Se revocará la asignación de este rol para esa plaza únicamente.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, quitar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#dc3545'
+            });
+            if (!confirmed.isConfirmed) return;
+
+            try {
+                const response = await authenticatedFetch('/api/roles/revocar', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        user_id: userId,
+                        role_id: roleId,
+                        scope_type: scopeType,
+                        scope_id: scopeId,
+                        motivo: 'Revocación de plaza desde modal de asignación'
+                    })
+                });
+
+                if (!response) return;
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    // Refrescar datos globales y actualizar la lista del modal
+                    await refreshUsuariosConRoles();
+                    actualizarPlazasAsignadas();
+                } else {
+                    throw new Error(data.error || 'Error al revocar plaza');
+                }
+            } catch (error) {
+                Swal.fire('Error', error.message || 'No se pudo quitar la plaza', 'error');
+            }
         }
 
         // Ejecutar asignación de rol
@@ -8290,7 +8402,7 @@
             }
 
             if (scopeType === 'plaza' && !plazaId) {
-                Swal.fire('Advertencia', 'Debe seleccionar una plaza', 'warning');
+                Swal.fire('Advertencia', 'Debe seleccionar una plaza para agregar', 'warning');
                 return;
             }
 
@@ -8311,9 +8423,21 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    Swal.fire('Éxito', 'Rol asignado correctamente', 'success');
-                    bootstrap.Modal.getInstance(document.getElementById('asignarRolModal')).hide();
+                    // Refrescar datos y actualizar lista de plazas sin cerrar el modal
                     await refreshUsuariosConRoles();
+                    document.getElementById('asignarRolPlazaId').value = '';
+                    if (scopeType === 'plaza') {
+                        actualizarPlazasAsignadas();
+                    }
+                    // Mostrar notificación toast breve
+                    const toast = document.createElement('div');
+                    toast.className = 'position-fixed bottom-0 end-0 p-3';
+                    toast.style.zIndex = '9999';
+                    toast.innerHTML = `<div class="toast show align-items-center text-bg-success border-0" role="alert">
+                        <div class="d-flex"><div class="toast-body"><i class="fas fa-check me-1"></i>Plaza asignada correctamente</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.closest('.position-fixed').remove()"></button></div></div>`;
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 3000);
                 } else {
                     throw new Error(data.error || 'Error al asignar rol');
                 }
@@ -8323,17 +8447,15 @@
             }
         }
 
-        // Mostrar modal para revocar rol
+        // Mostrar modal para revocar rol (ahora muestra asignaciones individuales por plaza)
         async function showRevocarRolModal(userId, userName) {
             try {
-                // Obtener roles actuales del usuario
                 const user = usuariosConRolesGlobal.find(u => u.user_id === userId);
                 if (!user) {
                     Swal.fire('Información', 'Usuario no encontrado', 'info');
                     return;
                 }
                 
-                // Filtrar roles activos (no nulos)
                 const rolesActivos = (user.roles || []).filter(r => r.role_id !== null);
                 
                 if (rolesActivos.length === 0) {
@@ -8341,46 +8463,84 @@
                     return;
                 }
 
-                const rolesOptions = rolesActivos.map(r => 
-                    `<option value="${r.role_id}">${escapeHtml(r.role_nombre)}</option>`
-                ).join('');
+                // Construir filas: una por cada asignación (rol + plaza)
+                const filas = rolesActivos.map((r, idx) => {
+                    const scopeLabel = r.scope_type === 'plaza'
+                        ? `<span class="badge bg-info">${escapeHtml(r.plaza_nombre || 'Plaza ' + r.scope_id)}</span>`
+                        : '<span class="badge bg-success">Global</span>';
+                    return `
+                        <tr>
+                            <td>${escapeHtml(r.role_nombre)}</td>
+                            <td>${scopeLabel}</td>
+                            <td>
+                                <button class="btn btn-sm btn-danger" onclick="revocarAsignacion(${userId}, ${r.role_id}, ${r.scope_type ? `'${r.scope_type}'` : 'null'}, ${r.scope_id ?? 'null'})">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>`;
+                }).join('');
 
-                const result = await Swal.fire({
-                    title: 'Revocar Rol',
+                await Swal.fire({
+                    title: `Gestionar asignaciones de ${escapeHtml(userName)}`,
+                    width: '600px',
                     html: `
-                        <p><strong>Usuario:</strong> ${userName}</p>
-                        <div class="mb-3">
-                            <label class="form-label">Seleccionar Rol a Revocar</label>
-                            <select class="form-select" id="revocarRolSelect">
-                                ${rolesOptions}
-                            </select>
+                        <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr><th>Rol</th><th>Plaza / Alcance</th><th>Acción</th></tr>
+                            </thead>
+                            <tbody>${filas}</tbody>
+                        </table>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Motivo</label>
-                            <textarea class="form-control" id="revocarRolMotivo" rows="2"></textarea>
+                        <div class="mb-2 mt-2">
+                            <label class="form-label small">Motivo (aplica a la revocación que elija)</label>
+                            <textarea class="form-control form-control-sm" id="revocarRolMotivo" rows="2" placeholder="Opcional"></textarea>
                         </div>
                     `,
+                    showConfirmButton: false,
                     showCancelButton: true,
-                    confirmButtonText: 'Revocar',
-                    cancelButtonText: 'Cancelar',
-                    confirmButtonColor: '#dc3545',
-                    preConfirm: () => {
-                        const rolId = document.getElementById('revocarRolSelect').value;
-                        const motivo = document.getElementById('revocarRolMotivo').value;
-                        return {rolId, motivo};
-                    }
+                    cancelButtonText: 'Cerrar',
                 });
-
-                if (result.isConfirmed) {
-                    await ejecutarRevocacionRol(userId, result.value.rolId, result.value.motivo);
-                }
             } catch (error) {
                 console.error('Error:', error);
                 Swal.fire('Error', 'No se pudo procesar la revocación', 'error');
             }
         }
 
-        // Ejecutar revocación de rol
+        // Revocar asignación individual (usada desde el modal de revocar)
+        async function revocarAsignacion(userId, roleId, scopeType, scopeId) {
+            const motivo = document.getElementById('revocarRolMotivo')?.value || 'Revocación manual desde panel';
+            try {
+                const response = await authenticatedFetch('/api/roles/revocar', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        user_id: userId,
+                        role_id: roleId,
+                        scope_type: scopeType,
+                        scope_id: scopeId,
+                        motivo: motivo
+                    })
+                });
+
+                if (!response) return;
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    await refreshUsuariosConRoles();
+                    // Cerrar y reabrir el modal con datos actualizados
+                    Swal.close();
+                    const user = usuariosConRolesGlobal.find(u => u.user_id === userId);
+                    if (user) showRevocarRolModal(userId, user.nombre);
+                } else {
+                    throw new Error(data.error || 'Error al revocar');
+                }
+            } catch (error) {
+                Swal.fire('Error', error.message || 'No se pudo revocar la asignación', 'error');
+            }
+        }
+
+        // Ejecutar revocación de rol (compatibilidad con código existente)
         async function ejecutarRevocacionRol(userId, rolId, motivo) {
             try {
                 const response = await authenticatedFetch('/api/roles/revocar', {
