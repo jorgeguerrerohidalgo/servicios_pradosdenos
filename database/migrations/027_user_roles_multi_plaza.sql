@@ -3,8 +3,8 @@
 -- =====================================================
 -- Descripción: Permite asignar el mismo rol a un usuario
 --              en múltiples plazas (relación N:M real).
---              Cambia el constraint UNIQUE(user_id, role_id)
---              por UNIQUE NULLS NOT DISTINCT(user_id, role_id, scope_type, scope_id)
+--              Elimina el constraint UNIQUE(user_id, role_id) que solo
+--              permitía una plaza por rol.
 --
 -- Fecha: 2026-07-02
 -- Autor: Sistema
@@ -20,12 +20,21 @@ ALTER TABLE user_roles
 ALTER TABLE user_roles
   DROP CONSTRAINT IF EXISTS user_roles_pkey_user_role;
 
--- 2. Agregar nuevo constraint que permite múltiples plazas por rol
---    NULLS NOT DISTINCT: trata dos NULLs como iguales (para roles globales)
---    Requiere PostgreSQL 15+ (Supabase >=15.x)
+-- Eliminar constraint nuevo si ya fue creado en un intento previo
 ALTER TABLE user_roles
-  ADD CONSTRAINT user_roles_user_role_scope_unique
-  UNIQUE NULLS NOT DISTINCT (user_id, role_id, scope_type, scope_id);
+  DROP CONSTRAINT IF EXISTS user_roles_user_role_scope_unique;
+
+-- Eliminar índice si fue creado previamente
+DROP INDEX IF EXISTS user_roles_user_role_scope_idx;
+
+-- 2. Agregar índice único compatible con cualquier versión de PostgreSQL
+--    COALESCE trata NULLs como valores fijos para que la unicidad funcione:
+--    - scope_type NULL → string vacío
+--    - scope_id NULL   → -1
+--    Esto impide duplicados exactos (mismo rol + misma plaza) pero permite
+--    un mismo rol con múltiples plazas distintas.
+CREATE UNIQUE INDEX user_roles_user_role_scope_idx
+  ON user_roles (user_id, role_id, COALESCE(scope_type, ''), COALESCE(scope_id, -1));
 
 COMMIT;
 
@@ -33,12 +42,12 @@ COMMIT;
 -- Verificación
 -- =====================================================
 
--- Ver constraints actuales de user_roles
-SELECT constraint_name, constraint_type
-FROM information_schema.table_constraints
-WHERE table_name = 'user_roles';
+-- Ver índices actuales de user_roles
+SELECT indexname, indexdef
+FROM pg_indexes
+WHERE tablename = 'user_roles';
 
--- Ver asignaciones actuales (puede haber duplicados tras la migración)
+-- Ver asignaciones duplicadas (deben ser 0 tras la migración)
 SELECT user_id, role_id, scope_type, scope_id, COUNT(*) as total
 FROM user_roles
 WHERE activo = TRUE

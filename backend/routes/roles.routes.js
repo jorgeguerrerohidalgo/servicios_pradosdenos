@@ -119,18 +119,31 @@ router.post('/asignar',
         });
       }
       
-      // Insertar o reactivar la asignación rol+scope exacta
-      // El constraint user_roles_user_role_scope_unique(user_id, role_id, scope_type, scope_id)
-      // permite múltiples plazas para el mismo rol+usuario
-      await pool.query(`
-        INSERT INTO user_roles (user_id, role_id, scope_type, scope_id, asignado_por, asignado_en, activo)
-        VALUES ($1, $2, $3, $4, $5, NOW(), TRUE)
-        ON CONFLICT ON CONSTRAINT user_roles_user_role_scope_unique DO UPDATE
-        SET asignado_por = EXCLUDED.asignado_por,
-            asignado_en = NOW(),
-            activo = TRUE,
-            updated_at = NOW()
-      `, [user_id, role_id, scope_type, scope_id, req.user.id]);
+      // Verificar si ya existe la asignación exacta (user_id + role_id + scope_type + scope_id)
+      // Usamos IS NOT DISTINCT FROM para comparar NULLs correctamente
+      const existing = await pool.query(`
+        SELECT id FROM user_roles
+        WHERE user_id = $1 AND role_id = $2
+          AND (scope_type IS NOT DISTINCT FROM $3)
+          AND (scope_id IS NOT DISTINCT FROM $4)
+      `, [user_id, role_id, scope_type ?? null, scope_id ?? null]);
+
+      if (existing.rows.length > 0) {
+        // Reactivar si estaba inactiva
+        await pool.query(`
+          UPDATE user_roles
+          SET asignado_por = $1, asignado_en = NOW(), activo = TRUE, updated_at = NOW()
+          WHERE user_id = $2 AND role_id = $3
+            AND (scope_type IS NOT DISTINCT FROM $4)
+            AND (scope_id IS NOT DISTINCT FROM $5)
+        `, [req.user.id, user_id, role_id, scope_type ?? null, scope_id ?? null]);
+      } else {
+        // Insertar nueva asignación (permite múltiples plazas para el mismo rol)
+        await pool.query(`
+          INSERT INTO user_roles (user_id, role_id, scope_type, scope_id, asignado_por, asignado_en, activo)
+          VALUES ($1, $2, $3, $4, $5, NOW(), TRUE)
+        `, [user_id, role_id, scope_type ?? null, scope_id ?? null, req.user.id]);
+      }
       
       // Actualizar timestamp de cambio de permisos
       await pool.query(`
