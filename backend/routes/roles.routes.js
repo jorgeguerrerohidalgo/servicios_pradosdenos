@@ -122,7 +122,7 @@ router.post('/asignar',
       // Verificar si ya existe la asignación exacta (user_id + role_id + scope_type + scope_id)
       // Usamos IS NOT DISTINCT FROM para comparar NULLs correctamente
       const existing = await pool.query(`
-        SELECT id FROM user_roles
+        SELECT 1 FROM user_roles
         WHERE user_id = $1 AND role_id = $2
           AND (scope_type IS NOT DISTINCT FROM $3)
           AND (scope_id IS NOT DISTINCT FROM $4)
