@@ -259,7 +259,10 @@ function applyButtonPermissions(modulo) {
     };
     
     // Ocultar botón "Nuevo/Crear" si no tiene permiso de crear
-    const createButtons = document.querySelectorAll(`[onclick*="show${capitalize(modulo)}Form"]`);
+    // Mapeo de excepciones: módulos cuya función show tiene nombre irregular
+    const functionNameMap = { 'vehiculos': 'Vehiculo' };
+    const functionSuffix = functionNameMap[modulo] || capitalize(modulo);
+    const createButtons = document.querySelectorAll(`[onclick*="show${functionSuffix}Form"]`);
     createButtons.forEach(btn => {
         if (!hasPermission(permissions.crear)) {
             btn.style.display = 'none';
