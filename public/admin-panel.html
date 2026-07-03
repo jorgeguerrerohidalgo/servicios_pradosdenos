@@ -4802,7 +4802,8 @@
                     loadCasas();
                 } else {
                     console.error('❌ Error al guardar casa - respuesta servidor:', result);
-                    throw new Error(result.message || result.error || 'Error al guardar casa');
+                    console.error('   Detalle error BD:', result.error);
+                    throw new Error(result.error || result.message || 'Error al guardar casa');
                 }
                 
             } catch (error) {
