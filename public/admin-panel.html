@@ -3911,10 +3911,13 @@
                     </td>
                     <td>${admin.created_at ? new Date(admin.created_at).toLocaleDateString('es-CL') : 'N/A'}</td>
                     <td>
-                        <button class="btn btn-sm btn-info me-1 edit-admin-btn" data-id="${admin.id}">
+                        <button class="btn btn-sm btn-info me-1 edit-admin-btn" data-id="${admin.id}" title="Editar">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger delete-admin-btn" data-id="${admin.id}">
+                        <button class="btn btn-sm btn-warning me-1 change-password-admin-btn" data-id="${admin.id}" data-nombre="${escapeHtml(admin.nombre)} ${escapeHtml(admin.apellido_paterno || '')}" title="Cambiar contraseña">
+                            <i class="fas fa-key"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger delete-admin-btn" data-id="${admin.id}" title="Eliminar">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -3924,6 +3927,9 @@
             // Agregar event listeners para los botones
             tbody.querySelectorAll('.edit-admin-btn').forEach(btn => {
                 btn.addEventListener('click', () => editAdmin(parseInt(btn.dataset.id)));
+            });
+            tbody.querySelectorAll('.change-password-admin-btn').forEach(btn => {
+                btn.addEventListener('click', () => changeAdminPassword(parseInt(btn.dataset.id), btn.dataset.nombre));
             });
             tbody.querySelectorAll('.delete-admin-btn').forEach(btn => {
                 btn.addEventListener('click', () => deleteAdmin(parseInt(btn.dataset.id)));
@@ -4088,6 +4094,57 @@
                     }
                 }
             });
+        }
+
+        async function changeAdminPassword(adminId, adminNombre) {
+            const { value: formValues, isConfirmed } = await Swal.fire({
+                title: 'Cambiar Contraseña',
+                html: `
+                    <p class="mb-3"><strong>${escapeHtml(adminNombre)}</strong></p>
+                    <div class="mb-3">
+                        <input type="password" id="swal-nueva-pass" class="form-control" placeholder="Nueva contraseña" autocomplete="new-password">
+                    </div>
+                    <div class="mb-3">
+                        <input type="password" id="swal-confirmar-pass" class="form-control" placeholder="Confirmar contraseña" autocomplete="new-password">
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Cambiar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#f59e0b',
+                preConfirm: () => {
+                    const nueva = document.getElementById('swal-nueva-pass').value;
+                    const confirmar = document.getElementById('swal-confirmar-pass').value;
+                    if (!nueva || nueva.length < 6) {
+                        Swal.showValidationMessage('La contraseña debe tener al menos 6 caracteres');
+                        return false;
+                    }
+                    if (nueva !== confirmar) {
+                        Swal.showValidationMessage('Las contraseñas no coinciden');
+                        return false;
+                    }
+                    return { password: nueva };
+                }
+            });
+
+            if (!isConfirmed || !formValues) return;
+
+            try {
+                const response = await authenticatedFetch(`/api/admin/admins/${adminId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ password: formValues.password })
+                });
+
+                if (response && response.ok) {
+                    Swal.fire({ icon: 'success', title: 'Contraseña actualizada', timer: 2000, showConfirmButton: false });
+                } else {
+                    const data = await response?.json();
+                    Swal.fire('Error', data?.message || 'No se pudo cambiar la contraseña', 'error');
+                }
+            } catch (error) {
+                console.error('Error cambiando contraseña:', error);
+                Swal.fire('Error', 'No se pudo cambiar la contraseña', 'error');
+            }
         }
 
         // ==================== FUNCIONES DE REPORTES ====================
