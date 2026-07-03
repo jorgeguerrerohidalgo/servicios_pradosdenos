@@ -19,7 +19,7 @@ SELECT setval('mascotas_id_seq',      (SELECT COALESCE(MAX(id), 1) FROM mascotas
 SELECT setval('plazas_id_seq',        (SELECT COALESCE(MAX(id), 1) FROM plazas));
 SELECT setval('admin_users_id_seq',   (SELECT COALESCE(MAX(id), 1) FROM admin_users));
 SELECT setval('pagos_id_seq',         (SELECT COALESCE(MAX(id), 1) FROM pagos));
-SELECT setval('vehiculos_id_seq',     (SELECT COALESCE(MAX(id), 1) FROM vehiculos));
+-- NOTA: vehiculos usa patente como PK (VARCHAR), no tiene secuencia id
 
 -- =====================================================
 -- Verificación: revisar estado actual de secuencias
