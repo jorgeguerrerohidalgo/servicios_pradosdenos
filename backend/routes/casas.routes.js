@@ -236,7 +236,8 @@ router.post('/', requireAuth, requirePermission('casas.crear'), async (req, res)
             data: result.rows[0]
         });
     } catch (error) {
-        console.error('Error al crear casa:', error);
+        console.error('❌ Error al crear casa:', error.message);
+        console.error('   Código PG:', error.code, '| Detalle:', error.detail, '| Constraint:', error.constraint);
         res.status(500).json({
             success: false,
             message: 'Error interno del servidor',
@@ -390,7 +391,8 @@ router.put('/:id', requireAuth, requirePermission('casas.editar'), async (req, r
             data: result.rows[0]
         });
     } catch (error) {
-        console.error('Error al actualizar casa:', error);
+        console.error('❌ Error al actualizar casa:', error.message);
+        console.error('   Código PG:', error.code, '| Detalle:', error.detail, '| Constraint:', error.constraint);
         res.status(500).json({
             success: false,
             message: 'Error interno del servidor',
