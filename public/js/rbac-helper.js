@@ -259,8 +259,19 @@ function applyButtonPermissions(modulo) {
     };
     
     // Ocultar botón "Nuevo/Crear" si no tiene permiso de crear
-    // Mapeo de excepciones: módulos cuya función show tiene nombre irregular
-    const functionNameMap = { 'vehiculos': 'Vehiculo' };
+    // Mapeo plural (nombre del módulo/permiso) → sufijo singular de la función showXxxForm
+    const functionNameMap = {
+        'eventos':         'Evento',
+        'documentos':      'Documento',
+        'guardias':        'Guardia',
+        'plazas':          'Plaza',
+        'administradores': 'Admin',
+        'casas':           'Casa',
+        'residentes':      'Residente',
+        'mascotas':        'Mascota',
+        'pagos':           'Pago',
+        'vehiculos':       'Vehiculo'
+    };
     const functionSuffix = functionNameMap[modulo] || capitalize(modulo);
     const createButtons = document.querySelectorAll(`[onclick*="show${functionSuffix}Form"]`);
     createButtons.forEach(btn => {
